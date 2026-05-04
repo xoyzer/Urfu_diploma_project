@@ -230,16 +230,25 @@ export function InventorySection() {
       const tx = transactions.find(t => t.id === id);
       if (!tx) return;
 
-      const { error: delErr } = await supabase.from('inventory_transactions').delete().eq('id', id);
+      // Read current stock directly from DB to avoid stale local state
+      const { data: freshProduct, error: fetchErr } = await supabase
+        .from('products')
+        .select('stock_quantity')
+        .eq('id', tx.product_id)
+        .maybeSingle();
+      if (fetchErr) throw fetchErr;
+
+      const { error: delErr } = await supabase
+        .from('inventory_transactions')
+        .delete()
+        .eq('id', id);
       if (delErr) throw delErr;
 
-      // Reverse the quantity change
-      const product = products.find(p => p.id === tx.product_id);
-      if (product) {
+      if (freshProduct) {
         const { error: updErr } = await supabase
           .from('products')
-          .update({ stock_quantity: product.stock_quantity - tx.quantity })
-          .eq('id', product.id);
+          .update({ stock_quantity: freshProduct.stock_quantity - tx.quantity })
+          .eq('id', tx.product_id);
         if (updErr) throw updErr;
       }
 
