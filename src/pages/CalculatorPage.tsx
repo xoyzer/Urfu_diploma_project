@@ -198,6 +198,32 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     ? 0
     : selectedTransport.baseCost + distance * PER_KM_RATE;
   const totalCost = productCost + deliveryCost;
+const handleCalculateDistance = async () => {
+    if (!destAddress.trim()) return;
+    setGeocoding(true);
+    setGeocodeError('');
+    setResolvedAddress('');
+    try {
+      const geo = await geocodeAddress(destAddress.trim());
+      if (!geo) {
+        setGeocodeError('Не удалось найти адрес. Попробуйте уточнить (город, улица, дом).');
+        return;
+      }
+      setResolvedAddress(geo.displayName);
+      const km = await routeDistanceKm({ lat: ORIGIN.lat, lon: ORIGIN.lon }, { lat: geo.lat, lon: geo.lon });
+      if (km == null) {
+        setGeocodeError('Не удалось рассчитать расстояние. Введите значение вручную.');
+        return;
+      }
+      setDistance(km);
+    } catch (error) {
+      console.error(error);
+      setGeocodeError('Ошибка при расчёте. Попробуйте позже или введите расстояние вручную.');
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
 
   const handleOrder = () => {
     if (items.length === 0) return;
