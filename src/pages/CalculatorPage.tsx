@@ -360,21 +360,82 @@ const handleCalculateDistance = async () => {
               </label>
             </div>
 
-            {!isPickup && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <MapPin className="inline h-4 w-4 mr-1" />
-                  Расстояние до места доставки (км)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={distance || ''}
-                  onChange={(e) => setDistance(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="Введите расстояние в км"
-                />
+            {!isPickup && (<div className="space-y-4">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <Info className="h-5 w-5 text-slate-500 mt-0.5 mr-2 flex-shrink-0" />
+                    <div className="text-sm text-slate-700">
+                      <div className="mb-1">
+                        <span className="font-semibold">Доставка с адреса:</span> {ORIGIN.address}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Регионы доставки:</span>{' '}
+                        {DELIVERY_REGIONS.join(', ')}. Дальше — по согласованию.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin className="inline h-4 w-4 mr-1" />
+                    Адрес доставки
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={destAddress}
+                      onChange={(e) => setDestAddress(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleCalculateDistance();
+                        }
+                      }}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="Например: Москва, Тверская улица, 1"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCalculateDistance}
+                      disabled={geocoding || !destAddress.trim()}
+                      className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-3 rounded-lg hover:bg-orange-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold whitespace-nowrap"
+                    >
+                      {geocoding ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Search className="h-5 w-5" />
+                      )}
+                      <span>Рассчитать</span>
+                    </button>
+                  </div>
+                  {resolvedAddress && (
+                    <p className="text-xs text-green-700 mt-2">
+                      Найдено: {resolvedAddress}
+                    </p>
+                  )}
+                  {geocodeError && (
+                    <p className="text-xs text-red-600 mt-2">{geocodeError}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Расстояние (км)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={distance || ''}
+                    onChange={(e) => setDistance(parseFloat(e.target.value) || 0)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Введите вручную или используйте автоматический расчёт"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Расстояние можно отредактировать вручную, если автоматический расчёт отличается от реального маршрута.
+                  </p>
+                </div>
               </div>
             )}
 
