@@ -114,6 +114,10 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
   const [newQuantity, setNewQuantity] = useState<number>(0);
   const [distance, setDistance] = useState<number>(0);
   const [isPickup, setIsPickup] = useState<boolean>(false);
+  const [destAddress, setDestAddress] = useState<string>('');
+  const [resolvedAddress, setResolvedAddress] = useState<string>('');
+  const [geocoding, setGeocoding] = useState<boolean>(false);
+  const [geocodeError, setGeocodeError] = useState<string>('');
 
   useEffect(() => {
     loadProducts();
