@@ -245,12 +245,12 @@ export function OrdersSection() {
             >
               <option value="">Выберите товар</option>
               {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name} - {p.price_per_sqm} ₽/м²</option>
+                <option key={p.id} value={p.id}>{p.name} - {p.price_per_sqm} ₽/{p.unit}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Количество м² <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Количество <span className="text-red-500">*</span></label>
             <input
               type="number"
               required
@@ -386,7 +386,7 @@ export function OrdersSection() {
                     <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <div className="font-semibold text-gray-900">{item.product?.name || 'Товар'}</div>
-                        <div className="text-xs text-gray-500">{item.quantity} м² × {item.price_per_sqm} ₽</div>
+                        <div className="text-xs text-gray-500">{item.quantity} {item.product?.unit || ''} × {item.price_per_sqm} ₽</div>
                       </div>
                       <div className="font-semibold text-gray-900">{item.subtotal.toLocaleString('ru-RU')} ₽</div>
                     </div>

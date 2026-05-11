@@ -188,7 +188,7 @@ export function AnalyticsSection() {
                   <h3 className="font-semibold text-gray-900">{product.product_name}</h3>
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-sm text-gray-600">
-                      Продано: {product.total_quantity.toFixed(1)} м²
+                      Продано: {product.total_quantity.toFixed(1)} ед.
                     </span>
                     <span className="text-sm font-semibold text-amber-600">
                       {product.total_revenue.toLocaleString('ru-RU', { maximumFractionDigits: 0 })} ₽

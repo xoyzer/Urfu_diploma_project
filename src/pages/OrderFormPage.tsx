@@ -124,7 +124,7 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
                   <div key={item.product.id} className="flex justify-between text-sm border-b border-amber-200 pb-2">
                     <div>
                       <div className="font-semibold">{item.product.name}</div>
-                      <div className="text-gray-600">{item.quantity} м² × {item.product.price_per_sqm} ₽</div>
+                      <div className="text-gray-600">{item.quantity} {item.product.unit} × {item.product.price_per_sqm} ₽</div>
                     </div>
                     <div className="font-semibold">{item.subtotal.toLocaleString('ru-RU')} ₽</div>
                   </div>

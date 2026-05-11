@@ -117,11 +117,11 @@ export function CatalogPage({ onNavigate }: CatalogPageProps) {
                   <div className="flex justify-between items-center mb-4">
                     <div>
                       <div className="text-2xl font-bold text-amber-600">{product.price_per_sqm} ₽</div>
-                      <div className="text-sm text-gray-500">за м²</div>
+                      <div className="text-sm text-gray-500">за {product.unit}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-gray-500">В наличии:</div>
-                      <div className="text-lg font-semibold">{product.stock_quantity} м²</div>
+                      <div className="text-lg font-semibold">{product.stock_quantity} {product.unit}</div>
                     </div>
                   </div>
 
