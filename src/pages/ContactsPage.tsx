@@ -3,7 +3,14 @@ import { Phone, Mail, MapPin, Clock } from "lucide-react";
 export function ContactsPage() {
     return (
         <div className="min-h-screen bg-gray-50">
-            <section className="bg-gradient-to-br from-stone-600 via-neutral-900 to-stone-800 text-white py-20 text-white py-20">
+            <section className="relative bg-gradient-to-br from-stone-900 via-neutral-900 to-stone-800 text-white py-24 overflow-hidden">
+                <div
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                        backgroundImage:
+                            "radial-gradient(circle at 20% 30%, rgba(217, 164, 64, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(217, 164, 64, 0.3) 0%, transparent 50%)",
+                    }}
+                ></div>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h1 className="text-5xl font-bold mb-6">Контакты</h1>
                     <p className="text-xl text-amber-100">Свяжитесь с нами любым удобным способом</p>

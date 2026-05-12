@@ -3,7 +3,14 @@ import { Award, Users, TrendingUp, Clock } from "lucide-react";
 export function AboutPage() {
     return (
         <div className="min-h-screen bg-gray-50">
-            <section className="bg-gradient-to-br from-stone-600 via-neutral-900 to-stone-800 text-white py-20">
+            <section className="relative bg-gradient-to-br from-stone-900 via-neutral-900 to-stone-800 text-white py-24 overflow-hidden">
+                <div
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                        backgroundImage:
+                            "radial-gradient(circle at 20% 30%, rgba(217, 164, 64, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(217, 164, 64, 0.3) 0%, transparent 50%)",
+                    }}
+                ></div>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h1 className="text-5xl font-bold mb-6">О компании</h1>
                     <p className="text-xl text-amber-100 max-w-3xl">
@@ -17,7 +24,7 @@ export function AboutPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <div>
                             <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                                Фабрика Плитки - ваш надежный партнер
+                                <span className="text-yellow-500">Фабрика Плитки</span> - ваш надежный партнер
                             </h2>
                             <div className="space-y-4 text-gray-700 leading-relaxed">
                                 <p>
@@ -47,7 +54,7 @@ export function AboutPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div className="text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-                                <Award className="h-8 w-8 text-amber-600" />
+                                <Award className="h-8 w-8 text-yellow-600" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Качество</h3>
                             <p className="text-gray-600">Вся продукция сертифицирована и соответствует ГОСТу</p>
@@ -55,7 +62,7 @@ export function AboutPage() {
 
                         <div className="text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-                                <Clock className="h-8 w-8 text-amber-600" />
+                                <Clock className="h-8 w-8 text-yellow-600" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Оперативность</h3>
                             <p className="text-gray-600">Быстрая обработка заказов и доставка в срок</p>
@@ -63,7 +70,7 @@ export function AboutPage() {
 
                         <div className="text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-                                <Users className="h-8 w-8 text-amber-600" />
+                                <Users className="h-8 w-8 text-yellow-600" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Клиентоориентированность</h3>
                             <p className="text-gray-600">Индивидуальный подход к каждому клиенту</p>
@@ -71,10 +78,10 @@ export function AboutPage() {
 
                         <div className="text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-                                <TrendingUp className="h-8 w-8 text-amber-600" />
+                                <TrendingUp className="h-8 w-8 text-yellow-600" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Опыт</h3>
-                            <p className="text-gray-600">Более 10 лет успешной работы на рынке</p>
+                            <p className="text-gray-600">Более 5 лет успешной работы на рынке</p>
                         </div>
                     </div>
                 </div>
@@ -82,7 +89,7 @@ export function AboutPage() {
 
             <section className="py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-gradient-to-br from-amber-700 to-stone-800 rounded-lg p-12 text-center text-white">
+                    <div className="bg-gradient-to-br bg-yellow-600 rounded-lg p-12 text-center text-white">
                         <h2 className="text-3xl font-bold mb-4">Работаем с частными лицами и организациями</h2>
                         <p className="text-xl text-amber-100 mb-8 max-w-2xl mx-auto">
                             Предоставляем гибкие условия оплаты, скидки при больших объемах и консультации по выбору
@@ -90,7 +97,7 @@ export function AboutPage() {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
                             <div>
-                                <div className="text-4xl font-bold mb-2">10+</div>
+                                <div className="text-4xl font-bold mb-2">5+</div>
                                 <div className="text-amber-100">лет на рынке</div>
                             </div>
                             <div>
@@ -98,7 +105,7 @@ export function AboutPage() {
                                 <div className="text-amber-100">довольных клиентов</div>
                             </div>
                             <div>
-                                <div className="text-4xl font-bold mb-2">100+</div>
+                                <div className="text-4xl font-bold mb-2">50+</div>
                                 <div className="text-amber-100">видов продукции</div>
                             </div>
                         </div>

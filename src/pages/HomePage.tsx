@@ -18,12 +18,12 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <div className="text-center lg:text-left">
-                            <div className="inline-block bg-amber-600/20 border border-amber-500/30 text-amber-300 text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-wider">
+                            <div className="inline-block border border-yellow-500/30 text-yellow-300 text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-wider">
                                 Производство полного цикла
                             </div>
                             <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
                                 <span className="text-white">Тротуарная плитка </span>
-                                <span className="text-amber-400">и бордюры</span>
+                                <span className="text-yellow-500">и бордюры</span>
                             </h1>
                             <p className="text-lg mb-8 text-stone-300 max-w-xl mx-auto lg:mx-0">
                                 Широкий ассортимент качественной продукции собственного производства с доставкой по
@@ -32,7 +32,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                                 <button
                                     onClick={() => onNavigate("catalog")}
-                                    className="bg-amber-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-amber-700 transition-colors shadow-lg"
+                                    className="bg-yellow-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-yellow-700 transition-colors shadow-lg"
                                 >
                                     Смотреть каталог
                                 </button>
@@ -63,15 +63,15 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div className="text-center p-6">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-                                <Package className="h-8 w-8 text-amber-700" />
+                                <Package className="h-8 w-8 text-yellow-700" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Большой ассортимент</h3>
-                            <p className="text-gray-600">Более 100 видов брусчатки и бордюров</p>
+                            <p className="text-gray-600">Более 50 видов брусчатки и бордюров</p>
                         </div>
 
                         <div className="text-center p-6">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-                                <ShieldCheck className="h-8 w-8 text-amber-700" />
+                                <ShieldCheck className="h-8 w-8 text-yellow-700" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Гарантия качества</h3>
                             <p className="text-gray-600">Вся продукция сертифицирована</p>
@@ -79,15 +79,15 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
                         <div className="text-center p-6">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-                                <Truck className="h-8 w-8 text-amber-700" />
+                                <Truck className="h-8 w-8 text-yellow-700" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Быстрая доставка</h3>
-                            <p className="text-gray-600">Доставка манипулятором и фурой</p>
+                            <p className="text-gray-600">Быстрая доставка товара в срок</p>
                         </div>
 
                         <div className="text-center p-6">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
-                                <Calculator className="h-8 w-8 text-amber-700" />
+                                <Calculator className="h-8 w-8 text-yellow-700" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Калькулятор расчета</h3>
                             <p className="text-gray-600">Рассчитайте стоимость онлайн</p>
@@ -108,7 +108,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                             className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
                             onClick={() => onNavigate("catalog")}
                         >
-                            <div className="h-48 bg-gradient-to-br from-amber-700 to-stone-800 flex items-center justify-center">
+                            <div className="h-48 bg-gradient-to-br from-yellow-600 to-stone-800 flex items-center justify-center">
                                 <Package className="h-16 w-16 text-amber-300 group-hover:scale-110 transition-transform" />
                             </div>
                             <div className="p-6">
@@ -122,7 +122,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                             onClick={() => onNavigate("catalog")}
                         >
                             <div className="h-48 bg-gradient-to-br from-stone-700 to-stone-900 flex items-center justify-center">
-                                <Package className="h-16 w-16 text-amber-400 group-hover:scale-110 transition-transform" />
+                                <Package className="h-16 w-16 text-yellow-400 group-hover:scale-110 transition-transform" />
                             </div>
                             <div className="p-6">
                                 <h3 className="text-xl font-semibold mb-2">Бордюры</h3>
@@ -134,7 +134,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                             className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
                             onClick={() => onNavigate("catalog")}
                         >
-                            <div className="h-48 bg-gradient-to-br from-amber-800 to-neutral-900 flex items-center justify-center">
+                            <div className="h-48 bg-gradient-to-br from-yellow-700 to-neutral-900 flex items-center justify-center">
                                 <Package className="h-16 w-16 text-amber-200 group-hover:scale-110 transition-transform" />
                             </div>
                             <div className="p-6">
@@ -146,7 +146,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 </div>
             </section>
 
-            <section className="bg-gradient-to-r from-amber-700 to-amber-800 text-white py-16">
+            <section className="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 className="text-3xl font-bold mb-4">Готовы сделать заказ?</h2>
                     <p className="text-xl mb-8 text-amber-100">Рассчитайте стоимость и оформите заявку прямо сейчас</p>
