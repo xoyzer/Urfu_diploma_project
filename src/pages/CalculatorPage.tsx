@@ -449,13 +449,13 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                         )}
 
                         {!isPickup && items.length > 0 && (
-                            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                            <div className="bg-yellow-100 border-2 border-yellow-600 rounded-lg p-6">
                                 <div className="flex items-center mb-3">
-                                    <Truck className="h-6 w-6 text-blue-600 mr-2" />
+                                    <Truck className="h-6 w-6 text-yellow-600 mr-2" />
                                     <h3 className="text-lg font-semibold text-gray-900">Рекомендованный транспорт</h3>
                                 </div>
                                 <div className="flex items-baseline justify-between">
-                                    <span className="text-xl font-bold text-blue-700">{selectedTransport.label}</span>
+                                    <span className="text-xl font-bold text-yellow-700">{selectedTransport.label}</span>
                                     <span className="text-sm text-gray-600">
                                         Подача {selectedTransport.baseCost.toLocaleString("ru-RU")} ₽ + {PER_KM_RATE}{" "}
                                         ₽/км
