@@ -14,7 +14,7 @@ export function Header({ onNavigate }: HeaderProps) {
                 <div className="flex justify-between items-center py-3">
                     <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onNavigate("home")}>
                         <img
-                            src="/photo_2026-04-21_12-00-50.jpg"
+                            src="/Фабрика Плитки (лого 2).png"
                             alt="Фабрика Плитки"
                             className="h-14 w-14 object-contain"
                         />

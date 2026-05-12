@@ -48,7 +48,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                             <div className="relative">
                                 <div className="absolute inset-0 bg-amber-500/20 blur-3xl rounded-full"></div>
                                 <img
-                                    src="/photo_2026-04-21_12-00-50.jpg"
+                                    src="/Фабрика Плитки (лого 2).png"
                                     alt="Фабрика Плитки"
                                     className="relative w-72 md:w-96 h-auto drop-shadow-2xl"
                                 />

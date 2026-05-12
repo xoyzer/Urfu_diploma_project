@@ -12,43 +12,42 @@ export function AboutPage() {
                     }}
                 ></div>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h1 className="text-5xl font-bold mb-6">О компании</h1>
-                    <p className="text-xl text-amber-100 max-w-3xl">
+                    <h1 className="text-6xl font-bold mb-6">О компании</h1>
+                    <p className="text-xl text-amber-100 max-w-4xl">
                         Надежный поставщик тротуарной плитки и бордюров с многолетним опытом работы
                     </p>
                 </div>
             </section>
 
             <section className="py-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+                    <div className="grid items-center">
                         <div>
-                            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                            <h2 className="text-3xl font-bold text-gray-900 mb-6 r text-center">
                                 <span className="text-yellow-500">Фабрика Плитки</span> - ваш надежный партнер
                             </h2>
-                            <div className="space-y-4 text-gray-700 leading-relaxed">
+                            <div className="grid text-xl space-y-4 text-gray-700 leading-relaxed gap-2 py-4">
                                 <p>
                                     Компания Фабрика Плитки специализируется на поставках качественной тротуарной
                                     плитки, брусчатки и бордюров для частных и коммерческих проектов любого масштаба.
                                 </p>
                                 <p>
                                     Мы работаем только с проверенными производителями и гарантируем высокое качество
-                                    всей продукции. Наш ассортимент включает более 100 наименований изделий различных
+                                    всей продукции. Наш ассортимент включает более 50 наименований изделий различных
                                     форм, размеров и цветов.
                                 </p>
                                 <p>
                                     Собственный парк транспорта позволяет нам обеспечивать быструю и надежную доставку
-                                    по всему региону. Мы осуществляем доставку как манипуляторами, так и большегрузными
-                                    автомобилями в зависимости от объема заказа.
+                                    по всему региону. Мы осуществляем доставку как разными видами манипуляторов, так и
+                                    большегрузными автомобилями в зависимости от объема заказа.
                                 </p>
                             </div>
                         </div>
-                        <div className="bg-gradient-to-br from-gray-300 to-gray-400 rounded-lg h-96"></div>
                     </div>
                 </div>
             </section>
 
-            <section className="bg-white py-16">
+            <section className="bg-white py-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Наши преимущества</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
