@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Eye } from "lucide-react";
+import { Plus, Trash2, Eye, CreditCard as Edit2, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
@@ -8,6 +8,14 @@ type Order = Database["public"]["Tables"]["orders"]["Row"];
 type Customer = Database["public"]["Tables"]["customers"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type OrderItem = Database["public"]["Tables"]["order_items"]["Row"] & { product?: Product };
+
+interface EditableOrderItem {
+  id?: string;
+  product_id: string;
+  quantity: number;
+  price_per_sqm: number;
+  subtotal: number;
+}
 
 const ORDER_STATUSES = ["Новый", "В обработке", "Согласован", "Доставляется", "Выполнен", "Отменен"];
 
@@ -22,6 +30,13 @@ export function OrdersSection() {
     const [selectedOrder, setSelectedOrder] = useState<(Order & { customer: Customer }) | null>(null);
     const [selectedOrderItems, setSelectedOrderItems] = useState<OrderItem[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [editableItems, setEditableItems] = useState<EditableOrderItem[]>([]);
+    const [editDeliveryData, setEditDeliveryData] = useState({
+        delivery_type: "манипулятор",
+        delivery_address: "",
+    });
+    const [editSaving, setEditSaving] = useState(false);
     const [formData, setFormData] = useState({
         customer_id: "",
         product_id: "",
@@ -149,6 +164,7 @@ export function OrdersSection() {
 
     async function openOrderDetails(order: Order & { customer: Customer }) {
         setSelectedOrder(order);
+        setEditMode(false);
         setLoadingDetails(true);
         try {
             const { data } = await supabase
@@ -156,11 +172,107 @@ export function OrdersSection() {
                 .select("*, product:products(*)")
                 .eq("order_id", order.id);
             setSelectedOrderItems((data as OrderItem[]) || []);
+            const items = (data as OrderItem[]) || [];
+            setEditableItems(items.map(item => ({
+                id: item.id,
+                product_id: item.product_id,
+                quantity: item.quantity,
+                price_per_sqm: item.price_per_sqm,
+                subtotal: item.subtotal,
+            })));
+            setEditDeliveryData({
+                delivery_type: order.delivery_type || "манипулятор",
+                delivery_address: order.delivery_address || "",
+            });
         } catch (error) {
             console.error("Error loading order items:", error);
             setSelectedOrderItems([]);
         } finally {
             setLoadingDetails(false);
+        }
+    }
+
+    function updateEditableItem(index: number, field: keyof EditableOrderItem, value: string | number) {
+        setEditableItems(prev => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], [field]: value };
+
+            if (field === "quantity" || field === "price_per_sqm") {
+                updated[index].subtotal = updated[index].quantity * updated[index].price_per_sqm;
+            }
+
+            return updated;
+        });
+    }
+
+    function addEditableItem() {
+        setEditableItems(prev => [...prev, {
+            product_id: "",
+            quantity: 0,
+            price_per_sqm: 0,
+            subtotal: 0,
+        }]);
+    }
+
+    function removeEditableItem(index: number) {
+        setEditableItems(prev => prev.filter((_, i) => i !== index));
+    }
+
+    async function saveOrderChanges() {
+        if (!selectedOrder || !editableItems.length) {
+            alert("Добавьте хотя бы один товар");
+            return;
+        }
+
+        setEditSaving(true);
+        try {
+            const totalProductCost = editableItems.reduce((sum, item) => sum + item.subtotal, 0);
+            const deliveryCost = Math.round((50 * (editDeliveryData.delivery_type === "манипулятор" ? 150 : 120)) / 1000);
+            const totalAmount = totalProductCost + deliveryCost;
+
+            // Delete old order items
+            await supabase.from("order_items").delete().eq("order_id", selectedOrder.id);
+
+            // Insert new order items
+            const itemsToInsert = editableItems.map(item => ({
+                order_id: selectedOrder.id,
+                product_id: item.product_id,
+                quantity: item.quantity,
+                price_per_sqm: item.price_per_sqm,
+                subtotal: item.subtotal,
+            }));
+
+            const { error: itemsError } = await supabase.from("order_items").insert(itemsToInsert);
+            if (itemsError) throw itemsError;
+
+            // Update order delivery info and totals
+            const { error: orderError } = await supabase
+                .from("orders")
+                .update({
+                    delivery_type: editDeliveryData.delivery_type,
+                    delivery_address: editDeliveryData.delivery_address,
+                    delivery_cost: deliveryCost,
+                    total_amount: totalAmount,
+                })
+                .eq("id", selectedOrder.id);
+
+            if (orderError) throw orderError;
+
+            // Log the update
+            await supabase.from("order_history").insert({
+                order_id: selectedOrder.id,
+                action_type: "order_updated",
+                comment: "Заказ отредактирован вручную",
+            });
+
+            setEditMode(false);
+            await openOrderDetails(selectedOrder);
+            await loadOrders();
+        } catch (error) {
+            console.error("Error saving order:", error);
+            alert("Ошибка при сохранении изменений");
+        } finally {
+            setEditSaving(false);
         }
     }
 
@@ -335,10 +447,20 @@ export function OrdersSection() {
                 onClose={() => {
                     setSelectedOrder(null);
                     setSelectedOrderItems([]);
+                    setEditMode(false);
                 }}
             >
                 {selectedOrder && (
                     <div className="space-y-5">
+                        {!editMode && (
+                            <button
+                                onClick={() => setEditMode(true)}
+                                className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                <Edit2 className="h-4 w-4" />
+                                <span>Редактировать заказ</span>
+                            </button>
+                        )}
                         <div>
                             <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Клиент</h3>
                             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -371,32 +493,135 @@ export function OrdersSection() {
 
                         <div>
                             <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Доставка</h3>
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div>
-                                    <div className="text-gray-500">Тип</div>
-                                    <div className="font-semibold text-gray-900">
-                                        {selectedOrder.delivery_type || "—"}
+                            {editMode ? (
+                                <div className="space-y-3 text-sm">
+                                    <div>
+                                        <label className="text-gray-600">Тип доставки</label>
+                                        <select
+                                            value={editDeliveryData.delivery_type}
+                                            onChange={(e) => setEditDeliveryData({ ...editDeliveryData, delivery_type: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="манипулятор">Манипулятор</option>
+                                            <option value="фура">Фура</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-600">Адрес доставки</label>
+                                        <input
+                                            type="text"
+                                            value={editDeliveryData.delivery_address}
+                                            onChange={(e) => setEditDeliveryData({ ...editDeliveryData, delivery_address: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            placeholder="Введите адрес или оставьте пусто для самовывоза"
+                                        />
                                     </div>
                                 </div>
-                                <div>
-                                    <div className="text-gray-500">Стоимость доставки</div>
-                                    <div className="font-semibold text-gray-900">
-                                        {selectedOrder.delivery_cost.toLocaleString("ru-RU")} ₽
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <div className="text-gray-500">Тип</div>
+                                        <div className="font-semibold text-gray-900">
+                                            {selectedOrder.delivery_type || "—"}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-gray-500">Стоимость доставки</div>
+                                        <div className="font-semibold text-gray-900">
+                                            {selectedOrder.delivery_cost.toLocaleString("ru-RU")} ₽
+                                        </div>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <div className="text-gray-500">Адрес</div>
+                                        <div className="font-semibold text-gray-900">
+                                            {selectedOrder.delivery_address || "— (самовывоз)"}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="col-span-2">
-                                    <div className="text-gray-500">Адрес</div>
-                                    <div className="font-semibold text-gray-900">
-                                        {selectedOrder.delivery_address || "— (самовывоз)"}
-                                    </div>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">Товары</h3>
+                            <div className="flex justify-between items-center mb-3">
+                                <h3 className="text-sm font-semibold text-gray-500 uppercase">Товары</h3>
+                                {editMode && (
+                                    <button
+                                        onClick={addEditableItem}
+                                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                                    >
+                                        <Plus className="h-3 w-3 inline mr-1" />
+                                        Добавить товар
+                                    </button>
+                                )}
+                            </div>
+
                             {loadingDetails ? (
                                 <div className="text-sm text-gray-500">Загрузка...</div>
+                            ) : editMode ? (
+                                <div className="space-y-3">
+                                    {editableItems.map((item, idx) => (
+                                        <div key={idx} className="p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
+                                            <div>
+                                                <label className="text-gray-600">Товар</label>
+                                                <select
+                                                    value={item.product_id}
+                                                    onChange={(e) => {
+                                                        const prod = products.find(p => p.id === e.target.value);
+                                                        updateEditableItem(idx, "product_id", e.target.value);
+                                                        if (prod) {
+                                                            updateEditableItem(idx, "price_per_sqm", prod.price_per_sqm);
+                                                        }
+                                                    }}
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded"
+                                                >
+                                                    <option value="">Выберите товар</option>
+                                                    {products.map(p => (
+                                                        <option key={p.id} value={p.id}>
+                                                            {p.name} - {p.price_per_sqm} ₽/{p.unit}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div>
+                                                    <label className="text-gray-600">Кол-во</label>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        step="1"
+                                                        value={item.quantity}
+                                                        onChange={(e) => updateEditableItem(idx, "quantity", parseInt(e.target.value) || 0)}
+                                                        className="w-full px-2 py-1 border border-gray-300 rounded"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-gray-600">Цена</label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value={item.price_per_sqm}
+                                                        onChange={(e) => updateEditableItem(idx, "price_per_sqm", parseFloat(e.target.value) || 0)}
+                                                        className="w-full px-2 py-1 border border-gray-300 rounded"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-gray-600">Сумма</label>
+                                                    <div className="px-2 py-1 bg-white border border-gray-300 rounded text-center font-semibold">
+                                                        {item.subtotal.toLocaleString("ru-RU")} ₽
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => removeEditableItem(idx)}
+                                                className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1"
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                                <span>Удалить</span>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             ) : selectedOrderItems.length === 0 ? (
                                 <div className="text-sm text-gray-500">Нет позиций</div>
                             ) : (
@@ -432,33 +657,61 @@ export function OrdersSection() {
                             </div>
                         )}
 
-                        <div className="border-t pt-4 grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                                <div className="text-gray-500">Источник</div>
-                                <div className="font-semibold text-gray-900">
-                                    {selectedOrder.source === "website" ? "Сайт" : "Телефон"}
+                        <div className="border-t pt-4">
+                            <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                                <div>
+                                    <div className="text-gray-500">Источник</div>
+                                    <div className="font-semibold text-gray-900">
+                                        {selectedOrder.source === "website" ? "Сайт" : "Телефон"}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500">Дата создания</div>
+                                    <div className="font-semibold text-gray-900">
+                                        {new Date(selectedOrder.created_at).toLocaleString("ru-RU")}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500">Статус</div>
+                                    <div
+                                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedOrder.status)}`}
+                                    >
+                                        {selectedOrder.status}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-500">Итого</div>
+                                    <div className="font-bold text-lg text-yellow-600">
+                                        {editMode ? (
+                                            <>
+                                                {(editableItems.reduce((sum, item) => sum + item.subtotal, 0) + Math.round((50 * (editDeliveryData.delivery_type === "манипулятор" ? 150 : 120)) / 1000)).toLocaleString("ru-RU")} ₽
+                                            </>
+                                        ) : (
+                                            selectedOrder.total_amount.toLocaleString("ru-RU") + " ₽"
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <div className="text-gray-500">Дата создания</div>
-                                <div className="font-semibold text-gray-900">
-                                    {new Date(selectedOrder.created_at).toLocaleString("ru-RU")}
+
+                            {editMode && (
+                                <div className="flex space-x-3 pt-4">
+                                    <button
+                                        onClick={saveOrderChanges}
+                                        disabled={editSaving}
+                                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-300 transition-colors font-semibold"
+                                    >
+                                        {editSaving ? "Сохранение..." : "Сохранить"}
+                                    </button>
+                                    <button
+                                        onClick={() => setEditMode(false)}
+                                        disabled={editSaving}
+                                        className="flex-1 bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 disabled:bg-gray-300 transition-colors font-semibold flex items-center justify-center space-x-2"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        <span>Отменить</span>
+                                    </button>
                                 </div>
-                            </div>
-                            <div>
-                                <div className="text-gray-500">Статус</div>
-                                <div
-                                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedOrder.status)}`}
-                                >
-                                    {selectedOrder.status}
-                                </div>
-                            </div>
-                            <div>
-                                <div className="text-gray-500">Итого</div>
-                                <div className="font-bold text-lg text-yellow-600">
-                                    {selectedOrder.total_amount.toLocaleString("ru-RU")} ₽
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 )}
