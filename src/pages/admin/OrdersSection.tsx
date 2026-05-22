@@ -455,7 +455,7 @@ export function OrdersSection() {
                         {!editMode && (
                             <button
                                 onClick={() => setEditMode(true)}
-                                className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                className="w-full flex items-center justify-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
                             >
                                 <Edit2 className="h-4 w-4" />
                                 <span>Редактировать заказ</span>
@@ -547,7 +547,7 @@ export function OrdersSection() {
                                 {editMode && (
                                     <button
                                         onClick={addEditableItem}
-                                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                                        className="text-xs bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition-colors"
                                     >
                                         <Plus className="h-3 w-3 inline mr-1" />
                                         Добавить товар
@@ -698,7 +698,7 @@ export function OrdersSection() {
                                     <button
                                         onClick={saveOrderChanges}
                                         disabled={editSaving}
-                                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-300 transition-colors font-semibold"
+                                        className="flex-1 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 disabled:bg-gray-300 transition-colors font-semibold"
                                     >
                                         {editSaving ? "Сохранение..." : "Сохранить"}
                                     </button>
