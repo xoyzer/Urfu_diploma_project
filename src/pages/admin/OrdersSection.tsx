@@ -51,12 +51,15 @@ export function OrdersSection() {
 
     const [formData, setFormData] = useState({
         customer_id: "",
-        product_id: "",
-        quantity: 0,
-        delivery_type: "манипулятор",
         delivery_address: "",
         source: "phone",
     });
+    const [newItems, setNewItems] = useState<EditableItem[]>([]);
+    const [newItemProductId, setNewItemProductId] = useState("");
+    const [newItemQty, setNewItemQty] = useState(0);
+    const [newTrips, setNewTrips] = useState<EditableTrip[]>([
+        { vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 },
+    ]);
 
     useEffect(() => {
         loadOrders();
@@ -89,16 +92,39 @@ export function OrdersSection() {
         }
     }
 
+    function addNewItem() {
+        if (!newItemProductId || newItemQty <= 0) return;
+        const prod = products.find(p => p.id === newItemProductId);
+        if (!prod) return;
+        const existing = newItems.findIndex(i => i.product_id === newItemProductId);
+        if (existing >= 0) {
+            setNewItems(prev => prev.map((item, idx) => idx === existing
+                ? { ...item, quantity: item.quantity + newItemQty, subtotal: (item.quantity + newItemQty) * item.price_per_sqm }
+                : item
+            ));
+        } else {
+            setNewItems(prev => [...prev, {
+                product_id: newItemProductId,
+                quantity: newItemQty,
+                price_per_sqm: prod.price_per_sqm,
+                subtotal: newItemQty * prod.price_per_sqm,
+            }]);
+        }
+        setNewItemProductId("");
+        setNewItemQty(0);
+    }
+
     async function handleAddOrder(e: React.FormEvent) {
         e.preventDefault();
+        if (newItems.length === 0) { alert("Добавьте хотя бы один товар"); return; }
+        if (newItems.some(i => !i.product_id)) { alert("Выберите товар для всех позиций"); return; }
+
         setSubmitting(true);
         try {
-            const selectedProduct = products.find((p) => p.id === formData.product_id);
-            if (!selectedProduct) throw new Error("Product not found");
-
-            const productCost = selectedProduct.price_per_sqm * formData.quantity;
-            const deliveryCost = Math.round((50 * (formData.delivery_type === "манипулятор" ? 150 : 120)) / 1000);
-            const totalCost = productCost + deliveryCost;
+            const productTotal = newItems.reduce((sum, i) => sum + i.subtotal, 0);
+            const deliveryCost = newTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
+            const totalCost = productTotal + deliveryCost;
+            const tripsLabel = newTrips.filter(t => t.vehicle_type).map(t => `${t.trip_count} × ${t.vehicle_type}`).join(", ");
 
             const { data: order, error: orderError } = await supabase
                 .from("orders")
@@ -107,7 +133,7 @@ export function OrdersSection() {
                     status: "Новый",
                     total_amount: totalCost,
                     delivery_cost: deliveryCost,
-                    delivery_type: formData.delivery_type,
+                    delivery_type: tripsLabel || "—",
                     delivery_address: formData.delivery_address,
                     source: formData.source,
                 })
@@ -115,13 +141,27 @@ export function OrdersSection() {
                 .single();
             if (orderError) throw orderError;
 
-            await supabase.from("order_items").insert({
-                order_id: order.id,
-                product_id: formData.product_id,
-                quantity: formData.quantity,
-                price_per_sqm: selectedProduct.price_per_sqm,
-                subtotal: productCost,
-            });
+            await supabase.from("order_items").insert(
+                newItems.map(item => ({
+                    order_id: order.id,
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    price_per_sqm: item.price_per_sqm,
+                    subtotal: item.subtotal,
+                }))
+            );
+
+            const tripsToInsert = newTrips.filter(t => t.vehicle_type && t.trip_count > 0);
+            if (tripsToInsert.length > 0) {
+                await supabase.from("order_delivery_trips").insert(
+                    tripsToInsert.map(t => ({
+                        order_id: order.id,
+                        vehicle_type: t.vehicle_type,
+                        trip_count: t.trip_count,
+                        cost_per_trip: t.cost_per_trip,
+                    }))
+                );
+            }
 
             await supabase.from("order_history").insert({
                 order_id: order.id,
@@ -130,14 +170,11 @@ export function OrdersSection() {
                 comment: "Заказ создан вручную",
             });
 
-            setFormData({
-                customer_id: "",
-                product_id: "",
-                quantity: 0,
-                delivery_type: "манипулятор",
-                delivery_address: "",
-                source: "phone",
-            });
+            setFormData({ customer_id: "", delivery_address: "", source: "phone" });
+            setNewItems([]);
+            setNewItemProductId("");
+            setNewItemQty(0);
+            setNewTrips([{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }]);
             setShowAddOrder(false);
             loadOrders();
         } catch (error) {
@@ -329,91 +366,252 @@ export function OrdersSection() {
             </div>
 
             {/* Create order modal */}
-            <Modal isOpen={showAddOrder} title="Создать заказ" onClose={() => setShowAddOrder(false)}>
-                <form onSubmit={handleAddOrder} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">
-                            Клиент <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            required
-                            value={formData.customer_id}
-                            onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                        >
-                            <option value="">Выберите клиента</option>
-                            {customers.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name} ({c.phone})
-                                </option>
+            <Modal isOpen={showAddOrder} title="Создать заказ" onClose={() => {
+                setShowAddOrder(false);
+                setNewItems([]);
+                setNewItemProductId("");
+                setNewItemQty(0);
+                setNewTrips([{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }]);
+            }}>
+                <form onSubmit={handleAddOrder} className="space-y-5">
+                    {/* Клиент и источник */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="col-span-2">
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Клиент <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                required
+                                value={formData.customer_id}
+                                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                            >
+                                <option value="">Выберите клиента</option>
+                                {customers.map((c) => (
+                                    <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Источник</label>
+                            <select
+                                value={formData.source}
+                                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                            >
+                                <option value="phone">Телефон</option>
+                                <option value="website">Сайт</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Адрес доставки</label>
+                            <input
+                                type="text"
+                                value={formData.delivery_address}
+                                onChange={(e) => setFormData({ ...formData, delivery_address: e.target.value })}
+                                placeholder="Оставьте пустым для самовывоза"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Добавление товаров */}
+                    <div className="border border-dashed border-gray-300 rounded-lg p-4 space-y-3">
+                        <h3 className="text-sm font-semibold text-gray-700">Товары</h3>
+                        <div className="grid grid-cols-12 gap-2 items-end">
+                            <div className="col-span-7">
+                                <label className="block text-xs text-gray-600 mb-1">Товар</label>
+                                <select
+                                    value={newItemProductId}
+                                    onChange={(e) => setNewItemProductId(e.target.value)}
+                                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm"
+                                >
+                                    <option value="">Выберите товар</option>
+                                    {Object.entries(
+                                        products.reduce<Record<string, Product[]>>((acc, p) => {
+                                            (acc[p.category] = acc[p.category] || []).push(p);
+                                            return acc;
+                                        }, {})
+                                    ).map(([cat, list]) => (
+                                        <optgroup key={cat} label={cat}>
+                                            {list.map(p => (
+                                                <option key={p.id} value={p.id}>{p.name} — {p.price_per_sqm} ₽/{p.unit}</option>
+                                            ))}
+                                        </optgroup>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="col-span-3">
+                                <label className="block text-xs text-gray-600 mb-1">
+                                    Кол-во ({products.find(p => p.id === newItemProductId)?.unit || "шт/м²"})
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={newItemQty || ""}
+                                    onChange={(e) => setNewItemQty(parseFloat(e.target.value) || 0)}
+                                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm"
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div className="col-span-2">
+                                <button
+                                    type="button"
+                                    onClick={addNewItem}
+                                    disabled={!newItemProductId || newItemQty <= 0}
+                                    className="w-full flex items-center justify-center bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 disabled:bg-gray-300 transition-colors"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {newItems.length > 0 && (
+                            <div className="space-y-1 mt-2">
+                                {newItems.map((item, idx) => {
+                                    const prod = products.find(p => p.id === item.product_id);
+                                    return (
+                                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                                            <span className="text-gray-800 flex-1 mr-2 truncate">{prod?.name || "Товар"}</span>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    step="1"
+                                                    value={item.quantity}
+                                                    onChange={(e) => {
+                                                        const qty = parseFloat(e.target.value) || 0;
+                                                        setNewItems(prev => prev.map((it, i) => i === idx
+                                                            ? { ...it, quantity: qty, subtotal: qty * it.price_per_sqm }
+                                                            : it
+                                                        ));
+                                                    }}
+                                                    className="w-16 px-1 py-1 border border-gray-300 rounded text-center"
+                                                />
+                                                <span className="text-gray-500 text-xs w-6">{prod?.unit}</span>
+                                                <span className="font-semibold w-24 text-right">{item.subtotal.toLocaleString("ru-RU")} ₽</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setNewItems(prev => prev.filter((_, i) => i !== idx))}
+                                                    className="text-red-500 hover:text-red-700"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                <div className="text-right text-sm font-semibold text-gray-700 pt-1">
+                                    Товары: {newItems.reduce((s, i) => s + i.subtotal, 0).toLocaleString("ru-RU")} ₽
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Рейсы доставки */}
+                    <div className="border border-dashed border-gray-300 rounded-lg p-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-sm font-semibold text-gray-700">Доставка (рейсы)</h3>
+                            <button
+                                type="button"
+                                onClick={() => setNewTrips(prev => [...prev, { vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }])}
+                                className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200 transition-colors flex items-center space-x-1"
+                            >
+                                <Plus className="h-3 w-3" />
+                                <span>Добавить рейс</span>
+                            </button>
+                        </div>
+                        <div className="space-y-2">
+                            {newTrips.map((trip, idx) => (
+                                <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                                    <div className="grid grid-cols-3 gap-2 mb-1">
+                                        <div className="col-span-3">
+                                            <label className="text-xs text-gray-500">Тип транспорта</label>
+                                            <select
+                                                value={trip.vehicle_type}
+                                                onChange={(e) => setNewTrips(prev => {
+                                                    const u = [...prev];
+                                                    u[idx] = { ...u[idx], vehicle_type: e.target.value };
+                                                    return u;
+                                                })}
+                                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-yellow-500"
+                                            >
+                                                {VEHICLE_TYPES.map(vt => (
+                                                    <option key={vt} value={vt}>{vt}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500">Кол-во рейсов</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                step="1"
+                                                value={trip.trip_count}
+                                                onChange={(e) => setNewTrips(prev => {
+                                                    const u = [...prev];
+                                                    u[idx] = { ...u[idx], trip_count: parseInt(e.target.value) || 1 };
+                                                    return u;
+                                                })}
+                                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500">Стоим. рейса, ₽</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value={trip.cost_per_trip || ""}
+                                                onChange={(e) => setNewTrips(prev => {
+                                                    const u = [...prev];
+                                                    u[idx] = { ...u[idx], cost_per_trip: parseFloat(e.target.value) || 0 };
+                                                    return u;
+                                                })}
+                                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500">Итого</label>
+                                            <div className="px-2 py-1 bg-white border border-gray-200 rounded text-center text-sm font-semibold">
+                                                {(trip.trip_count * trip.cost_per_trip).toLocaleString("ru-RU")} ₽
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {newTrips.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setNewTrips(prev => prev.filter((_, i) => i !== idx))}
+                                            className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1 mt-1"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                            <span>Удалить рейс</span>
+                                        </button>
+                                    )}
+                                </div>
                             ))}
-                        </select>
+                        </div>
+                        <div className="text-right text-sm font-semibold text-gray-700">
+                            Доставка: {newTrips.reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0).toLocaleString("ru-RU")} ₽
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">
-                            Товар <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            required
-                            value={formData.product_id}
-                            onChange={(e) => setFormData({ ...formData, product_id: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                        >
-                            <option value="">Выберите товар</option>
-                            {products.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name} - {p.price_per_sqm} ₽/{p.unit}
-                                </option>
-                            ))}
-                        </select>
+
+                    {/* Итого */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 flex justify-between items-center">
+                        <span className="text-sm font-semibold text-gray-700">Итого:</span>
+                        <span className="text-lg font-bold text-yellow-700">
+                            {(
+                                newItems.reduce((s, i) => s + i.subtotal, 0) +
+                                newTrips.reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0)
+                            ).toLocaleString("ru-RU")} ₽
+                        </span>
                     </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">
-                            Количество <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="number"
-                            required
-                            step="0.1"
-                            value={formData.quantity}
-                            onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Тип доставки</label>
-                        <select
-                            value={formData.delivery_type}
-                            onChange={(e) => setFormData({ ...formData, delivery_type: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                        >
-                            <option value="манипулятор">Манипулятор</option>
-                            <option value="фура">Фура</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Адрес доставки</label>
-                        <input
-                            type="text"
-                            value={formData.delivery_address}
-                            onChange={(e) => setFormData({ ...formData, delivery_address: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Источник</label>
-                        <select
-                            value={formData.source}
-                            onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                        >
-                            <option value="phone">Телефон</option>
-                            <option value="website">Сайт</option>
-                        </select>
-                    </div>
+
                     <button
                         type="submit"
-                        disabled={submitting}
+                        disabled={submitting || newItems.length === 0}
                         className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 disabled:bg-gray-300 transition-colors font-semibold"
                     >
                         {submitting ? "Создание..." : "Создать заказ"}
