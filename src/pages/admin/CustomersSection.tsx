@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Mail, Phone, Trash2, AlertCircle } from "lucide-react";
+import { Search, Plus, Mail, Phone, Trash2, AlertCircle, CreditCard as Edit2, Check, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Modal } from "../../components/Modal";
 import { validatePhone, formatPhoneDisplay, validateEmail, validateName, validateAddress } from "../../lib/validators";
@@ -7,22 +7,23 @@ import { Database } from "../../types/database";
 
 type Customer = Database["public"]["Tables"]["customers"]["Row"];
 
+const EMPTY_FORM = { name: "", phone: "", email: "", company_name: "", address: "", notes: "" };
+
 export function CustomersSection() {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({
-        name: "",
-        phone: "",
-        email: "",
-        company_name: "",
-        address: "",
-        notes: "",
-    });
+    const [formData, setFormData] = useState(EMPTY_FORM);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+    // Edit state
+    const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+    const [editData, setEditData] = useState(EMPTY_FORM);
+    const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+    const [editSaving, setEditSaving] = useState(false);
 
     useEffect(() => {
         loadCustomers();
@@ -34,7 +35,6 @@ export function CustomersSection() {
                 .from("customers")
                 .select("*")
                 .order("created_at", { ascending: false });
-
             if (error) throw error;
             setCustomers(data || []);
         } catch (error) {
@@ -44,50 +44,38 @@ export function CustomersSection() {
         }
     }
 
-    function validateForm(): boolean {
-        const newErrors: Record<string, string> = {};
-
-        const nameValidation = validateName(formData.name);
-        if (!nameValidation.valid) newErrors.name = nameValidation.error || "";
-
-        if (formData.phone) {
-            const phoneValidation = validatePhone(formData.phone);
-            if (!phoneValidation.valid) newErrors.phone = phoneValidation.error || "";
+    function validateFields(data: typeof EMPTY_FORM): Record<string, string> {
+        const errs: Record<string, string> = {};
+        const nameValidation = validateName(data.name);
+        if (!nameValidation.valid) errs.name = nameValidation.error || "";
+        if (!data.phone) {
+            errs.phone = "Телефон не может быть пустым";
         } else {
-            newErrors.phone = "Телефон не может быть пустым";
+            const phoneValidation = validatePhone(data.phone);
+            if (!phoneValidation.valid) errs.phone = phoneValidation.error || "";
         }
-
-        if (formData.email) {
-            const emailValidation = validateEmail(formData.email);
-            if (!emailValidation.valid) newErrors.email = emailValidation.error || "";
+        if (data.email) {
+            const emailValidation = validateEmail(data.email);
+            if (!emailValidation.valid) errs.email = emailValidation.error || "";
         }
-
-        if (formData.address && !validateAddress(formData.address).valid) {
-            newErrors.address = "Некорректный адрес";
+        if (data.address && !validateAddress(data.address).valid) {
+            errs.address = "Некорректный адрес";
         }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        return errs;
     }
 
     async function handleAddCustomer(e: React.FormEvent) {
         e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
+        const errs = validateFields(formData);
+        setErrors(errs);
+        if (Object.keys(errs).length > 0) return;
 
         setSubmitting(true);
         try {
             const phoneValidation = validatePhone(formData.phone);
-            const dataToInsert = {
-                ...formData,
-                phone: phoneValidation.formatted,
-            };
-
-            const { error } = await supabase.from("customers").insert([dataToInsert]);
+            const { error } = await supabase.from("customers").insert([{ ...formData, phone: phoneValidation.formatted }]);
             if (error) throw error;
-            setFormData({ name: "", phone: "", email: "", company_name: "", address: "", notes: "" });
+            setFormData(EMPTY_FORM);
             setErrors({});
             setTouched({});
             setShowModal(false);
@@ -100,11 +88,47 @@ export function CustomersSection() {
         }
     }
 
+    function openEditCustomer(customer: Customer) {
+        setEditingCustomer(customer);
+        setEditData({
+            name: customer.name,
+            phone: customer.phone,
+            email: customer.email || "",
+            company_name: customer.company_name || "",
+            address: customer.address || "",
+            notes: customer.notes || "",
+        });
+        setEditErrors({});
+    }
+
+    async function handleSaveCustomer() {
+        if (!editingCustomer) return;
+        const errs = validateFields(editData);
+        setEditErrors(errs);
+        if (Object.keys(errs).length > 0) return;
+
+        setEditSaving(true);
+        try {
+            const phoneValidation = validatePhone(editData.phone);
+            const { error } = await supabase
+                .from("customers")
+                .update({ ...editData, phone: phoneValidation.formatted })
+                .eq("id", editingCustomer.id);
+            if (error) throw error;
+            setEditingCustomer(null);
+            loadCustomers();
+        } catch (error) {
+            console.error("Error updating customer:", error);
+            alert("Ошибка при сохранении клиента");
+        } finally {
+            setEditSaving(false);
+        }
+    }
+
     function handlePhoneChange(value: string) {
         const validation = validatePhone(value);
         setFormData({ ...formData, phone: validation.formatted });
         setTouched({ ...touched, phone: true });
-
         if (!validation.valid) {
             setErrors({ ...errors, phone: validation.error || "" });
         } else {
@@ -117,7 +141,6 @@ export function CustomersSection() {
     function handleEmailChange(value: string) {
         setFormData({ ...formData, email: value });
         setTouched({ ...touched, email: true });
-
         if (value) {
             const validation = validateEmail(value);
             if (!validation.valid) {
@@ -170,6 +193,7 @@ export function CustomersSection() {
                 </button>
             </div>
 
+            {/* Add customer modal */}
             <Modal
                 isOpen={showModal}
                 title="Добавить нового клиента"
@@ -218,16 +242,14 @@ export function CustomersSection() {
                                 touched.phone && errors.phone ? "border-red-500" : "border-gray-300"
                             }`}
                         />
-                        <div className="flex items-center justify-between mt-1">
-                            {touched.phone && errors.phone ? (
-                                <div className="flex items-center space-x-1 text-sm text-red-600">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <span>{errors.phone}</span>
-                                </div>
-                            ) : formData.phone ? (
-                                <p className="text-xs text-gray-500">{formatPhoneDisplay(formData.phone)}</p>
-                            ) : null}
-                        </div>
+                        {touched.phone && errors.phone ? (
+                            <div className="flex items-center space-x-1 mt-1 text-sm text-red-600">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>{errors.phone}</span>
+                            </div>
+                        ) : formData.phone ? (
+                            <p className="text-xs text-gray-500 mt-1">{formatPhoneDisplay(formData.phone)}</p>
+                        ) : null}
                     </div>
 
                     <div>
@@ -289,6 +311,127 @@ export function CustomersSection() {
                 </form>
             </Modal>
 
+            {/* Edit customer modal */}
+            <Modal
+                isOpen={!!editingCustomer}
+                title="Редактировать клиента"
+                onClose={() => setEditingCustomer(null)}
+            >
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Имя <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={editData.name}
+                            onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 ${
+                                editErrors.name ? "border-red-500" : "border-gray-300"
+                            }`}
+                        />
+                        {editErrors.name && (
+                            <div className="flex items-center space-x-1 mt-1 text-sm text-red-600">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>{editErrors.name}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Телефон <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="tel"
+                            value={editData.phone}
+                            onChange={(e) => {
+                                const v = validatePhone(e.target.value);
+                                setEditData({ ...editData, phone: v.formatted });
+                            }}
+                            placeholder="8 (XXX) XXX-XX-XX"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 ${
+                                editErrors.phone ? "border-red-500" : "border-gray-300"
+                            }`}
+                        />
+                        {editErrors.phone && (
+                            <div className="flex items-center space-x-1 mt-1 text-sm text-red-600">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>{editErrors.phone}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                        <input
+                            type="text"
+                            value={editData.email}
+                            onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                            placeholder="user@domain.com"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 ${
+                                editErrors.email ? "border-red-500" : "border-gray-300"
+                            }`}
+                        />
+                        {editErrors.email && (
+                            <div className="flex items-center space-x-1 mt-1 text-sm text-red-600">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>{editErrors.email}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Компания</label>
+                        <input
+                            type="text"
+                            value={editData.company_name}
+                            onChange={(e) => setEditData({ ...editData, company_name: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Адрес</label>
+                        <input
+                            type="text"
+                            value={editData.address}
+                            onChange={(e) => setEditData({ ...editData, address: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Примечание</label>
+                        <textarea
+                            value={editData.notes}
+                            onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                            rows={2}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                        />
+                    </div>
+
+                    <div className="flex space-x-3 pt-2">
+                        <button
+                            onClick={handleSaveCustomer}
+                            disabled={editSaving}
+                            className="flex-1 flex items-center justify-center space-x-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-300 transition-colors font-semibold"
+                        >
+                            <Check className="h-4 w-4" />
+                            <span>{editSaving ? "Сохранение..." : "Сохранить"}</span>
+                        </button>
+                        <button
+                            onClick={() => setEditingCustomer(null)}
+                            disabled={editSaving}
+                            className="flex-1 flex items-center justify-center space-x-2 bg-gray-400 text-white py-2 rounded-lg hover:bg-gray-500 disabled:bg-gray-300 transition-colors font-semibold"
+                        >
+                            <X className="h-4 w-4" />
+                            <span>Отменить</span>
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <div className="mb-6">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -315,12 +458,22 @@ export function CustomersSection() {
                                     <p className="text-sm text-gray-600">{customer.company_name}</p>
                                 )}
                             </div>
-                            <button
-                                onClick={() => deleteCustomer(customer.id)}
-                                className="text-red-600 hover:text-red-800"
-                            >
-                                <Trash2 className="h-5 w-5" />
-                            </button>
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    onClick={() => openEditCustomer(customer)}
+                                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                                    title="Редактировать"
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={() => deleteCustomer(customer.id)}
+                                    className="text-red-600 hover:text-red-800 transition-colors"
+                                    title="Удалить"
+                                >
+                                    <Trash2 className="h-5 w-5" />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
