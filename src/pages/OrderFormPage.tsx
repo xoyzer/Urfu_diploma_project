@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ShoppingCart, CheckCircle } from 'lucide-react';
+import { ShoppingCart, CheckCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CalculatorResult } from './CalculatorPage';
 
 interface OrderFormPageProps {
   orderData?: CalculatorResult;
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, clearOrder?: boolean) => void;
 }
 
 export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
@@ -82,7 +82,7 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
 
       setSuccess(true);
       setTimeout(() => {
-        onNavigate('home');
+        onNavigate('home', true);
       }, 3000);
     } catch (error) {
       console.error('Error creating order:', error);
@@ -249,6 +249,16 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
               className="w-full bg-amber-600 text-white py-4 rounded-lg hover:bg-amber-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-lg font-semibold"
             >
               {loading ? 'Отправка...' : 'Отправить заявку'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigate('calculator')}
+              disabled={loading}
+              className="w-full flex items-center justify-center space-x-2 bg-gray-300 text-gray-800 py-3 rounded-lg hover:bg-gray-400 transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed font-semibold"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span>Вернуться к калькулятору</span>
             </button>
           </form>
         </div>

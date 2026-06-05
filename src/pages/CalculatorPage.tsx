@@ -118,9 +118,36 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     const [geocoding, setGeocoding] = useState<boolean>(false);
     const [geocodeError, setGeocodeError] = useState<string>("");
 
+    const CALCULATOR_STORAGE_KEY = 'calculator_state';
+
     useEffect(() => {
         loadProducts();
+        restoreCalculatorState();
     }, []);
+
+    function saveCalculatorState() {
+        const state = { items, distance, isPickup, destAddress };
+        localStorage.setItem(CALCULATOR_STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function restoreCalculatorState() {
+        try {
+            const saved = localStorage.getItem(CALCULATOR_STORAGE_KEY);
+            if (saved) {
+                const state = JSON.parse(saved);
+                setItems(state.items || []);
+                setDistance(state.distance || 0);
+                setIsPickup(state.isPickup || false);
+                setDestAddress(state.destAddress || "");
+            }
+        } catch (error) {
+            console.error('Failed to restore calculator state:', error);
+        }
+    }
+
+    useEffect(() => {
+        saveCalculatorState();
+    }, [items, distance, isPickup, destAddress]);
 
     async function loadProducts() {
         const { data } = await supabase

@@ -37,7 +37,10 @@ function AppContent() {
     );
   }
 
-  const handleNavigate = (page: string) => {
+  const handleNavigate = (page: string, clearOrder = false) => {
+    if (clearOrder) {
+      setOrderData(undefined);
+    }
     setCurrentPage(page);
   };
 
