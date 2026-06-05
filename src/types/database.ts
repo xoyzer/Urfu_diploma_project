@@ -257,6 +257,33 @@ export interface Database {
           updated_at?: string
         }
       }
+      order_delivery_trips: {
+        Row: {
+          id: string
+          order_id: string
+          vehicle_type: string
+          trip_count: number
+          cost_per_trip: number
+          total_cost: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          vehicle_type: string
+          trip_count: number
+          cost_per_trip: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          vehicle_type?: string
+          trip_count?: number
+          cost_per_trip?: number
+          created_at?: string
+        }
+      }
       inventory_transactions: {
         Row: {
           id: string
