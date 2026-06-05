@@ -8,6 +8,7 @@ type Order = Database["public"]["Tables"]["orders"]["Row"];
 type Customer = Database["public"]["Tables"]["customers"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type OrderItem = Database["public"]["Tables"]["order_items"]["Row"] & { product?: Product };
+type DeliveryTrip = Database["public"]["Tables"]["order_delivery_trips"]["Row"];
 
 interface EditableItem {
     id?: string;
@@ -16,6 +17,15 @@ interface EditableItem {
     price_per_sqm: number;
     subtotal: number;
 }
+
+interface EditableTrip {
+    id?: string;
+    vehicle_type: string;
+    trip_count: number;
+    cost_per_trip: number;
+}
+
+const VEHICLE_TYPES = ["манипулятор 5т", "манипулятор 8т", "манипулятор 10т", "фура 20т"];
 
 const ORDER_STATUSES = ["Новый", "В обработке", "Согласован", "Доставляется", "Выполнен", "Отменен"];
 
@@ -31,14 +41,12 @@ export function OrdersSection() {
     // View/edit modal
     const [selectedOrder, setSelectedOrder] = useState<(Order & { customer: Customer }) | null>(null);
     const [selectedOrderItems, setSelectedOrderItems] = useState<OrderItem[]>([]);
+    const [selectedTrips, setSelectedTrips] = useState<DeliveryTrip[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [editItems, setEditItems] = useState<EditableItem[]>([]);
-    const [editDelivery, setEditDelivery] = useState({
-        delivery_type: "манипулятор",
-        delivery_address: "",
-        delivery_cost: 0,
-    });
+    const [editTrips, setEditTrips] = useState<EditableTrip[]>([]);
+    const [editDeliveryAddress, setEditDeliveryAddress] = useState("");
     const [editSaving, setEditSaving] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -161,29 +169,30 @@ export function OrdersSection() {
         setEditMode(false);
         setLoadingDetails(true);
         try {
-            const { data } = await supabase
-                .from("order_items")
-                .select("*, product:products(*)")
-                .eq("order_id", order.id);
-            const items = (data as OrderItem[]) || [];
+            const [itemsRes, tripsRes] = await Promise.all([
+                supabase.from("order_items").select("*, product:products(*)").eq("order_id", order.id),
+                supabase.from("order_delivery_trips").select("*").eq("order_id", order.id).order("created_at"),
+            ]);
+            const items = (itemsRes.data as OrderItem[]) || [];
+            const trips = (tripsRes.data as DeliveryTrip[]) || [];
             setSelectedOrderItems(items);
-            setEditItems(
-                items.map((item) => ({
-                    id: item.id,
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    price_per_sqm: item.price_per_sqm,
-                    subtotal: item.subtotal,
-                })),
+            setSelectedTrips(trips);
+            setEditItems(items.map((item) => ({
+                id: item.id,
+                product_id: item.product_id,
+                quantity: item.quantity,
+                price_per_sqm: item.price_per_sqm,
+                subtotal: item.subtotal,
+            })));
+            setEditTrips(trips.length > 0
+                ? trips.map(t => ({ id: t.id, vehicle_type: t.vehicle_type, trip_count: t.trip_count, cost_per_trip: t.cost_per_trip }))
+                : [{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }]
             );
-            setEditDelivery({
-                delivery_type: order.delivery_type || "манипулятор",
-                delivery_address: order.delivery_address || "",
-                delivery_cost: order.delivery_cost,
-            });
+            setEditDeliveryAddress(order.delivery_address || "");
         } catch (error) {
             console.error("Error loading order items:", error);
             setSelectedOrderItems([]);
+            setSelectedTrips([]);
         } finally {
             setLoadingDetails(false);
         }
@@ -202,22 +211,19 @@ export function OrdersSection() {
 
     async function saveOrderChanges() {
         if (!selectedOrder) return;
-        if (editItems.length === 0) {
-            alert("Добавьте хотя бы один товар");
-            return;
-        }
-        if (editItems.some((i) => !i.product_id)) {
-            alert("Выберите товар для всех позиций");
-            return;
-        }
+        if (editItems.length === 0) { alert("Добавьте хотя бы один товар"); return; }
+        if (editItems.some((i) => !i.product_id)) { alert("Выберите товар для всех позиций"); return; }
+        if (editTrips.some(t => !t.vehicle_type)) { alert("Выберите тип транспорта для всех рейсов"); return; }
 
         setEditSaving(true);
         try {
             const productTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0);
-            const totalAmount = productTotal + editDelivery.delivery_cost;
+            const deliveryCost = editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
+            const totalAmount = productTotal + deliveryCost;
+            const tripsLabel = editTrips.map(t => `${t.trip_count} × ${t.vehicle_type}`).join(", ");
 
+            // Update order items
             await supabase.from("order_items").delete().eq("order_id", selectedOrder.id);
-
             const { error: itemsError } = await supabase.from("order_items").insert(
                 editItems.map((item) => ({
                     order_id: selectedOrder.id,
@@ -229,12 +235,26 @@ export function OrdersSection() {
             );
             if (itemsError) throw itemsError;
 
+            // Update delivery trips
+            await supabase.from("order_delivery_trips").delete().eq("order_id", selectedOrder.id);
+            if (editTrips.length > 0) {
+                const { error: tripsError } = await supabase.from("order_delivery_trips").insert(
+                    editTrips.map(t => ({
+                        order_id: selectedOrder.id,
+                        vehicle_type: t.vehicle_type,
+                        trip_count: t.trip_count,
+                        cost_per_trip: t.cost_per_trip,
+                    }))
+                );
+                if (tripsError) throw tripsError;
+            }
+
             const { error: orderError } = await supabase
                 .from("orders")
                 .update({
-                    delivery_type: editDelivery.delivery_type,
-                    delivery_address: editDelivery.delivery_address,
-                    delivery_cost: editDelivery.delivery_cost,
+                    delivery_type: tripsLabel,
+                    delivery_address: editDeliveryAddress,
+                    delivery_cost: deliveryCost,
                     total_amount: totalAmount,
                 })
                 .eq("id", selectedOrder.id);
@@ -247,13 +267,7 @@ export function OrdersSection() {
             });
 
             setEditMode(false);
-            const updatedOrder = {
-                ...selectedOrder,
-                delivery_type: editDelivery.delivery_type,
-                delivery_address: editDelivery.delivery_address,
-                delivery_cost: editDelivery.delivery_cost,
-                total_amount: totalAmount,
-            };
+            const updatedOrder = { ...selectedOrder, delivery_type: tripsLabel, delivery_address: editDeliveryAddress, delivery_cost: deliveryCost, total_amount: totalAmount };
             setSelectedOrder(updatedOrder as Order & { customer: Customer });
             await openOrderDetails(updatedOrder as Order & { customer: Customer });
             loadOrders();
@@ -291,7 +305,8 @@ export function OrdersSection() {
         return colors[status] || "bg-gray-100 text-gray-800";
     };
 
-    const editTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0) + editDelivery.delivery_cost;
+    const editDeliveryCost = editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
+    const editTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0) + editDeliveryCost;
 
     if (loading) {
         return <div className="text-center py-12">Загрузка заказов...</div>;
@@ -485,67 +500,125 @@ export function OrdersSection() {
                             {editMode ? (
                                 <div className="space-y-3 text-sm">
                                     <div>
-                                        <label className="text-gray-600">Тип доставки</label>
-                                        <select
-                                            value={editDelivery.delivery_type}
-                                            onChange={(e) =>
-                                                setEditDelivery({ ...editDelivery, delivery_type: e.target.value })
-                                            }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="манипулятор">Манипулятор</option>
-                                            <option value="фура">Фура</option>
-                                        </select>
-                                    </div>
-                                    <div>
                                         <label className="text-gray-600">Адрес доставки</label>
                                         <input
                                             type="text"
-                                            value={editDelivery.delivery_address}
-                                            onChange={(e) =>
-                                                setEditDelivery({ ...editDelivery, delivery_address: e.target.value })
-                                            }
+                                            value={editDeliveryAddress}
+                                            onChange={(e) => setEditDeliveryAddress(e.target.value)}
                                             placeholder="Оставьте пустым для самовывоза"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
                                         />
                                     </div>
+
                                     <div>
-                                        <label className="text-gray-600">Стоимость доставки, ₽</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            value={editDelivery.delivery_cost}
-                                            onChange={(e) =>
-                                                setEditDelivery({
-                                                    ...editDelivery,
-                                                    delivery_cost: parseFloat(e.target.value) || 0,
-                                                })
-                                            }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        />
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="text-gray-600 font-medium">Рейсы</label>
+                                            <button
+                                                onClick={() => setEditTrips(prev => [...prev, { vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }])}
+                                                className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200 transition-colors flex items-center space-x-1"
+                                            >
+                                                <Plus className="h-3 w-3" />
+                                                <span>Добавить рейс</span>
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {editTrips.map((trip, idx) => (
+                                                <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                                                    <div className="grid grid-cols-3 gap-2 mb-2">
+                                                        <div className="col-span-3">
+                                                            <label className="text-gray-500 text-xs">Тип транспорта</label>
+                                                            <select
+                                                                value={trip.vehicle_type}
+                                                                onChange={(e) => setEditTrips(prev => {
+                                                                    const u = [...prev];
+                                                                    u[idx] = { ...u[idx], vehicle_type: e.target.value };
+                                                                    return u;
+                                                                })}
+                                                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500"
+                                                            >
+                                                                {VEHICLE_TYPES.map(vt => (
+                                                                    <option key={vt} value={vt}>{vt}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-gray-500 text-xs">Кол-во рейсов</label>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                step="1"
+                                                                value={trip.trip_count}
+                                                                onChange={(e) => setEditTrips(prev => {
+                                                                    const u = [...prev];
+                                                                    u[idx] = { ...u[idx], trip_count: parseInt(e.target.value) || 1 };
+                                                                    return u;
+                                                                })}
+                                                                className="w-full px-2 py-1 border border-gray-300 rounded"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-gray-500 text-xs">Стоим. рейса, ₽</label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                step="1"
+                                                                value={trip.cost_per_trip}
+                                                                onChange={(e) => setEditTrips(prev => {
+                                                                    const u = [...prev];
+                                                                    u[idx] = { ...u[idx], cost_per_trip: parseFloat(e.target.value) || 0 };
+                                                                    return u;
+                                                                })}
+                                                                className="w-full px-2 py-1 border border-gray-300 rounded"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-gray-500 text-xs">Итого</label>
+                                                            <div className="px-2 py-1 bg-white border border-gray-200 rounded text-center font-semibold">
+                                                                {(trip.trip_count * trip.cost_per_trip).toLocaleString("ru-RU")} ₽
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {editTrips.length > 1 && (
+                                                        <button
+                                                            onClick={() => setEditTrips(prev => prev.filter((_, i) => i !== idx))}
+                                                            className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1"
+                                                        >
+                                                            <Trash2 className="h-3 w-3" />
+                                                            <span>Удалить рейс</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-2 text-right text-sm font-semibold text-gray-700">
+                                            Итого за доставку: {editDeliveryCost.toLocaleString("ru-RU")} ₽
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div>
-                                        <div className="text-gray-500">Тип</div>
-                                        <div className="font-semibold text-gray-900">
-                                            {selectedOrder.delivery_type || "—"}
+                                <div className="space-y-3 text-sm">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <div className="text-gray-500">Итого за доставку</div>
+                                            <div className="font-semibold text-gray-900">{selectedOrder.delivery_cost.toLocaleString("ru-RU")} ₽</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-gray-500">Адрес</div>
+                                            <div className="font-semibold text-gray-900">{selectedOrder.delivery_address || "— (самовывоз)"}</div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <div className="text-gray-500">Стоимость доставки</div>
-                                        <div className="font-semibold text-gray-900">
-                                            {selectedOrder.delivery_cost.toLocaleString("ru-RU")} ₽
+                                    {selectedTrips.length > 0 ? (
+                                        <div className="space-y-1">
+                                            {selectedTrips.map(t => (
+                                                <div key={t.id} className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
+                                                    <span className="text-gray-700">{t.trip_count} рейс(а) — {t.vehicle_type}</span>
+                                                    <span className="font-semibold">{t.total_cost.toLocaleString("ru-RU")} ₽</span>
+                                                </div>
+                                            ))}
                                         </div>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <div className="text-gray-500">Адрес</div>
-                                        <div className="font-semibold text-gray-900">
-                                            {selectedOrder.delivery_address || "— (самовывоз)"}
-                                        </div>
-                                    </div>
+                                    ) : selectedOrder.delivery_type ? (
+                                        <div className="text-gray-700">{selectedOrder.delivery_type}</div>
+                                    ) : null}
                                 </div>
                             )}
                         </div>
