@@ -71,7 +71,7 @@ export function Header({ onNavigate }: HeaderProps) {
                         ) : (
                             <button
                                 onClick={() => onNavigate("login")}
-                                className="flex items-center space-x-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-800 transition-colors shadow-sm"
+                                className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors shadow-sm"
                             >
                                 <User className="h-5 w-5" />
                                 <span>Вход</span>
