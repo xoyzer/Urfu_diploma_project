@@ -94,21 +94,31 @@ export function OrdersSection() {
 
     function addNewItem() {
         if (!newItemProductId || newItemQty <= 0) return;
-        const prod = products.find(p => p.id === newItemProductId);
+        const prod = products.find((p) => p.id === newItemProductId);
         if (!prod) return;
-        const existing = newItems.findIndex(i => i.product_id === newItemProductId);
+        const existing = newItems.findIndex((i) => i.product_id === newItemProductId);
         if (existing >= 0) {
-            setNewItems(prev => prev.map((item, idx) => idx === existing
-                ? { ...item, quantity: item.quantity + newItemQty, subtotal: (item.quantity + newItemQty) * item.price_per_sqm }
-                : item
-            ));
+            setNewItems((prev) =>
+                prev.map((item, idx) =>
+                    idx === existing
+                        ? {
+                              ...item,
+                              quantity: item.quantity + newItemQty,
+                              subtotal: (item.quantity + newItemQty) * item.price_per_sqm,
+                          }
+                        : item,
+                ),
+            );
         } else {
-            setNewItems(prev => [...prev, {
-                product_id: newItemProductId,
-                quantity: newItemQty,
-                price_per_sqm: prod.price_per_sqm,
-                subtotal: newItemQty * prod.price_per_sqm,
-            }]);
+            setNewItems((prev) => [
+                ...prev,
+                {
+                    product_id: newItemProductId,
+                    quantity: newItemQty,
+                    price_per_sqm: prod.price_per_sqm,
+                    subtotal: newItemQty * prod.price_per_sqm,
+                },
+            ]);
         }
         setNewItemProductId("");
         setNewItemQty(0);
@@ -116,15 +126,24 @@ export function OrdersSection() {
 
     async function handleAddOrder(e: React.FormEvent) {
         e.preventDefault();
-        if (newItems.length === 0) { alert("Добавьте хотя бы один товар"); return; }
-        if (newItems.some(i => !i.product_id)) { alert("Выберите товар для всех позиций"); return; }
+        if (newItems.length === 0) {
+            alert("Добавьте хотя бы один товар");
+            return;
+        }
+        if (newItems.some((i) => !i.product_id)) {
+            alert("Выберите товар для всех позиций");
+            return;
+        }
 
         setSubmitting(true);
         try {
             const productTotal = newItems.reduce((sum, i) => sum + i.subtotal, 0);
             const deliveryCost = newTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
             const totalCost = productTotal + deliveryCost;
-            const tripsLabel = newTrips.filter(t => t.vehicle_type).map(t => `${t.trip_count} × ${t.vehicle_type}`).join(", ");
+            const tripsLabel = newTrips
+                .filter((t) => t.vehicle_type)
+                .map((t) => `${t.trip_count} × ${t.vehicle_type}`)
+                .join(", ");
 
             const { data: order, error: orderError } = await supabase
                 .from("orders")
@@ -142,24 +161,24 @@ export function OrdersSection() {
             if (orderError) throw orderError;
 
             await supabase.from("order_items").insert(
-                newItems.map(item => ({
+                newItems.map((item) => ({
                     order_id: order.id,
                     product_id: item.product_id,
                     quantity: item.quantity,
                     price_per_sqm: item.price_per_sqm,
                     subtotal: item.subtotal,
-                }))
+                })),
             );
 
-            const tripsToInsert = newTrips.filter(t => t.vehicle_type && t.trip_count > 0);
+            const tripsToInsert = newTrips.filter((t) => t.vehicle_type && t.trip_count > 0);
             if (tripsToInsert.length > 0) {
                 await supabase.from("order_delivery_trips").insert(
-                    tripsToInsert.map(t => ({
+                    tripsToInsert.map((t) => ({
                         order_id: order.id,
                         vehicle_type: t.vehicle_type,
                         trip_count: t.trip_count,
                         cost_per_trip: t.cost_per_trip,
-                    }))
+                    })),
                 );
             }
 
@@ -214,16 +233,24 @@ export function OrdersSection() {
             const trips = (tripsRes.data as DeliveryTrip[]) || [];
             setSelectedOrderItems(items);
             setSelectedTrips(trips);
-            setEditItems(items.map((item) => ({
-                id: item.id,
-                product_id: item.product_id,
-                quantity: item.quantity,
-                price_per_sqm: item.price_per_sqm,
-                subtotal: item.subtotal,
-            })));
-            setEditTrips(trips.length > 0
-                ? trips.map(t => ({ id: t.id, vehicle_type: t.vehicle_type, trip_count: t.trip_count, cost_per_trip: t.cost_per_trip }))
-                : [{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }]
+            setEditItems(
+                items.map((item) => ({
+                    id: item.id,
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    price_per_sqm: item.price_per_sqm,
+                    subtotal: item.subtotal,
+                })),
+            );
+            setEditTrips(
+                trips.length > 0
+                    ? trips.map((t) => ({
+                          id: t.id,
+                          vehicle_type: t.vehicle_type,
+                          trip_count: t.trip_count,
+                          cost_per_trip: t.cost_per_trip,
+                      }))
+                    : [{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }],
             );
             setEditDeliveryAddress(order.delivery_address || "");
         } catch (error) {
@@ -248,16 +275,25 @@ export function OrdersSection() {
 
     async function saveOrderChanges() {
         if (!selectedOrder) return;
-        if (editItems.length === 0) { alert("Добавьте хотя бы один товар"); return; }
-        if (editItems.some((i) => !i.product_id)) { alert("Выберите товар для всех позиций"); return; }
-        if (editTrips.some(t => !t.vehicle_type)) { alert("Выберите тип транспорта для всех рейсов"); return; }
+        if (editItems.length === 0) {
+            alert("Добавьте хотя бы один товар");
+            return;
+        }
+        if (editItems.some((i) => !i.product_id)) {
+            alert("Выберите товар для всех позиций");
+            return;
+        }
+        if (editTrips.some((t) => !t.vehicle_type)) {
+            alert("Выберите тип транспорта для всех рейсов");
+            return;
+        }
 
         setEditSaving(true);
         try {
             const productTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0);
             const deliveryCost = editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
             const totalAmount = productTotal + deliveryCost;
-            const tripsLabel = editTrips.map(t => `${t.trip_count} × ${t.vehicle_type}`).join(", ");
+            const tripsLabel = editTrips.map((t) => `${t.trip_count} × ${t.vehicle_type}`).join(", ");
 
             // Update order items
             await supabase.from("order_items").delete().eq("order_id", selectedOrder.id);
@@ -276,12 +312,12 @@ export function OrdersSection() {
             await supabase.from("order_delivery_trips").delete().eq("order_id", selectedOrder.id);
             if (editTrips.length > 0) {
                 const { error: tripsError } = await supabase.from("order_delivery_trips").insert(
-                    editTrips.map(t => ({
+                    editTrips.map((t) => ({
                         order_id: selectedOrder.id,
                         vehicle_type: t.vehicle_type,
                         trip_count: t.trip_count,
                         cost_per_trip: t.cost_per_trip,
-                    }))
+                    })),
                 );
                 if (tripsError) throw tripsError;
             }
@@ -304,7 +340,13 @@ export function OrdersSection() {
             });
 
             setEditMode(false);
-            const updatedOrder = { ...selectedOrder, delivery_type: tripsLabel, delivery_address: editDeliveryAddress, delivery_cost: deliveryCost, total_amount: totalAmount };
+            const updatedOrder = {
+                ...selectedOrder,
+                delivery_type: tripsLabel,
+                delivery_address: editDeliveryAddress,
+                delivery_cost: deliveryCost,
+                total_amount: totalAmount,
+            };
             setSelectedOrder(updatedOrder as Order & { customer: Customer });
             await openOrderDetails(updatedOrder as Order & { customer: Customer });
             loadOrders();
@@ -366,13 +408,17 @@ export function OrdersSection() {
             </div>
 
             {/* Create order modal */}
-            <Modal isOpen={showAddOrder} title="Создать заказ" onClose={() => {
-                setShowAddOrder(false);
-                setNewItems([]);
-                setNewItemProductId("");
-                setNewItemQty(0);
-                setNewTrips([{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }]);
-            }}>
+            <Modal
+                isOpen={showAddOrder}
+                title="Создать заказ"
+                onClose={() => {
+                    setShowAddOrder(false);
+                    setNewItems([]);
+                    setNewItemProductId("");
+                    setNewItemQty(0);
+                    setNewTrips([{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }]);
+                }}
+            >
                 <form onSubmit={handleAddOrder} className="space-y-5">
                     {/* Клиент и источник */}
                     <div className="grid grid-cols-2 gap-3">
@@ -388,7 +434,9 @@ export function OrdersSection() {
                             >
                                 <option value="">Выберите клиента</option>
                                 {customers.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                                    <option key={c.id} value={c.id}>
+                                        {c.name} ({c.phone})
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -409,7 +457,7 @@ export function OrdersSection() {
                                 type="text"
                                 value={formData.delivery_address}
                                 onChange={(e) => setFormData({ ...formData, delivery_address: e.target.value })}
-                                placeholder="Оставьте пустым для самовывоза"
+                                placeholder=""
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
                             />
                         </div>
@@ -431,11 +479,13 @@ export function OrdersSection() {
                                         products.reduce<Record<string, Product[]>>((acc, p) => {
                                             (acc[p.category] = acc[p.category] || []).push(p);
                                             return acc;
-                                        }, {})
+                                        }, {}),
                                     ).map(([cat, list]) => (
                                         <optgroup key={cat} label={cat}>
-                                            {list.map(p => (
-                                                <option key={p.id} value={p.id}>{p.name} — {p.price_per_sqm} ₽/{p.unit}</option>
+                                            {list.map((p) => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name} — {p.price_per_sqm} ₽/{p.unit}
+                                                </option>
                                             ))}
                                         </optgroup>
                                     ))}
@@ -443,7 +493,7 @@ export function OrdersSection() {
                             </div>
                             <div className="col-span-3">
                                 <label className="block text-xs text-gray-600 mb-1">
-                                    Кол-во ({products.find(p => p.id === newItemProductId)?.unit || "шт/м²"})
+                                    Кол-во ({products.find((p) => p.id === newItemProductId)?.unit || "шт/м²"})
                                 </label>
                                 <input
                                     type="number"
@@ -470,10 +520,15 @@ export function OrdersSection() {
                         {newItems.length > 0 && (
                             <div className="space-y-1 mt-2">
                                 {newItems.map((item, idx) => {
-                                    const prod = products.find(p => p.id === item.product_id);
+                                    const prod = products.find((p) => p.id === item.product_id);
                                     return (
-                                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
-                                            <span className="text-gray-800 flex-1 mr-2 truncate">{prod?.name || "Товар"}</span>
+                                        <div
+                                            key={idx}
+                                            className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm"
+                                        >
+                                            <span className="text-gray-800 flex-1 mr-2 truncate">
+                                                {prod?.name || "Товар"}
+                                            </span>
                                             <div className="flex items-center gap-2 flex-shrink-0">
                                                 <input
                                                     type="number"
@@ -482,18 +537,29 @@ export function OrdersSection() {
                                                     value={item.quantity}
                                                     onChange={(e) => {
                                                         const qty = parseFloat(e.target.value) || 0;
-                                                        setNewItems(prev => prev.map((it, i) => i === idx
-                                                            ? { ...it, quantity: qty, subtotal: qty * it.price_per_sqm }
-                                                            : it
-                                                        ));
+                                                        setNewItems((prev) =>
+                                                            prev.map((it, i) =>
+                                                                i === idx
+                                                                    ? {
+                                                                          ...it,
+                                                                          quantity: qty,
+                                                                          subtotal: qty * it.price_per_sqm,
+                                                                      }
+                                                                    : it,
+                                                            ),
+                                                        );
                                                     }}
                                                     className="w-16 px-1 py-1 border border-gray-300 rounded text-center"
                                                 />
                                                 <span className="text-gray-500 text-xs w-6">{prod?.unit}</span>
-                                                <span className="font-semibold w-24 text-right">{item.subtotal.toLocaleString("ru-RU")} ₽</span>
+                                                <span className="font-semibold w-24 text-right">
+                                                    {item.subtotal.toLocaleString("ru-RU")} ₽
+                                                </span>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setNewItems(prev => prev.filter((_, i) => i !== idx))}
+                                                    onClick={() =>
+                                                        setNewItems((prev) => prev.filter((_, i) => i !== idx))
+                                                    }
                                                     className="text-red-500 hover:text-red-700"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -515,7 +581,12 @@ export function OrdersSection() {
                             <h3 className="text-sm font-semibold text-gray-700">Доставка (рейсы)</h3>
                             <button
                                 type="button"
-                                onClick={() => setNewTrips(prev => [...prev, { vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }])}
+                                onClick={() =>
+                                    setNewTrips((prev) => [
+                                        ...prev,
+                                        { vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 },
+                                    ])
+                                }
                                 className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200 transition-colors flex items-center space-x-1"
                             >
                                 <Plus className="h-3 w-3" />
@@ -530,15 +601,19 @@ export function OrdersSection() {
                                             <label className="text-xs text-gray-500">Тип транспорта</label>
                                             <select
                                                 value={trip.vehicle_type}
-                                                onChange={(e) => setNewTrips(prev => {
-                                                    const u = [...prev];
-                                                    u[idx] = { ...u[idx], vehicle_type: e.target.value };
-                                                    return u;
-                                                })}
+                                                onChange={(e) =>
+                                                    setNewTrips((prev) => {
+                                                        const u = [...prev];
+                                                        u[idx] = { ...u[idx], vehicle_type: e.target.value };
+                                                        return u;
+                                                    })
+                                                }
                                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-yellow-500"
                                             >
-                                                {VEHICLE_TYPES.map(vt => (
-                                                    <option key={vt} value={vt}>{vt}</option>
+                                                {VEHICLE_TYPES.map((vt) => (
+                                                    <option key={vt} value={vt}>
+                                                        {vt}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
@@ -549,11 +624,16 @@ export function OrdersSection() {
                                                 min="1"
                                                 step="1"
                                                 value={trip.trip_count}
-                                                onChange={(e) => setNewTrips(prev => {
-                                                    const u = [...prev];
-                                                    u[idx] = { ...u[idx], trip_count: parseInt(e.target.value) || 1 };
-                                                    return u;
-                                                })}
+                                                onChange={(e) =>
+                                                    setNewTrips((prev) => {
+                                                        const u = [...prev];
+                                                        u[idx] = {
+                                                            ...u[idx],
+                                                            trip_count: parseInt(e.target.value) || 1,
+                                                        };
+                                                        return u;
+                                                    })
+                                                }
                                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                                             />
                                         </div>
@@ -564,11 +644,16 @@ export function OrdersSection() {
                                                 min="0"
                                                 step="1"
                                                 value={trip.cost_per_trip || ""}
-                                                onChange={(e) => setNewTrips(prev => {
-                                                    const u = [...prev];
-                                                    u[idx] = { ...u[idx], cost_per_trip: parseFloat(e.target.value) || 0 };
-                                                    return u;
-                                                })}
+                                                onChange={(e) =>
+                                                    setNewTrips((prev) => {
+                                                        const u = [...prev];
+                                                        u[idx] = {
+                                                            ...u[idx],
+                                                            cost_per_trip: parseFloat(e.target.value) || 0,
+                                                        };
+                                                        return u;
+                                                    })
+                                                }
                                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                                                 placeholder="0"
                                             />
@@ -583,7 +668,7 @@ export function OrdersSection() {
                                     {newTrips.length > 1 && (
                                         <button
                                             type="button"
-                                            onClick={() => setNewTrips(prev => prev.filter((_, i) => i !== idx))}
+                                            onClick={() => setNewTrips((prev) => prev.filter((_, i) => i !== idx))}
                                             className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1 mt-1"
                                         >
                                             <Trash2 className="h-3 w-3" />
@@ -594,7 +679,8 @@ export function OrdersSection() {
                             ))}
                         </div>
                         <div className="text-right text-sm font-semibold text-gray-700">
-                            Доставка: {newTrips.reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0).toLocaleString("ru-RU")} ₽
+                            Доставка:{" "}
+                            {newTrips.reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0).toLocaleString("ru-RU")} ₽
                         </div>
                     </div>
 
@@ -605,7 +691,8 @@ export function OrdersSection() {
                             {(
                                 newItems.reduce((s, i) => s + i.subtotal, 0) +
                                 newTrips.reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0)
-                            ).toLocaleString("ru-RU")} ₽
+                            ).toLocaleString("ru-RU")}{" "}
+                            ₽
                         </span>
                     </div>
 
@@ -712,7 +799,16 @@ export function OrdersSection() {
                                         <div className="flex justify-between items-center mb-2">
                                             <label className="text-gray-600 font-medium">Рейсы</label>
                                             <button
-                                                onClick={() => setEditTrips(prev => [...prev, { vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }])}
+                                                onClick={() =>
+                                                    setEditTrips((prev) => [
+                                                        ...prev,
+                                                        {
+                                                            vehicle_type: "манипулятор 5т",
+                                                            trip_count: 1,
+                                                            cost_per_trip: 0,
+                                                        },
+                                                    ])
+                                                }
                                                 className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200 transition-colors flex items-center space-x-1"
                                             >
                                                 <Plus className="h-3 w-3" />
@@ -724,61 +820,90 @@ export function OrdersSection() {
                                                 <div key={idx} className="p-3 bg-gray-50 rounded-lg">
                                                     <div className="grid grid-cols-3 gap-2 mb-2">
                                                         <div className="col-span-3">
-                                                            <label className="text-gray-500 text-xs">Тип транспорта</label>
+                                                            <label className="text-gray-500 text-xs">
+                                                                Тип транспорта
+                                                            </label>
                                                             <select
                                                                 value={trip.vehicle_type}
-                                                                onChange={(e) => setEditTrips(prev => {
-                                                                    const u = [...prev];
-                                                                    u[idx] = { ...u[idx], vehicle_type: e.target.value };
-                                                                    return u;
-                                                                })}
+                                                                onChange={(e) =>
+                                                                    setEditTrips((prev) => {
+                                                                        const u = [...prev];
+                                                                        u[idx] = {
+                                                                            ...u[idx],
+                                                                            vehicle_type: e.target.value,
+                                                                        };
+                                                                        return u;
+                                                                    })
+                                                                }
                                                                 className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500"
                                                             >
-                                                                {VEHICLE_TYPES.map(vt => (
-                                                                    <option key={vt} value={vt}>{vt}</option>
+                                                                {VEHICLE_TYPES.map((vt) => (
+                                                                    <option key={vt} value={vt}>
+                                                                        {vt}
+                                                                    </option>
                                                                 ))}
                                                             </select>
                                                         </div>
                                                         <div>
-                                                            <label className="text-gray-500 text-xs">Кол-во рейсов</label>
+                                                            <label className="text-gray-500 text-xs">
+                                                                Кол-во рейсов
+                                                            </label>
                                                             <input
                                                                 type="number"
                                                                 min="1"
                                                                 step="1"
                                                                 value={trip.trip_count}
-                                                                onChange={(e) => setEditTrips(prev => {
-                                                                    const u = [...prev];
-                                                                    u[idx] = { ...u[idx], trip_count: parseInt(e.target.value) || 1 };
-                                                                    return u;
-                                                                })}
+                                                                onChange={(e) =>
+                                                                    setEditTrips((prev) => {
+                                                                        const u = [...prev];
+                                                                        u[idx] = {
+                                                                            ...u[idx],
+                                                                            trip_count: parseInt(e.target.value) || 1,
+                                                                        };
+                                                                        return u;
+                                                                    })
+                                                                }
                                                                 className="w-full px-2 py-1 border border-gray-300 rounded"
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label className="text-gray-500 text-xs">Стоим. рейса, ₽</label>
+                                                            <label className="text-gray-500 text-xs">
+                                                                Стоим. рейса, ₽
+                                                            </label>
                                                             <input
                                                                 type="number"
                                                                 min="0"
                                                                 step="1"
                                                                 value={trip.cost_per_trip}
-                                                                onChange={(e) => setEditTrips(prev => {
-                                                                    const u = [...prev];
-                                                                    u[idx] = { ...u[idx], cost_per_trip: parseFloat(e.target.value) || 0 };
-                                                                    return u;
-                                                                })}
+                                                                onChange={(e) =>
+                                                                    setEditTrips((prev) => {
+                                                                        const u = [...prev];
+                                                                        u[idx] = {
+                                                                            ...u[idx],
+                                                                            cost_per_trip:
+                                                                                parseFloat(e.target.value) || 0,
+                                                                        };
+                                                                        return u;
+                                                                    })
+                                                                }
                                                                 className="w-full px-2 py-1 border border-gray-300 rounded"
                                                             />
                                                         </div>
                                                         <div>
                                                             <label className="text-gray-500 text-xs">Итого</label>
                                                             <div className="px-2 py-1 bg-white border border-gray-200 rounded text-center font-semibold">
-                                                                {(trip.trip_count * trip.cost_per_trip).toLocaleString("ru-RU")} ₽
+                                                                {(trip.trip_count * trip.cost_per_trip).toLocaleString(
+                                                                    "ru-RU",
+                                                                )}{" "}
+                                                                ₽
                                                             </div>
                                                         </div>
                                                     </div>
                                                     {editTrips.length > 1 && (
                                                         <button
-                                                            onClick={() => setEditTrips(prev => prev.filter((_, i) => i !== idx))}
+                                                            onClick={() =>
+                                                                setEditTrips((prev) => prev.filter((_, i) => i !== idx))
+                                                            }
                                                             className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1"
                                                         >
                                                             <Trash2 className="h-3 w-3" />
@@ -798,19 +923,30 @@ export function OrdersSection() {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <div className="text-gray-500">Итого за доставку</div>
-                                            <div className="font-semibold text-gray-900">{selectedOrder.delivery_cost.toLocaleString("ru-RU")} ₽</div>
+                                            <div className="font-semibold text-gray-900">
+                                                {selectedOrder.delivery_cost.toLocaleString("ru-RU")} ₽
+                                            </div>
                                         </div>
                                         <div>
                                             <div className="text-gray-500">Адрес</div>
-                                            <div className="font-semibold text-gray-900">{selectedOrder.delivery_address || "— (самовывоз)"}</div>
+                                            <div className="font-semibold text-gray-900">
+                                                {selectedOrder.delivery_address || "— (самовывоз)"}
+                                            </div>
                                         </div>
                                     </div>
                                     {selectedTrips.length > 0 ? (
                                         <div className="space-y-1">
-                                            {selectedTrips.map(t => (
-                                                <div key={t.id} className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
-                                                    <span className="text-gray-700">{t.trip_count} рейс(а) — {t.vehicle_type}</span>
-                                                    <span className="font-semibold">{t.total_cost.toLocaleString("ru-RU")} ₽</span>
+                                            {selectedTrips.map((t) => (
+                                                <div
+                                                    key={t.id}
+                                                    className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs"
+                                                >
+                                                    <span className="text-gray-700">
+                                                        {t.trip_count} рейс(а) — {t.vehicle_type}
+                                                    </span>
+                                                    <span className="font-semibold">
+                                                        {t.total_cost.toLocaleString("ru-RU")} ₽
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>
