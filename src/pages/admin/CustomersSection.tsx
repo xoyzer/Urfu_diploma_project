@@ -73,7 +73,9 @@ export function CustomersSection() {
         setSubmitting(true);
         try {
             const phoneValidation = validatePhone(formData.phone);
-            const { error } = await supabase.from("customers").insert([{ ...formData, phone: phoneValidation.formatted }]);
+            const { error } = await supabase
+                .from("customers")
+                .insert([{ ...formData, phone: phoneValidation.formatted }]);
             if (error) throw error;
             setFormData(EMPTY_FORM);
             setErrors({});
@@ -312,11 +314,7 @@ export function CustomersSection() {
             </Modal>
 
             {/* Edit customer modal */}
-            <Modal
-                isOpen={!!editingCustomer}
-                title="Редактировать клиента"
-                onClose={() => setEditingCustomer(null)}
-            >
+            <Modal isOpen={!!editingCustomer} title="Редактировать клиента" onClose={() => setEditingCustomer(null)}>
                 <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -415,7 +413,7 @@ export function CustomersSection() {
                         <button
                             onClick={handleSaveCustomer}
                             disabled={editSaving}
-                            className="flex-1 flex items-center justify-center space-x-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-300 transition-colors font-semibold"
+                            className="flex-1 flex items-center justify-center space-x-2 bg-amber-100 text-amber-600 py-2 rounded-lg hover:bg-amber-200 disabled:bg-gray-300 transition-colors font-semibold"
                         >
                             <Check className="h-4 w-4" />
                             <span>{editSaving ? "Сохранение..." : "Сохранить"}</span>
@@ -461,7 +459,7 @@ export function CustomersSection() {
                             <div className="flex items-center space-x-2">
                                 <button
                                     onClick={() => openEditCustomer(customer)}
-                                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                                    className="text-yellow-600 hover:text-yellow-800 transition-colors"
                                     title="Редактировать"
                                 >
                                     <Edit2 className="h-4 w-4" />

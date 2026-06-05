@@ -34,7 +34,11 @@ export function OrdersSection() {
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [editItems, setEditItems] = useState<EditableItem[]>([]);
-    const [editDelivery, setEditDelivery] = useState({ delivery_type: "манипулятор", delivery_address: "", delivery_cost: 0 });
+    const [editDelivery, setEditDelivery] = useState({
+        delivery_type: "манипулятор",
+        delivery_address: "",
+        delivery_cost: 0,
+    });
     const [editSaving, setEditSaving] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -118,7 +122,14 @@ export function OrdersSection() {
                 comment: "Заказ создан вручную",
             });
 
-            setFormData({ customer_id: "", product_id: "", quantity: 0, delivery_type: "манипулятор", delivery_address: "", source: "phone" });
+            setFormData({
+                customer_id: "",
+                product_id: "",
+                quantity: 0,
+                delivery_type: "манипулятор",
+                delivery_address: "",
+                source: "phone",
+            });
             setShowAddOrder(false);
             loadOrders();
         } catch (error) {
@@ -156,13 +167,15 @@ export function OrdersSection() {
                 .eq("order_id", order.id);
             const items = (data as OrderItem[]) || [];
             setSelectedOrderItems(items);
-            setEditItems(items.map(item => ({
-                id: item.id,
-                product_id: item.product_id,
-                quantity: item.quantity,
-                price_per_sqm: item.price_per_sqm,
-                subtotal: item.subtotal,
-            })));
+            setEditItems(
+                items.map((item) => ({
+                    id: item.id,
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    price_per_sqm: item.price_per_sqm,
+                    subtotal: item.subtotal,
+                })),
+            );
             setEditDelivery({
                 delivery_type: order.delivery_type || "манипулятор",
                 delivery_address: order.delivery_address || "",
@@ -177,7 +190,7 @@ export function OrdersSection() {
     }
 
     function updateEditItem(index: number, field: keyof EditableItem, value: string | number) {
-        setEditItems(prev => {
+        setEditItems((prev) => {
             const updated = [...prev];
             updated[index] = { ...updated[index], [field]: value };
             if (field === "quantity" || field === "price_per_sqm") {
@@ -189,8 +202,14 @@ export function OrdersSection() {
 
     async function saveOrderChanges() {
         if (!selectedOrder) return;
-        if (editItems.length === 0) { alert("Добавьте хотя бы один товар"); return; }
-        if (editItems.some(i => !i.product_id)) { alert("Выберите товар для всех позиций"); return; }
+        if (editItems.length === 0) {
+            alert("Добавьте хотя бы один товар");
+            return;
+        }
+        if (editItems.some((i) => !i.product_id)) {
+            alert("Выберите товар для всех позиций");
+            return;
+        }
 
         setEditSaving(true);
         try {
@@ -200,13 +219,13 @@ export function OrdersSection() {
             await supabase.from("order_items").delete().eq("order_id", selectedOrder.id);
 
             const { error: itemsError } = await supabase.from("order_items").insert(
-                editItems.map(item => ({
+                editItems.map((item) => ({
                     order_id: selectedOrder.id,
                     product_id: item.product_id,
                     quantity: item.quantity,
                     price_per_sqm: item.price_per_sqm,
                     subtotal: item.subtotal,
-                }))
+                })),
             );
             if (itemsError) throw itemsError;
 
@@ -228,7 +247,13 @@ export function OrdersSection() {
             });
 
             setEditMode(false);
-            const updatedOrder = { ...selectedOrder, delivery_type: editDelivery.delivery_type, delivery_address: editDelivery.delivery_address, delivery_cost: editDelivery.delivery_cost, total_amount: totalAmount };
+            const updatedOrder = {
+                ...selectedOrder,
+                delivery_type: editDelivery.delivery_type,
+                delivery_address: editDelivery.delivery_address,
+                delivery_cost: editDelivery.delivery_cost,
+                total_amount: totalAmount,
+            };
             setSelectedOrder(updatedOrder as Order & { customer: Customer });
             await openOrderDetails(updatedOrder as Order & { customer: Customer });
             loadOrders();
@@ -256,12 +281,12 @@ export function OrdersSection() {
 
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
-            "Новый": "bg-blue-100 text-blue-800",
+            Новый: "bg-blue-100 text-blue-800",
             "В обработке": "bg-yellow-100 text-yellow-800",
-            "Согласован": "bg-green-100 text-green-800",
-            "Доставляется": "bg-purple-100 text-purple-800",
-            "Выполнен": "bg-gray-100 text-gray-800",
-            "Отменен": "bg-red-100 text-red-800",
+            Согласован: "bg-green-100 text-green-800",
+            Доставляется: "bg-purple-100 text-purple-800",
+            Выполнен: "bg-gray-100 text-gray-800",
+            Отменен: "bg-red-100 text-red-800",
         };
         return colors[status] || "bg-gray-100 text-gray-800";
     };
@@ -303,7 +328,9 @@ export function OrdersSection() {
                         >
                             <option value="">Выберите клиента</option>
                             {customers.map((c) => (
-                                <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                                <option key={c.id} value={c.id}>
+                                    {c.name} ({c.phone})
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -319,7 +346,9 @@ export function OrdersSection() {
                         >
                             <option value="">Выберите товар</option>
                             {products.map((p) => (
-                                <option key={p.id} value={p.id}>{p.name} - {p.price_per_sqm} ₽/{p.unit}</option>
+                                <option key={p.id} value={p.id}>
+                                    {p.name} - {p.price_per_sqm} ₽/{p.unit}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -400,7 +429,11 @@ export function OrdersSection() {
             <Modal
                 isOpen={!!selectedOrder}
                 title={selectedOrder ? `Заказ №${selectedOrder.order_number}` : ""}
-                onClose={() => { setSelectedOrder(null); setSelectedOrderItems([]); setEditMode(false); }}
+                onClose={() => {
+                    setSelectedOrder(null);
+                    setSelectedOrderItems([]);
+                    setEditMode(false);
+                }}
             >
                 {selectedOrder && (
                     <div className="space-y-5">
@@ -408,7 +441,7 @@ export function OrdersSection() {
                         {!editMode && (
                             <button
                                 onClick={() => setEditMode(true)}
-                                className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                className="w-full flex items-center justify-center space-x-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
                             >
                                 <Edit2 className="h-4 w-4" />
                                 <span>Редактировать заказ</span>
@@ -421,19 +454,27 @@ export function OrdersSection() {
                             <div className="grid grid-cols-2 gap-3 text-sm">
                                 <div>
                                     <div className="text-gray-500">Имя</div>
-                                    <div className="font-semibold text-gray-900">{selectedOrder.customer?.name || "—"}</div>
+                                    <div className="font-semibold text-gray-900">
+                                        {selectedOrder.customer?.name || "—"}
+                                    </div>
                                 </div>
                                 <div>
                                     <div className="text-gray-500">Телефон</div>
-                                    <div className="font-semibold text-gray-900">{selectedOrder.customer?.phone || "—"}</div>
+                                    <div className="font-semibold text-gray-900">
+                                        {selectedOrder.customer?.phone || "—"}
+                                    </div>
                                 </div>
                                 <div>
                                     <div className="text-gray-500">Email</div>
-                                    <div className="font-semibold text-gray-900 break-all">{selectedOrder.customer?.email || "—"}</div>
+                                    <div className="font-semibold text-gray-900 break-all">
+                                        {selectedOrder.customer?.email || "—"}
+                                    </div>
                                 </div>
                                 <div>
                                     <div className="text-gray-500">Компания</div>
-                                    <div className="font-semibold text-gray-900">{selectedOrder.customer?.company_name || "—"}</div>
+                                    <div className="font-semibold text-gray-900">
+                                        {selectedOrder.customer?.company_name || "—"}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -447,7 +488,9 @@ export function OrdersSection() {
                                         <label className="text-gray-600">Тип доставки</label>
                                         <select
                                             value={editDelivery.delivery_type}
-                                            onChange={(e) => setEditDelivery({ ...editDelivery, delivery_type: e.target.value })}
+                                            onChange={(e) =>
+                                                setEditDelivery({ ...editDelivery, delivery_type: e.target.value })
+                                            }
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                         >
                                             <option value="манипулятор">Манипулятор</option>
@@ -459,7 +502,9 @@ export function OrdersSection() {
                                         <input
                                             type="text"
                                             value={editDelivery.delivery_address}
-                                            onChange={(e) => setEditDelivery({ ...editDelivery, delivery_address: e.target.value })}
+                                            onChange={(e) =>
+                                                setEditDelivery({ ...editDelivery, delivery_address: e.target.value })
+                                            }
                                             placeholder="Оставьте пустым для самовывоза"
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                         />
@@ -471,7 +516,12 @@ export function OrdersSection() {
                                             min="0"
                                             step="1"
                                             value={editDelivery.delivery_cost}
-                                            onChange={(e) => setEditDelivery({ ...editDelivery, delivery_cost: parseFloat(e.target.value) || 0 })}
+                                            onChange={(e) =>
+                                                setEditDelivery({
+                                                    ...editDelivery,
+                                                    delivery_cost: parseFloat(e.target.value) || 0,
+                                                })
+                                            }
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
@@ -480,15 +530,21 @@ export function OrdersSection() {
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                     <div>
                                         <div className="text-gray-500">Тип</div>
-                                        <div className="font-semibold text-gray-900">{selectedOrder.delivery_type || "—"}</div>
+                                        <div className="font-semibold text-gray-900">
+                                            {selectedOrder.delivery_type || "—"}
+                                        </div>
                                     </div>
                                     <div>
                                         <div className="text-gray-500">Стоимость доставки</div>
-                                        <div className="font-semibold text-gray-900">{selectedOrder.delivery_cost.toLocaleString("ru-RU")} ₽</div>
+                                        <div className="font-semibold text-gray-900">
+                                            {selectedOrder.delivery_cost.toLocaleString("ru-RU")} ₽
+                                        </div>
                                     </div>
                                     <div className="col-span-2">
                                         <div className="text-gray-500">Адрес</div>
-                                        <div className="font-semibold text-gray-900">{selectedOrder.delivery_address || "— (самовывоз)"}</div>
+                                        <div className="font-semibold text-gray-900">
+                                            {selectedOrder.delivery_address || "— (самовывоз)"}
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -500,8 +556,13 @@ export function OrdersSection() {
                                 <h3 className="text-sm font-semibold text-gray-500 uppercase">Товары</h3>
                                 {editMode && (
                                     <button
-                                        onClick={() => setEditItems(prev => [...prev, { product_id: "", quantity: 1, price_per_sqm: 0, subtotal: 0 }])}
-                                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors flex items-center space-x-1"
+                                        onClick={() =>
+                                            setEditItems((prev) => [
+                                                ...prev,
+                                                { product_id: "", quantity: 1, price_per_sqm: 0, subtotal: 0 },
+                                            ])
+                                        }
+                                        className="text-xs bg-yellow-100 text-yellow-800 text-white px-3 py-1 rounded hover:bg-yellow-200 transition-colors flex items-center space-x-1"
                                     >
                                         <Plus className="h-3 w-3" />
                                         <span>Добавить</span>
@@ -520,19 +581,26 @@ export function OrdersSection() {
                                                 <select
                                                     value={item.product_id}
                                                     onChange={(e) => {
-                                                        const prod = products.find(p => p.id === e.target.value);
+                                                        const prod = products.find((p) => p.id === e.target.value);
                                                         const price = prod ? prod.price_per_sqm : item.price_per_sqm;
-                                                        setEditItems(prev => {
+                                                        setEditItems((prev) => {
                                                             const updated = [...prev];
-                                                            updated[idx] = { ...updated[idx], product_id: e.target.value, price_per_sqm: price, subtotal: updated[idx].quantity * price };
+                                                            updated[idx] = {
+                                                                ...updated[idx],
+                                                                product_id: e.target.value,
+                                                                price_per_sqm: price,
+                                                                subtotal: updated[idx].quantity * price,
+                                                            };
                                                             return updated;
                                                         });
                                                     }}
                                                     className="w-full px-2 py-1 border border-gray-300 rounded"
                                                 >
                                                     <option value="">Выберите товар</option>
-                                                    {products.map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name} - {p.price_per_sqm} ₽/{p.unit}</option>
+                                                    {products.map((p) => (
+                                                        <option key={p.id} value={p.id}>
+                                                            {p.name} - {p.price_per_sqm} ₽/{p.unit}
+                                                        </option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -544,7 +612,13 @@ export function OrdersSection() {
                                                         min="1"
                                                         step="1"
                                                         value={item.quantity}
-                                                        onChange={(e) => updateEditItem(idx, "quantity", parseInt(e.target.value) || 0)}
+                                                        onChange={(e) =>
+                                                            updateEditItem(
+                                                                idx,
+                                                                "quantity",
+                                                                parseInt(e.target.value) || 0,
+                                                            )
+                                                        }
                                                         className="w-full px-2 py-1 border border-gray-300 rounded"
                                                     />
                                                 </div>
@@ -555,7 +629,13 @@ export function OrdersSection() {
                                                         min="0"
                                                         step="0.01"
                                                         value={item.price_per_sqm}
-                                                        onChange={(e) => updateEditItem(idx, "price_per_sqm", parseFloat(e.target.value) || 0)}
+                                                        onChange={(e) =>
+                                                            updateEditItem(
+                                                                idx,
+                                                                "price_per_sqm",
+                                                                parseFloat(e.target.value) || 0,
+                                                            )
+                                                        }
                                                         className="w-full px-2 py-1 border border-gray-300 rounded"
                                                     />
                                                 </div>
@@ -567,7 +647,7 @@ export function OrdersSection() {
                                                 </div>
                                             </div>
                                             <button
-                                                onClick={() => setEditItems(prev => prev.filter((_, i) => i !== idx))}
+                                                onClick={() => setEditItems((prev) => prev.filter((_, i) => i !== idx))}
                                                 className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1"
                                             >
                                                 <Trash2 className="h-3 w-3" />
@@ -581,14 +661,21 @@ export function OrdersSection() {
                             ) : (
                                 <div className="space-y-2">
                                     {selectedOrderItems.map((item) => (
-                                        <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <div
+                                            key={item.id}
+                                            className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                                        >
                                             <div>
-                                                <div className="font-semibold text-gray-900">{item.product?.name || "Товар"}</div>
+                                                <div className="font-semibold text-gray-900">
+                                                    {item.product?.name || "Товар"}
+                                                </div>
                                                 <div className="text-xs text-gray-500">
                                                     {item.quantity} {item.product?.unit || ""} × {item.price_per_sqm} ₽
                                                 </div>
                                             </div>
-                                            <div className="font-semibold text-gray-900">{item.subtotal.toLocaleString("ru-RU")} ₽</div>
+                                            <div className="font-semibold text-gray-900">
+                                                {item.subtotal.toLocaleString("ru-RU")} ₽
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -621,7 +708,9 @@ export function OrdersSection() {
                                 </div>
                                 <div>
                                     <div className="text-gray-500">Статус</div>
-                                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedOrder.status)}`}>
+                                    <div
+                                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedOrder.status)}`}
+                                    >
                                         {selectedOrder.status}
                                     </div>
                                 </div>
@@ -638,7 +727,7 @@ export function OrdersSection() {
                                     <button
                                         onClick={saveOrderChanges}
                                         disabled={editSaving}
-                                        className="flex-1 flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-300 transition-colors font-semibold"
+                                        className="flex-1 flex items-center justify-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 disabled:bg-gray-300 transition-colors font-semibold"
                                     >
                                         <Check className="h-4 w-4" />
                                         <span>{editSaving ? "Сохранение..." : "Сохранить"}</span>
@@ -664,13 +753,23 @@ export function OrdersSection() {
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Номер</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Клиент</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Телефон</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                                Клиент
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                                Телефон
+                            </th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Сумма</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Источник</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Статус</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                                Источник
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                                Статус
+                            </th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Дата</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Действия</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                                Действия
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -680,14 +779,22 @@ export function OrdersSection() {
                                 className="hover:bg-yellow-50 cursor-pointer transition-colors"
                                 onClick={() => openOrderDetails(order)}
                             >
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.order_number}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.customer?.name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.customer?.phone}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {order.order_number}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {order.customer?.name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {order.customer?.phone}
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                     {order.total_amount.toLocaleString("ru-RU")} ₽
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    <span className={`px-2 py-1 rounded ${order.source === "website" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}`}>
+                                    <span
+                                        className={`px-2 py-1 rounded ${order.source === "website" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}`}
+                                    >
                                         {order.source === "website" ? "Сайт" : "Телефон"}
                                     </span>
                                 </td>
@@ -698,14 +805,19 @@ export function OrdersSection() {
                                         className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(order.status)}`}
                                     >
                                         {ORDER_STATUSES.map((status) => (
-                                            <option key={status} value={status}>{status}</option>
+                                            <option key={status} value={status}>
+                                                {status}
+                                            </option>
                                         ))}
                                     </select>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                     {new Date(order.created_at).toLocaleDateString("ru-RU")}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={(e) => e.stopPropagation()}>
+                                <td
+                                    className="px-6 py-4 whitespace-nowrap text-sm"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     <div className="flex space-x-3">
                                         <button
                                             onClick={() => openOrderDetails(order)}
