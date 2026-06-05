@@ -118,7 +118,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     const [geocoding, setGeocoding] = useState<boolean>(false);
     const [geocodeError, setGeocodeError] = useState<string>("");
 
-    const CALCULATOR_STORAGE_KEY = 'calculator_state';
+    const CALCULATOR_STORAGE_KEY = "calculator_state";
 
     useEffect(() => {
         loadProducts();
@@ -141,7 +141,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                 setDestAddress(state.destAddress || "");
             }
         } catch (error) {
-            console.error('Failed to restore calculator state:', error);
+            console.error("Failed to restore calculator state:", error);
         }
     }
 
@@ -476,7 +476,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                         )}
 
                         {!isPickup && items.length > 0 && (
-                            <div className="bg-yellow-100 border-2 border-yellow-600 rounded-lg p-6">
+                            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
                                 <div className="flex items-center mb-3">
                                     <Truck className="h-6 w-6 text-yellow-600 mr-2" />
                                     <h3 className="text-lg font-semibold text-gray-900">Рекомендованный транспорт</h3>
@@ -495,7 +495,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                             </div>
                         )}
 
-                        <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-6 rounded-lg border-2 border-yellow-200">
+                        <div className="bg-yellow-50 p-6 rounded-lg border-2 border-yellow-200">
                             <h3 className="text-lg font-semibold mb-4 text-gray-900">Расчет стоимости</h3>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-gray-700">
