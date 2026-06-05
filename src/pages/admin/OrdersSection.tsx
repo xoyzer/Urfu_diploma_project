@@ -309,7 +309,7 @@ export function OrdersSection() {
                     className="flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors"
                 >
                     <Plus className="h-5 w-5" />
-                    <span>Добавить заказ (звонок)</span>
+                    <span>Добавить заказ</span>
                 </button>
             </div>
 
@@ -441,7 +441,7 @@ export function OrdersSection() {
                         {!editMode && (
                             <button
                                 onClick={() => setEditMode(true)}
-                                className="w-full flex items-center justify-center space-x-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+                                className="w-full flex items-center justify-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
                             >
                                 <Edit2 className="h-4 w-4" />
                                 <span>Редактировать заказ</span>
