@@ -238,7 +238,7 @@ export function VehiclesSection() {
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 disabled:bg-gray-300 transition-colors font-semibold"
+                        className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 disabled:bg-gray-300 transition-colors font-semibold"
                     >
                         {submitting ? "Добавление..." : "Добавить транспорт"}
                     </button>

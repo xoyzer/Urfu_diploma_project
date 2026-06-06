@@ -118,9 +118,62 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     const [geocoding, setGeocoding] = useState<boolean>(false);
     const [geocodeError, setGeocodeError] = useState<string>("");
 
+    const CALCULATOR_STORAGE_KEY = "calculator_state";
+
     useEffect(() => {
         loadProducts();
     }, []);
+
+    useEffect(() => {
+        if (products.length > 0) {
+            restoreCalculatorState();
+        }
+    }, [products]);
+
+    function saveCalculatorState() {
+        const state = {
+            itemIds: items.map(i => ({ productId: i.product.id, quantity: i.quantity, subtotal: i.subtotal, weight: i.weight })),
+            distance,
+            isPickup,
+            destAddress
+        };
+        localStorage.setItem(CALCULATOR_STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function restoreCalculatorState() {
+        try {
+            const saved = localStorage.getItem(CALCULATOR_STORAGE_KEY);
+            if (saved) {
+                const state = JSON.parse(saved);
+                setDistance(state.distance || 0);
+                setIsPickup(state.isPickup || false);
+                setDestAddress(state.destAddress || "");
+                if (state.itemIds && products.length > 0) {
+                    const restoredItems: CartItem[] = [];
+                    for (const savedItem of state.itemIds) {
+                        const prod = products.find(p => p.id === savedItem.productId);
+                        if (prod) {
+                            restoredItems.push({
+                                product: prod,
+                                quantity: savedItem.quantity,
+                                subtotal: savedItem.subtotal,
+                                weight: savedItem.weight
+                            });
+                        }
+                    }
+                    setItems(restoredItems);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to restore calculator state:", error);
+        }
+    }
+
+    useEffect(() => {
+        if (items.length > 0 || distance || isPickup || destAddress) {
+            saveCalculatorState();
+        }
+    }, [items, distance, isPickup, destAddress]);
 
     async function loadProducts() {
         const { data } = await supabase
@@ -228,6 +281,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
 
     const handleOrder = () => {
         if (items.length === 0) return;
+        saveCalculatorState();
         onNavigate({
             items,
             deliveryType: isPickup ? "Самовывоз" : selectedTransport.label,
@@ -449,7 +503,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                         )}
 
                         {!isPickup && items.length > 0 && (
-                            <div className="bg-yellow-100 border-2 border-yellow-600 rounded-lg p-6">
+                            <div className="bg-yellow-0 border-2 border-yellow-10 rounded-lg p-6">
                                 <div className="flex items-center mb-3">
                                     <Truck className="h-6 w-6 text-yellow-600 mr-2" />
                                     <h3 className="text-lg font-semibold text-gray-900">Рекомендованный транспорт</h3>
@@ -468,7 +522,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                             </div>
                         )}
 
-                        <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-6 rounded-lg border-2 border-yellow-200">
+                        <div className="bg-yellow-50 p-6 rounded-lg border-2 border-yellow-200">
                             <h3 className="text-lg font-semibold mb-4 text-gray-900">Расчет стоимости</h3>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-gray-700">
