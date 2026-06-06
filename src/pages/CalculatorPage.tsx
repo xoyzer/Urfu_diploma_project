@@ -122,11 +122,21 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
 
     useEffect(() => {
         loadProducts();
-        restoreCalculatorState();
     }, []);
 
+    useEffect(() => {
+        if (products.length > 0) {
+            restoreCalculatorState();
+        }
+    }, [products]);
+
     function saveCalculatorState() {
-        const state = { items, distance, isPickup, destAddress };
+        const state = {
+            itemIds: items.map(i => ({ productId: i.product.id, quantity: i.quantity, subtotal: i.subtotal, weight: i.weight })),
+            distance,
+            isPickup,
+            destAddress
+        };
         localStorage.setItem(CALCULATOR_STORAGE_KEY, JSON.stringify(state));
     }
 
@@ -135,10 +145,24 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
             const saved = localStorage.getItem(CALCULATOR_STORAGE_KEY);
             if (saved) {
                 const state = JSON.parse(saved);
-                setItems(state.items || []);
                 setDistance(state.distance || 0);
                 setIsPickup(state.isPickup || false);
                 setDestAddress(state.destAddress || "");
+                if (state.itemIds && products.length > 0) {
+                    const restoredItems: CartItem[] = [];
+                    for (const savedItem of state.itemIds) {
+                        const prod = products.find(p => p.id === savedItem.productId);
+                        if (prod) {
+                            restoredItems.push({
+                                product: prod,
+                                quantity: savedItem.quantity,
+                                subtotal: savedItem.subtotal,
+                                weight: savedItem.weight
+                            });
+                        }
+                    }
+                    setItems(restoredItems);
+                }
             }
         } catch (error) {
             console.error("Failed to restore calculator state:", error);
@@ -146,7 +170,9 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     }
 
     useEffect(() => {
-        saveCalculatorState();
+        if (items.length > 0 || distance || isPickup || destAddress) {
+            saveCalculatorState();
+        }
     }, [items, distance, isPickup, destAddress]);
 
     async function loadProducts() {
@@ -255,6 +281,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
 
     const handleOrder = () => {
         if (items.length === 0) return;
+        saveCalculatorState();
         onNavigate({
             items,
             deliveryType: isPickup ? "Самовывоз" : selectedTransport.label,
