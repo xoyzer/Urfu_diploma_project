@@ -538,7 +538,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                             </div>
                         )}
 
-                        <div className="bg-yellow-50 p-6 rounded-lg border-2 border-yellow-200">
+                        <div className="bg-yellow-50/50 p-6 rounded-lg border-2 border-yellow-600">
                             <h3 className="text-lg font-semibold mb-4 text-gray-900">Расчет стоимости</h3>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-gray-700">
@@ -549,7 +549,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                     <span>Стоимость доставки:</span>
                                     <span className="font-semibold">{deliveryCost.toLocaleString("ru-RU")} ₽</span>
                                 </div>
-                                <div className="border-t-2 border-yellow-300 pt-2 mt-2 flex justify-between text-xl font-bold text-yellow-700">
+                                <div className="border-t-2 border-yellow-600 pt-2 mt-2 flex justify-between text-xl font-bold text-yellow-700">
                                     <span>Итого:</span>
                                     <span>{totalCost.toLocaleString("ru-RU")} ₽</span>
                                 </div>
