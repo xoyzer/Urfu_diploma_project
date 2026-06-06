@@ -88,24 +88,26 @@ export function AboutPage() {
 
             <section className="py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-gradient-to-br bg-yellow-600 rounded-lg p-12 text-center text-white">
-                        <h2 className="text-3xl font-bold mb-4">Работаем с частными лицами и организациями</h2>
-                        <p className="text-xl text-amber-100 mb-8 max-w-2xl mx-auto">
+                    <div className="bg-yellow-500/15 text-amber-700 py-16 hover:bg-yellow-500/15 transition-colors duration-700 shadow-lg p-12 text-center text-white">
+                        <h2 className="text-3xl font-bold mb-4 text-yellow-700">
+                            Работаем с частными лицами и организациями
+                        </h2>
+                        <p className="text-xl text-yellow-800 mb-8 max-w-2xl mx-auto">
                             Предоставляем гибкие условия оплаты, скидки при больших объемах и консультации по выбору
                             материалов
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
                             <div>
-                                <div className="text-4xl font-bold mb-2">5+</div>
-                                <div className="text-amber-100">лет на рынке</div>
+                                <div className="text-4xl font-bold mb-2 text-yellow-800">5+</div>
+                                <div className="text-yellow-800">лет на рынке</div>
                             </div>
                             <div>
-                                <div className="text-4xl font-bold mb-2">1000+</div>
-                                <div className="text-amber-100">довольных клиентов</div>
+                                <div className="text-4xl font-bold mb-2 text-yellow-800">1000+</div>
+                                <div className="text-yellow-800">довольных клиентов</div>
                             </div>
                             <div>
-                                <div className="text-4xl font-bold mb-2">50+</div>
-                                <div className="text-amber-100">видов продукции</div>
+                                <div className="text-4xl font-bold mb-2 text-yellow-800">50+</div>
+                                <div className="text-yellow-800">видов продукции</div>
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
-import { Calculator, Truck, MapPin, ShoppingCart, Plus, Trash2, Search, Loader2, Info } from "lucide-react";
+import {
+    Calculator,
+    Truck,
+    MapPin,
+    ShoppingCart,
+    Plus,
+    Trash2,
+    Search,
+    Loader2,
+    Info,
+    ArrowDownWideNarrow,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Database } from "../types/database";
 
@@ -132,10 +143,15 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
 
     function saveCalculatorState() {
         const state = {
-            itemIds: items.map(i => ({ productId: i.product.id, quantity: i.quantity, subtotal: i.subtotal, weight: i.weight })),
+            itemIds: items.map((i) => ({
+                productId: i.product.id,
+                quantity: i.quantity,
+                subtotal: i.subtotal,
+                weight: i.weight,
+            })),
             distance,
             isPickup,
-            destAddress
+            destAddress,
         };
         localStorage.setItem(CALCULATOR_STORAGE_KEY, JSON.stringify(state));
     }
@@ -151,13 +167,13 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                 if (state.itemIds && products.length > 0) {
                     const restoredItems: CartItem[] = [];
                     for (const savedItem of state.itemIds) {
-                        const prod = products.find(p => p.id === savedItem.productId);
+                        const prod = products.find((p) => p.id === savedItem.productId);
                         if (prod) {
                             restoredItems.push({
                                 product: prod,
                                 quantity: savedItem.quantity,
                                 subtotal: savedItem.subtotal,
-                                weight: savedItem.weight
+                                weight: savedItem.weight,
                             });
                         }
                     }
@@ -312,7 +328,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                     <select
                                         value={selectedProductId}
                                         onChange={(e) => setSelectedProductId(e.target.value)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-600 focus:border-transparent"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none bg-white pr-10"
                                     >
                                         <option value="">-- Выберите продукт --</option>
                                         {Object.entries(productsByCategory).map(([cat, list]) => (

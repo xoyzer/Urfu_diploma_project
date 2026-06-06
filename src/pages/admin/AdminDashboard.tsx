@@ -40,7 +40,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     <div className="p-6 border-b border-gray-200">
                         <div className="flex items-center space-x-2">
                             <LayoutDashboard className="h-6 w-6 text-yellow-600" />
-                            <h2 className="text-xl font-bold text-gray-900">CRM Панель</h2>
+                            <h2 className="text-xl font-bold text-gray-900"></h2>
                         </div>
                     </div>
                     <button

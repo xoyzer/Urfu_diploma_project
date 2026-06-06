@@ -300,7 +300,7 @@ export function InventorySection() {
                             required
                             value={receivingForm.product_id}
                             onChange={(e) => setReceivingForm({ ...receivingForm, product_id: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
                         >
                             <option value="">Выберите товар</option>
                             {products.map((p) => (
@@ -405,7 +405,7 @@ export function InventorySection() {
                             <select
                                 value={selectedOrderId}
                                 onChange={(e) => handleOrderSelect(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 appearance-none"
                             >
                                 <option value="">Выберите заказ</option>
                                 {orders.map((o) => (
@@ -448,7 +448,7 @@ export function InventorySection() {
                                                 value={line.product_id}
                                                 disabled={shipmentMode === "order" && !!selectedOrderId}
                                                 onChange={(e) => updateShipmentLine(idx, "product_id", e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 text-sm disabled:bg-gray-100"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 text-sm disabled:bg-gray-100 appearance-none"
                                             >
                                                 <option value="">Выберите товар</option>
                                                 {products.map((p) => (

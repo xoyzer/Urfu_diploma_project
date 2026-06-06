@@ -1,5 +1,6 @@
 import { User, LogOut } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { Search, Plus, Mail, Phone, Trash2, AlertCircle, CreditCard as Edit2, Check, X } from "lucide-react";
 
 interface HeaderProps {
     onNavigate: (page: string) => void;
@@ -12,7 +13,10 @@ export function Header({ onNavigate }: HeaderProps) {
         <header className="bg-white shadow-md border-b-2 border-yellow-600">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center py-3">
-                    <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onNavigate("home")}>
+                    <div
+                        className="flex items-center space-x-3 cursor-pointer transition-transform duration-300 hover:scale-105"
+                        onClick={() => onNavigate("home")}
+                    >
                         <img
                             src="/Фабрика Плитки (лого 2).png"
                             alt="Фабрика Плитки"
@@ -50,6 +54,11 @@ export function Header({ onNavigate }: HeaderProps) {
                             Контакты
                         </button>
                     </nav>
+
+                    <div className="flex items-center space-x-2 text-gray-700 hover:text-yellow-600 transition-colors font-medium ">
+                        <Phone className="h-4 w-4" />
+                        <a href="tel:+79126719311">+7 (912) 671-93-11</a>
+                    </div>
 
                     <div className="flex items-center space-x-4">
                         {user ? (

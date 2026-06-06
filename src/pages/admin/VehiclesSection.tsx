@@ -194,7 +194,7 @@ export function VehiclesSection() {
                         <select
                             value={vehicleForm.type}
                             onChange={(e) => setVehicleForm({ ...vehicleForm, type: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none"
                         >
                             <option value="манипулятор">Манипулятор</option>
                             <option value="фура">Фура</option>
@@ -324,7 +324,7 @@ export function VehiclesSection() {
                                     required
                                     value={deliveryForm.order_id}
                                     onChange={(e) => setDeliveryForm({ ...deliveryForm, order_id: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none"
                                 >
                                     <option value="">Выберите заказ</option>
                                     {orders.map((o) => (
@@ -342,7 +342,7 @@ export function VehiclesSection() {
                                     required
                                     value={deliveryForm.vehicle_id}
                                     onChange={(e) => setDeliveryForm({ ...deliveryForm, vehicle_id: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none"
                                 >
                                     <option value="">Выберите транспорт</option>
                                     {vehicles

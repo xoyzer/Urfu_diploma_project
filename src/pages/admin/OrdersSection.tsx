@@ -139,12 +139,16 @@ export function OrdersSection() {
         setSubmitting(true);
         try {
             const productTotal = newItems.reduce((sum, i) => sum + i.subtotal, 0);
-            const deliveryCost = formData.is_pickup ? 0 : newTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
+            const deliveryCost = formData.is_pickup
+                ? 0
+                : newTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
             const totalCost = productTotal + deliveryCost;
-            const deliveryType = formData.is_pickup ? "Самовывоз" : newTrips
-                .filter((t) => t.vehicle_type)
-                .map((t) => `${t.trip_count} × ${t.vehicle_type}`)
-                .join(", ") || "—";
+            const deliveryType = formData.is_pickup
+                ? "Самовывоз"
+                : newTrips
+                      .filter((t) => t.vehicle_type)
+                      .map((t) => `${t.trip_count} × ${t.vehicle_type}`)
+                      .join(", ") || "—";
 
             const { data: order, error: orderError } = await supabase
                 .from("orders")
@@ -434,7 +438,7 @@ export function OrdersSection() {
                                 required
                                 value={formData.customer_id}
                                 onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
                             >
                                 <option value="">Выберите клиента</option>
                                 {customers.map((c) => (
@@ -449,7 +453,7 @@ export function OrdersSection() {
                             <select
                                 value={formData.source}
                                 onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
                             >
                                 <option value="phone">Телефон</option>
                                 <option value="website">Сайт</option>
@@ -460,7 +464,7 @@ export function OrdersSection() {
                             <select
                                 value={formData.is_pickup ? "pickup" : "delivery"}
                                 onChange={(e) => setFormData({ ...formData, is_pickup: e.target.value === "pickup" })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
                             >
                                 <option value="delivery">Доставка</option>
                                 <option value="pickup">Самовывоз</option>
@@ -491,7 +495,7 @@ export function OrdersSection() {
                                 <select
                                     value={newItemProductId}
                                     onChange={(e) => setNewItemProductId(e.target.value)}
-                                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm"
+                                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm appearance-none"
                                 >
                                     <option value="">Выберите товар</option>
                                     {Object.entries(
@@ -607,7 +611,7 @@ export function OrdersSection() {
                                             { vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 },
                                         ])
                                     }
-                                    className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200 transition-colors flex items-center space-x-1"
+                                    className="text-xs bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-500 transition-colors flex items-center space-x-1"
                                 >
                                     <Plus className="h-3 w-3" />
                                     <span>Добавить рейс</span>
@@ -628,7 +632,7 @@ export function OrdersSection() {
                                                             return u;
                                                         })
                                                     }
-                                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-yellow-500"
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-yellow-500 appearance-none"
                                                 >
                                                     {VEHICLE_TYPES.map((vt) => (
                                                         <option key={vt} value={vt}>
@@ -700,7 +704,10 @@ export function OrdersSection() {
                             </div>
                             <div className="text-right text-sm font-semibold text-gray-700">
                                 Доставка:{" "}
-                                {newTrips.reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0).toLocaleString("ru-RU")} ₽
+                                {newTrips
+                                    .reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0)
+                                    .toLocaleString("ru-RU")}{" "}
+                                ₽
                             </div>
                         </div>
                     )}
@@ -713,7 +720,9 @@ export function OrdersSection() {
                         <span className="text-lg font-bold text-yellow-700">
                             {(
                                 newItems.reduce((s, i) => s + i.subtotal, 0) +
-                                (formData.is_pickup ? 0 : newTrips.reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0))
+                                (formData.is_pickup
+                                    ? 0
+                                    : newTrips.reduce((s, t) => s + t.trip_count * t.cost_per_trip, 0))
                             ).toLocaleString("ru-RU")}{" "}
                             ₽
                         </span>
@@ -761,15 +770,6 @@ export function OrdersSection() {
                 {selectedOrder && (
                     <div className="space-y-5">
                         {/* Edit toggle button */}
-                        {!editMode && (
-                            <button
-                                onClick={() => setEditMode(true)}
-                                className="w-full flex items-center justify-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
-                            >
-                                <Edit2 className="h-4 w-4" />
-                                <span>Редактировать заказ</span>
-                            </button>
-                        )}
 
                         {/* Customer info (read-only) */}
                         <div>
@@ -813,7 +813,7 @@ export function OrdersSection() {
                                             type="text"
                                             value={editDeliveryAddress}
                                             onChange={(e) => setEditDeliveryAddress(e.target.value)}
-                                            placeholder="Оставьте пустым для самовывоза"
+                                            placeholder=""
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
                                         />
                                     </div>
@@ -832,7 +832,7 @@ export function OrdersSection() {
                                                         },
                                                     ])
                                                 }
-                                                className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200 transition-colors flex items-center space-x-1"
+                                                className="text-xs bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-500 transition-colors flex items-center space-x-1"
                                             >
                                                 <Plus className="h-3 w-3" />
                                                 <span>Добавить рейс</span>
@@ -858,7 +858,7 @@ export function OrdersSection() {
                                                                         return u;
                                                                     })
                                                                 }
-                                                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500"
+                                                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500 appearance-none"
                                                             >
                                                                 {VEHICLE_TYPES.map((vt) => (
                                                                     <option key={vt} value={vt}>
@@ -992,10 +992,10 @@ export function OrdersSection() {
                                                 { product_id: "", quantity: 1, price_per_sqm: 0, subtotal: 0 },
                                             ])
                                         }
-                                        className="text-xs bg-yellow-100 text-yellow-800 text-white px-3 py-1 rounded hover:bg-yellow-200 transition-colors flex items-center space-x-1"
+                                        className="text-xs bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-500 transition-colors flex items-center space-x-1"
                                     >
                                         <Plus className="h-3 w-3" />
-                                        <span>Добавить</span>
+                                        <span>Добавить товар</span>
                                     </button>
                                 )}
                             </div>
@@ -1024,7 +1024,7 @@ export function OrdersSection() {
                                                             return updated;
                                                         });
                                                     }}
-                                                    className="w-full px-2 py-1 border border-gray-300 rounded"
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded appearance-none"
                                                 >
                                                     <option value="">Выберите товар</option>
                                                     {products.map((p) => (
@@ -1171,6 +1171,18 @@ export function OrdersSection() {
                                         <span>Отменить</span>
                                     </button>
                                 </div>
+                            )}
+                        </div>
+
+                        <div className="">
+                            {!editMode && (
+                                <button
+                                    onClick={() => setEditMode(true)}
+                                    className="w-full flex items-center justify-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                    <span>Редактировать заказ</span>
+                                </button>
                             )}
                         </div>
                     </div>
