@@ -476,7 +476,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                         )}
 
                         {!isPickup && items.length > 0 && (
-                            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+                            <div className="bg-yellow-0 border-2 border-yellow-10 rounded-lg p-6">
                                 <div className="flex items-center mb-3">
                                     <Truck className="h-6 w-6 text-yellow-600 mr-2" />
                                     <h3 className="text-lg font-semibold text-gray-900">Рекомендованный транспорт</h3>
