@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Trash2, Eye, CreditCard as Edit2, Check, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Trash2, Eye, CreditCard as Edit2, Check, X, Search } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
