@@ -98,15 +98,15 @@ export function AboutPage() {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
                             <div>
-                                <div className="text-4xl font-bold mb-2 text-yellow-800">5+</div>
+                                <div className="text-4xl font-bold mb-2 text-yellow-700">5+</div>
                                 <div className="text-yellow-800">лет на рынке</div>
                             </div>
                             <div>
-                                <div className="text-4xl font-bold mb-2 text-yellow-800">1000+</div>
+                                <div className="text-4xl font-bold mb-2 text-yellow-700">1000+</div>
                                 <div className="text-yellow-800">довольных клиентов</div>
                             </div>
                             <div>
-                                <div className="text-4xl font-bold mb-2 text-yellow-800">50+</div>
+                                <div className="text-4xl font-bold mb-2 text-yellow-700">50+</div>
                                 <div className="text-yellow-800">видов продукции</div>
                             </div>
                         </div>

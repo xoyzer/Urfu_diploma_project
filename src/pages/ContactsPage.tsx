@@ -32,8 +32,8 @@ export function ContactsPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-lg font-semibold text-gray-900 mb-1">Телефон</h3>
-                                        <p className="text-gray-600">+7 912 671 9311 Алексей</p>
-                                        <p className="text-gray-600"></p>
+                                        <p className="text-gray-600">+7 (912) 671-93-11 </p>
+                                        <p className="text-gray-1000">Алексей</p>
                                     </div>
                                 </div>
 
