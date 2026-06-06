@@ -14,6 +14,7 @@ export interface Database {
           id: string
           name: string
           category: string
+          subcategory: string | null
           description: string
           price_per_sqm: number
           photo_url: string
@@ -28,6 +29,7 @@ export interface Database {
           id?: string
           name: string
           category: string
+          subcategory?: string | null
           description?: string
           price_per_sqm: number
           photo_url?: string
@@ -42,6 +44,7 @@ export interface Database {
           id?: string
           name?: string
           category?: string
+          subcategory?: string | null
           description?: string
           price_per_sqm?: number
           photo_url?: string
