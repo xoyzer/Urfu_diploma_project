@@ -47,6 +47,7 @@ export function OrdersSection() {
     const [editItems, setEditItems] = useState<EditableItem[]>([]);
     const [editTrips, setEditTrips] = useState<EditableTrip[]>([]);
     const [editDeliveryAddress, setEditDeliveryAddress] = useState("");
+    const [editIsPickup, setEditIsPickup] = useState(false);
     const [editSaving, setEditSaving] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -297,6 +298,7 @@ export function OrdersSection() {
                     : [{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }],
             );
             setEditDeliveryAddress(order.delivery_address || "");
+            setEditIsPickup(order.delivery_type === "Самовывоз");
         } catch (error) {
             console.error("Error loading order items:", error);
             setSelectedOrderItems([]);
@@ -327,7 +329,7 @@ export function OrdersSection() {
             alert("Выберите товар для всех позиций");
             return;
         }
-        if (editTrips.some((t) => !t.vehicle_type)) {
+        if (!editIsPickup && editTrips.some((t) => !t.vehicle_type)) {
             alert("Выберите тип транспорта для всех рейсов");
             return;
         }
@@ -335,9 +337,11 @@ export function OrdersSection() {
         setEditSaving(true);
         try {
             const productTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0);
-            const deliveryCost = editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
+            const deliveryCost = editIsPickup ? 0 : editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
             const totalAmount = productTotal + deliveryCost;
-            const tripsLabel = editTrips.map((t) => `${t.trip_count} × ${t.vehicle_type}`).join(", ");
+            const deliveryType = editIsPickup
+                ? "Самовывоз"
+                : editTrips.map((t) => `${t.trip_count} × ${t.vehicle_type}`).join(", ") || "—";
 
             // Update order items
             await supabase.from("order_items").delete().eq("order_id", selectedOrder.id);
@@ -354,7 +358,7 @@ export function OrdersSection() {
 
             // Update delivery trips
             await supabase.from("order_delivery_trips").delete().eq("order_id", selectedOrder.id);
-            if (editTrips.length > 0) {
+            if (!editIsPickup && editTrips.length > 0) {
                 const { error: tripsError } = await supabase.from("order_delivery_trips").insert(
                     editTrips.map((t) => ({
                         order_id: selectedOrder.id,
@@ -369,8 +373,8 @@ export function OrdersSection() {
             const { error: orderError } = await supabase
                 .from("orders")
                 .update({
-                    delivery_type: tripsLabel,
-                    delivery_address: editDeliveryAddress,
+                    delivery_type: deliveryType,
+                    delivery_address: editIsPickup ? "" : editDeliveryAddress,
                     delivery_cost: deliveryCost,
                     total_amount: totalAmount,
                 })
@@ -386,8 +390,8 @@ export function OrdersSection() {
             setEditMode(false);
             const updatedOrder = {
                 ...selectedOrder,
-                delivery_type: tripsLabel,
-                delivery_address: editDeliveryAddress,
+                delivery_type: deliveryType,
+                delivery_address: editIsPickup ? "" : editDeliveryAddress,
                 delivery_cost: deliveryCost,
                 total_amount: totalAmount,
             };
@@ -428,7 +432,7 @@ export function OrdersSection() {
         return colors[status] || "bg-gray-100 text-gray-800";
     };
 
-    const editDeliveryCost = editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
+    const editDeliveryCost = editIsPickup ? 0 : editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
     const editTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0) + editDeliveryCost;
 
     if (loading) {
@@ -881,138 +885,160 @@ export function OrdersSection() {
                             {editMode ? (
                                 <div className="space-y-3 text-sm">
                                     <div>
-                                        <label className="text-gray-600">Адрес доставки</label>
-                                        <input
-                                            type="text"
-                                            value={editDeliveryAddress}
-                                            onChange={(e) => setEditDeliveryAddress(e.target.value)}
-                                            placeholder=""
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
-                                        />
+                                        <label className="text-gray-600">Способ получения</label>
+                                        <select
+                                            value={editIsPickup ? "pickup" : "delivery"}
+                                            onChange={(e) => setEditIsPickup(e.target.value === "pickup")}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
+                                        >
+                                            <option value="delivery">Доставка</option>
+                                            <option value="pickup">Самовывоз</option>
+                                        </select>
                                     </div>
 
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <label className="text-gray-600 font-medium">Рейсы</label>
-                                            <button
-                                                onClick={() =>
-                                                    setEditTrips((prev) => [
-                                                        ...prev,
-                                                        {
-                                                            vehicle_type: "манипулятор 5т",
-                                                            trip_count: 1,
-                                                            cost_per_trip: 0,
-                                                        },
-                                                    ])
-                                                }
-                                                className="text-xs bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-500 transition-colors flex items-center space-x-1"
-                                            >
-                                                <Plus className="h-3 w-3" />
-                                                <span>Добавить рейс</span>
-                                            </button>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {editTrips.map((trip, idx) => (
-                                                <div key={idx} className="p-3 bg-gray-50 rounded-lg">
-                                                    <div className="grid grid-cols-3 gap-2 mb-2">
-                                                        <div className="col-span-3">
-                                                            <label className="text-gray-500 text-xs">
-                                                                Тип транспорта
-                                                            </label>
-                                                            <select
-                                                                value={trip.vehicle_type}
-                                                                onChange={(e) =>
-                                                                    setEditTrips((prev) => {
-                                                                        const u = [...prev];
-                                                                        u[idx] = {
-                                                                            ...u[idx],
-                                                                            vehicle_type: e.target.value,
-                                                                        };
-                                                                        return u;
-                                                                    })
-                                                                }
-                                                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500 appearance-none"
-                                                            >
-                                                                {VEHICLE_TYPES.map((vt) => (
-                                                                    <option key={vt} value={vt}>
-                                                                        {vt}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-gray-500 text-xs">
-                                                                Кол-во рейсов
-                                                            </label>
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                step="1"
-                                                                value={trip.trip_count}
-                                                                onChange={(e) =>
-                                                                    setEditTrips((prev) => {
-                                                                        const u = [...prev];
-                                                                        u[idx] = {
-                                                                            ...u[idx],
-                                                                            trip_count: parseInt(e.target.value) || 1,
-                                                                        };
-                                                                        return u;
-                                                                    })
-                                                                }
-                                                                className="w-full px-2 py-1 border border-gray-300 rounded"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-gray-500 text-xs">
-                                                                Стоим. рейса, ₽
-                                                            </label>
-                                                            <input
-                                                                type="number"
-                                                                min="0"
-                                                                step="1"
-                                                                value={trip.cost_per_trip}
-                                                                onChange={(e) =>
-                                                                    setEditTrips((prev) => {
-                                                                        const u = [...prev];
-                                                                        u[idx] = {
-                                                                            ...u[idx],
-                                                                            cost_per_trip:
-                                                                                parseFloat(e.target.value) || 0,
-                                                                        };
-                                                                        return u;
-                                                                    })
-                                                                }
-                                                                className="w-full px-2 py-1 border border-gray-300 rounded"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-gray-500 text-xs">Итого</label>
-                                                            <div className="px-2 py-1 bg-white border border-gray-200 rounded text-center font-semibold">
-                                                                {(trip.trip_count * trip.cost_per_trip).toLocaleString(
-                                                                    "ru-RU",
-                                                                )}{" "}
-                                                                ₽
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {editTrips.length > 1 && (
-                                                        <button
-                                                            onClick={() =>
-                                                                setEditTrips((prev) => prev.filter((_, i) => i !== idx))
-                                                            }
-                                                            className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1"
-                                                        >
-                                                            <Trash2 className="h-3 w-3" />
-                                                            <span>Удалить рейс</span>
-                                                        </button>
-                                                    )}
+                                    {!editIsPickup && (
+                                        <>
+                                            <div>
+                                                <label className="text-gray-600">Адрес доставки</label>
+                                                <input
+                                                    type="text"
+                                                    value={editDeliveryAddress}
+                                                    onChange={(e) => setEditDeliveryAddress(e.target.value)}
+                                                    placeholder=""
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <label className="text-gray-600 font-medium">Рейсы</label>
+                                                    <button
+                                                        onClick={() =>
+                                                            setEditTrips((prev) => [
+                                                                ...prev,
+                                                                {
+                                                                    vehicle_type: "манипулятор 5т",
+                                                                    trip_count: 1,
+                                                                    cost_per_trip: 0,
+                                                                },
+                                                            ])
+                                                        }
+                                                        className="text-xs bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-500 transition-colors flex items-center space-x-1"
+                                                    >
+                                                        <Plus className="h-3 w-3" />
+                                                        <span>Добавить рейс</span>
+                                                    </button>
                                                 </div>
-                                            ))}
+                                                <div className="space-y-2">
+                                                    {editTrips.map((trip, idx) => (
+                                                        <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                                                            <div className="grid grid-cols-3 gap-2 mb-2">
+                                                                <div className="col-span-3">
+                                                                    <label className="text-gray-500 text-xs">
+                                                                        Тип транспорта
+                                                                    </label>
+                                                                    <select
+                                                                        value={trip.vehicle_type}
+                                                                        onChange={(e) =>
+                                                                            setEditTrips((prev) => {
+                                                                                const u = [...prev];
+                                                                                u[idx] = {
+                                                                                    ...u[idx],
+                                                                                    vehicle_type: e.target.value,
+                                                                                };
+                                                                                return u;
+                                                                            })
+                                                                        }
+                                                                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500 appearance-none"
+                                                                    >
+                                                                        {VEHICLE_TYPES.map((vt) => (
+                                                                            <option key={vt} value={vt}>
+                                                                                {vt}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-gray-500 text-xs">
+                                                                        Кол-во рейсов
+                                                                    </label>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        step="1"
+                                                                        value={trip.trip_count}
+                                                                        onChange={(e) =>
+                                                                            setEditTrips((prev) => {
+                                                                                const u = [...prev];
+                                                                                u[idx] = {
+                                                                                    ...u[idx],
+                                                                                    trip_count: parseInt(e.target.value) || 1,
+                                                                                };
+                                                                                return u;
+                                                                            })
+                                                                        }
+                                                                        className="w-full px-2 py-1 border border-gray-300 rounded"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-gray-500 text-xs">
+                                                                        Стоим. рейса, ₽
+                                                                    </label>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        step="1"
+                                                                        value={trip.cost_per_trip}
+                                                                        onChange={(e) =>
+                                                                            setEditTrips((prev) => {
+                                                                                const u = [...prev];
+                                                                                u[idx] = {
+                                                                                    ...u[idx],
+                                                                                    cost_per_trip:
+                                                                                        parseFloat(e.target.value) || 0,
+                                                                                };
+                                                                                return u;
+                                                                            })
+                                                                        }
+                                                                        className="w-full px-2 py-1 border border-gray-300 rounded"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-gray-500 text-xs">Итого</label>
+                                                                    <div className="px-2 py-1 bg-white border border-gray-200 rounded text-center font-semibold">
+                                                                        {(trip.trip_count * trip.cost_per_trip).toLocaleString(
+                                                                            "ru-RU",
+                                                                        )}{" "}
+                                                                        ₽
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {editTrips.length > 1 && (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        setEditTrips((prev) => prev.filter((_, i) => i !== idx))
+                                                                    }
+                                                                    className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1"
+                                                                >
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                    <span>Удалить рейс</span>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="mt-2 text-right text-sm font-semibold text-gray-700">
+                                                    Итого за доставку: {editDeliveryCost.toLocaleString("ru-RU")} ₽
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {editIsPickup && (
+                                        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                                            Самовывоз — доставка не требуется
                                         </div>
-                                        <div className="mt-2 text-right text-sm font-semibold text-gray-700">
-                                            Итого за доставку: {editDeliveryCost.toLocaleString("ru-RU")} ₽
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="space-y-3 text-sm">
