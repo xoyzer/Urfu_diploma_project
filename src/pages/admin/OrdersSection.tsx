@@ -29,7 +29,13 @@ const VEHICLE_TYPES = ["манипулятор 5т", "манипулятор 8т
 
 const ORDER_STATUSES = ["Новый", "В обработке", "Согласован", "Доставляется", "Выполнен", "Отменен"];
 
-export function OrdersSection() {
+interface OrdersSectionProps {
+    onNavigateToAddCustomer?: (data?: { name?: string; phone?: string }) => void;
+    selectedCustomerId?: string | null;
+    onCustomerSelected?: () => void;
+}
+
+export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onCustomerSelected }: OrdersSectionProps) {
     const [orders, setOrders] = useState<(Order & { customer: Customer })[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
@@ -72,6 +78,18 @@ export function OrdersSection() {
         loadOrders();
         loadCustomersAndProducts();
     }, []);
+
+    useEffect(() => {
+        if (selectedCustomerId && customers.length > 0) {
+            const customer = customers.find((c) => c.id === selectedCustomerId);
+            if (customer) {
+                setFormData((prev) => ({ ...prev, customer_id: customer.id }));
+                setCustomerSearch(customer.name);
+                setShowAddOrder(true);
+                onCustomerSelected?.();
+            }
+        }
+    }, [selectedCustomerId, customers]);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -494,8 +512,24 @@ export function OrdersSection() {
                                 {showCustomerDropdown && (
                                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                                         {filteredCustomers.length === 0 ? (
-                                            <div className="px-4 py-3 text-gray-500 text-sm">
-                                                Клиент не найден
+                                            <div className="px-4 py-3">
+                                                <div className="text-gray-500 text-sm mb-2">Клиент не найден</div>
+                                                {onNavigateToAddCustomer && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setShowAddOrder(false);
+                                                            onNavigateToAddCustomer({
+                                                                name: customerSearch,
+                                                                phone: customerSearch.match(/\d+/g)?.join("") || "",
+                                                            });
+                                                        }}
+                                                        className="text-sm text-yellow-600 hover:text-yellow-700 font-medium flex items-center space-x-1"
+                                                    >
+                                                        <Plus className="h-4 w-4" />
+                                                        <span>Добавить нового клиента</span>
+                                                    </button>
+                                                )}
                                             </div>
                                         ) : (
                                             filteredCustomers.map((c) => (
