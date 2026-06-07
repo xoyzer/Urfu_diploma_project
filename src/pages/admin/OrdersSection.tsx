@@ -62,10 +62,41 @@ export function OrdersSection() {
         { vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 },
     ]);
 
+    // Customer search state
+    const [customerSearch, setCustomerSearch] = useState("");
+    const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+    const customerSearchRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         loadOrders();
         loadCustomersAndProducts();
     }, []);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (customerSearchRef.current && !customerSearchRef.current.contains(event.target as Node)) {
+                setShowCustomerDropdown(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filteredCustomers = customers.filter((c) => {
+        if (!customerSearch) return true;
+        const search = customerSearch.toLowerCase();
+        return (
+            c.name.toLowerCase().includes(search) ||
+            c.phone.toLowerCase().includes(search) ||
+            (c.company_name && c.company_name.toLowerCase().includes(search))
+        );
+    });
+
+    function selectCustomer(customer: Customer) {
+        setFormData({ ...formData, customer_id: customer.id });
+        setCustomerSearch(customer.name);
+        setShowCustomerDropdown(false);
+    }
 
     async function loadCustomersAndProducts() {
         try {
@@ -127,6 +158,10 @@ export function OrdersSection() {
 
     async function handleAddOrder(e: React.FormEvent) {
         e.preventDefault();
+        if (!formData.customer_id) {
+            alert("Выберите клиента");
+            return;
+        }
         if (newItems.length === 0) {
             alert("Добавьте хотя бы один товар");
             return;
@@ -201,6 +236,8 @@ export function OrdersSection() {
             setNewItemProductId("");
             setNewItemQty(0);
             setNewTrips([{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }]);
+            setCustomerSearch("");
+            setShowCustomerDropdown(false);
             setShowAddOrder(false);
             loadOrders();
         } catch (error) {
@@ -425,6 +462,8 @@ export function OrdersSection() {
                     setNewItemQty(0);
                     setNewTrips([{ vehicle_type: "манипулятор 5т", trip_count: 1, cost_per_trip: 0 }]);
                     setFormData({ customer_id: "", delivery_address: "", source: "phone", is_pickup: false });
+                    setCustomerSearch("");
+                    setShowCustomerDropdown(false);
                 }}
             >
                 <form onSubmit={handleAddOrder} className="space-y-5">
@@ -434,19 +473,53 @@ export function OrdersSection() {
                             <label className="block text-sm font-semibold text-gray-700 mb-1">
                                 Клиент <span className="text-red-500">*</span>
                             </label>
-                            <select
-                                required
-                                value={formData.customer_id}
-                                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
-                            >
-                                <option value="">Выберите клиента</option>
-                                {customers.map((c) => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.name} ({c.phone})
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="relative" ref={customerSearchRef}>
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <input
+                                    type="text"
+                                    placeholder="Введите имя или телефон..."
+                                    value={customerSearch}
+                                    onChange={(e) => {
+                                        setCustomerSearch(e.target.value);
+                                        setFormData({ ...formData, customer_id: "" });
+                                        setShowCustomerDropdown(true);
+                                    }}
+                                    onFocus={() => setShowCustomerDropdown(true)}
+                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                                />
+                                {showCustomerDropdown && (
+                                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                        {filteredCustomers.length === 0 ? (
+                                            <div className="px-4 py-3 text-gray-500 text-sm">
+                                                Клиент не найден
+                                            </div>
+                                        ) : (
+                                            filteredCustomers.map((c) => (
+                                                <button
+                                                    key={c.id}
+                                                    type="button"
+                                                    onClick={() => selectCustomer(c)}
+                                                    className={`w-full text-left px-4 py-2 hover:bg-yellow-50 transition-colors ${
+                                                        formData.customer_id === c.id ? "bg-yellow-100" : ""
+                                                    }`}
+                                                >
+                                                    <div className="font-semibold text-gray-900">{c.name}</div>
+                                                    <div className="text-sm text-gray-600">
+                                                        {c.phone}
+                                                        {c.company_name && <span className="ml-2">({c.company_name})</span>}
+                                                    </div>
+                                                </button>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            {formData.customer_id && (
+                                <div className="mt-1 text-sm text-green-600">
+                                    <Check className="inline h-4 w-4 mr-1" />
+                                    Клиент выбран
+                                </div>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">Источник</label>
