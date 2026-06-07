@@ -9,7 +9,12 @@ type Customer = Database["public"]["Tables"]["customers"]["Row"];
 
 const EMPTY_FORM = { name: "", phone: "", email: "", company_name: "", address: "", notes: "" };
 
-export function CustomersSection() {
+interface CustomersSectionProps {
+    initialData?: { name?: string; phone?: string } | null;
+    onCustomerCreated?: (customerId: string) => void;
+}
+
+export function CustomersSection({ initialData, onCustomerCreated }: CustomersSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -28,6 +33,17 @@ export function CustomersSection() {
     useEffect(() => {
         loadCustomers();
     }, []);
+
+    useEffect(() => {
+        if (initialData) {
+            setFormData((prev) => ({
+                ...prev,
+                name: initialData.name || prev.name,
+                phone: initialData.phone || prev.phone,
+            }));
+            setShowModal(true);
+        }
+    }, [initialData]);
 
     async function loadCustomers() {
         try {
@@ -73,15 +89,20 @@ export function CustomersSection() {
         setSubmitting(true);
         try {
             const phoneValidation = validatePhone(formData.phone);
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from("customers")
-                .insert([{ ...formData, phone: phoneValidation.formatted }]);
+                .insert([{ ...formData, phone: phoneValidation.formatted }])
+                .select("id")
+                .single();
             if (error) throw error;
             setFormData(EMPTY_FORM);
             setErrors({});
             setTouched({});
             setShowModal(false);
             loadCustomers();
+            if (data && onCustomerCreated) {
+                onCustomerCreated(data.id);
+            }
         } catch (error) {
             console.error("Error adding customer:", error);
             alert("Ошибка при добавлении клиента");

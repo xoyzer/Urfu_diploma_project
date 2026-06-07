@@ -12,6 +12,11 @@ interface AdminDashboardProps {
     onNavigate?: (page: string) => void;
 }
 
+interface NewCustomerData {
+    name?: string;
+    phone?: string;
+}
+
 const ADMIN_SECTION_KEY = "paving_admin_section";
 
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
@@ -19,6 +24,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         const stored = localStorage.getItem(ADMIN_SECTION_KEY) as Section | null;
         return stored || "orders";
     });
+    const [newCustomerInitial, setNewCustomerInitial] = useState<NewCustomerData | null>(null);
+    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
     const changeSection = (section: Section) => {
         setActiveSection(section);
@@ -32,6 +39,17 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         { id: "inventory" as Section, label: "Склад", icon: Package },
         { id: "analytics" as Section, label: "Аналитика", icon: BarChart3 },
     ];
+
+    function handleNavigateToAddCustomer(data?: NewCustomerData) {
+        setNewCustomerInitial(data || null);
+        changeSection("customers");
+    }
+
+    function handleCustomerCreated(customerId: string) {
+        setSelectedCustomerId(customerId);
+        setNewCustomerInitial(null);
+        changeSection("orders");
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -55,7 +73,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                             {menuItems.map((item) => (
                                 <li key={item.id}>
                                     <button
-                                        onClick={() => changeSection(item.id)}
+                                        onClick={() => {
+                                            changeSection(item.id);
+                                            setNewCustomerInitial(null);
+                                        }}
                                         className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                                             activeSection === item.id
                                                 ? "bg-amber-50 text-amber-600 font-semibold"
@@ -72,8 +93,22 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 </aside>
 
                 <main className="flex-1 p-8">
-                    {activeSection === "orders" && <OrdersSection />}
-                    {activeSection === "customers" && <CustomersSection />}
+                    {activeSection === "orders" && (
+                        <OrdersSection
+                            onNavigateToAddCustomer={handleNavigateToAddCustomer}
+                            selectedCustomerId={selectedCustomerId}
+                            onCustomerSelected={() => setSelectedCustomerId(null)}
+                        />
+                    )}
+                    {activeSection === "customers" && (
+                        <CustomersSection
+                            initialData={newCustomerInitial}
+                            onCustomerCreated={(customerId) => {
+                                handleCustomerCreated(customerId);
+                                setNewCustomerInitial(null);
+                            }}
+                        />
+                    )}
                     {activeSection === "vehicles" && <VehiclesSection />}
                     {activeSection === "inventory" && <InventorySection />}
                     {activeSection === "analytics" && <AnalyticsSection />}
