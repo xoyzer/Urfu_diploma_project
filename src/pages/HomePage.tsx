@@ -44,7 +44,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                                     Калькулятор
                                 </button>
                             </div>
-                            <div className="flex gap-4 justify-center lg:justify-start mt-10">
+                            <div className="flex gap-4 justify-center lg:justify-start mt-12">
                                 <a
                                     href="https://t.me/aleksey6317"
                                     target="_blank"
