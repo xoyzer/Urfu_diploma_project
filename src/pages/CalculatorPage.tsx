@@ -616,6 +616,19 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                         </p>
                                     )}
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Расстояние (км)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        readOnly
+                                        value={distance || ""}
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-default"
+                                        placeholder="Будет рассчитано автоматически"
+                                    />
+                                </div>
                             </div>
                         )}
 
