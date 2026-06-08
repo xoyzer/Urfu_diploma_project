@@ -616,25 +616,6 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                         </p>
                                     )}
                                 </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Расстояние (км)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        value={distance || ""}
-                                        onChange={(e) => setDistance(parseFloat(e.target.value) || 0)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                        placeholder="Введите вручную или используйте автоматический расчёт"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Расстояние можно отредактировать вручную, если автоматический расчёт отличается
-                                        от реального маршрута.
-                                    </p>
-                                </div>
                             </div>
                         )}
 
