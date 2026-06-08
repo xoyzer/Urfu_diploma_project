@@ -620,7 +620,7 @@ export function VehiclesSection() {
                                                     onClick={() => completeDelivery(delivery)}
                                                     className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
                                                 >
-                                                    <CheckCircle className="h-3 w-3" />
+                                                    <CheckCircle2 className="h-3 w-3" />
                                                     Завершить
                                                 </button>
                                             </div>
