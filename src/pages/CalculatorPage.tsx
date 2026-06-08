@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     Calculator,
     Truck,
@@ -11,6 +11,8 @@ import {
     Info,
     ArrowDownWideNarrow,
 } from "lucide-react";
+
+declare const ymaps: any;
 import { supabase } from "../lib/supabase";
 import { Database } from "../types/database";
 
@@ -129,10 +131,26 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     const [geocoding, setGeocoding] = useState<boolean>(false);
     const [geocodeError, setGeocodeError] = useState<string>("");
 
+    const mapContainerRef = useRef<HTMLDivElement>(null);
+    const ymapsMapRef = useRef<any>(null);
+    const ymapsPlacemarkRef = useRef<any>(null);
+    const mapInitializedRef = useRef(false);
+    const [mapReady, setMapReady] = useState(false);
+
     const CALCULATOR_STORAGE_KEY = "calculator_state";
 
     useEffect(() => {
         loadProducts();
+
+        if ((window as any).ymaps) {
+            (window as any).ymaps.ready(() => setMapReady(true));
+            return;
+        }
+        const script = document.createElement("script");
+        script.src = `https://api-maps.yandex.ru/2.1/?apikey=9dce9981-f1cc-4161-ae41-6f952a43c8c3&lang=ru_RU`;
+        script.async = true;
+        script.onload = () => (window as any).ymaps.ready(() => setMapReady(true));
+        document.head.appendChild(script);
     }, []);
 
     useEffect(() => {
@@ -190,6 +208,63 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
             saveCalculatorState();
         }
     }, [items, distance, isPickup, destAddress]);
+
+    useEffect(() => {
+        if (items.length > 0 || distance || isPickup || destAddress) {
+            saveCalculatorState();
+        }
+    }, [items, distance, isPickup, destAddress]);
+
+    useEffect(() => {
+        if (!mapReady || isPickup || !mapContainerRef.current || mapInitializedRef.current) return;
+        mapInitializedRef.current = true;
+
+        const map = new ymaps.Map(mapContainerRef.current, {
+            center: [ORIGIN.lat, ORIGIN.lon],
+            zoom: 9,
+            controls: ["zoomControl", "geolocationControl"],
+        });
+        ymapsMapRef.current = map;
+
+        const originMark = new ymaps.Placemark(
+            [ORIGIN.lat, ORIGIN.lon],
+            { balloonContent: "Склад Фабрики Плитки" },
+            { preset: "islands#redDotIcon" },
+        );
+        map.geoObjects.add(originMark);
+
+        map.events.add("click", (e: any) => {
+            const coords: [number, number] = e.get("coords");
+
+            if (ymapsPlacemarkRef.current) map.geoObjects.remove(ymapsPlacemarkRef.current);
+            const mark = new ymaps.Placemark(coords, {}, { preset: "islands#blueCircleDotIcon", draggable: true });
+            ymapsPlacemarkRef.current = mark;
+            map.geoObjects.add(mark);
+
+            mark.events.add("dragend", () => {
+                const newCoords: [number, number] = mark.geometry.getCoordinates();
+                reverseGeocodeAndRoute(newCoords);
+            });
+
+            reverseGeocodeAndRoute(coords);
+        });
+
+        function reverseGeocodeAndRoute(coords: [number, number]) {
+            ymaps.geocode(coords, { results: 1 }).then((res: any) => {
+                const obj = res.geoObjects.get(0);
+                if (!obj) return;
+                const addr: string = obj.getAddressLine();
+                setDestAddress(addr);
+                setResolvedAddress(addr);
+                setGeocodeError("");
+            });
+
+            ymaps.route([[ORIGIN.lat, ORIGIN.lon], coords], { routingMode: "auto" }).then((route: any) => {
+                const km = Math.round(route.getLength() / 1000);
+                setDistance(km);
+            });
+        }
+    }, [mapReady, isPickup]);
 
     async function loadProducts() {
         const { data } = await supabase
@@ -275,18 +350,41 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
         setGeocodeError("");
         setResolvedAddress("");
         try {
-            const geo = await geocodeAddress(destAddress.trim());
-            if (!geo) {
-                setGeocodeError("Не удалось найти адрес. Попробуйте уточнить (город, улица, дом).");
-                return;
+            if (mapReady) {
+                const geocodeRes = await ymaps.geocode(destAddress.trim(), { results: 1 });
+                const obj = geocodeRes.geoObjects.get(0);
+                if (!obj) {
+                    setGeocodeError("Не удалось найти адрес. Попробуйте уточнить (город, улица, дом).");
+                    return;
+                }
+                const coords: [number, number] = obj.geometry.getCoordinates();
+                const addr: string = obj.getAddressLine();
+                setResolvedAddress(addr);
+
+                if (ymapsMapRef.current) {
+                    if (ymapsPlacemarkRef.current) ymapsMapRef.current.geoObjects.remove(ymapsPlacemarkRef.current);
+                    const mark = new ymaps.Placemark(coords, {}, { preset: "islands#blueCircleDotIcon" });
+                    ymapsPlacemarkRef.current = mark;
+                    ymapsMapRef.current.geoObjects.add(mark);
+                    ymapsMapRef.current.setCenter(coords, 12);
+                }
+
+                const route = await ymaps.route([[ORIGIN.lat, ORIGIN.lon], coords], { routingMode: "auto" });
+                setDistance(Math.round(route.getLength() / 1000));
+            } else {
+                const geo = await geocodeAddress(destAddress.trim());
+                if (!geo) {
+                    setGeocodeError("Не удалось найти адрес. Попробуйте уточнить (город, улица, дом).");
+                    return;
+                }
+                setResolvedAddress(geo.displayName);
+                const km = await routeDistanceKm({ lat: ORIGIN.lat, lon: ORIGIN.lon }, { lat: geo.lat, lon: geo.lon });
+                if (km == null) {
+                    setGeocodeError("Не удалось рассчитать расстояние. Введите значение вручную.");
+                    return;
+                }
+                setDistance(km);
             }
-            setResolvedAddress(geo.displayName);
-            const km = await routeDistanceKm({ lat: ORIGIN.lat, lon: ORIGIN.lon }, { lat: geo.lat, lon: geo.lon });
-            if (km == null) {
-                setGeocodeError("Не удалось рассчитать расстояние. Введите значение вручную.");
-                return;
-            }
-            setDistance(km);
         } catch (error) {
             console.error(error);
             setGeocodeError("Ошибка при расчёте. Попробуйте позже или введите расстояние вручную.");
@@ -495,6 +593,28 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                         <p className="text-xs text-green-700 mt-2">Найдено: {resolvedAddress}</p>
                                     )}
                                     {geocodeError && <p className="text-xs text-red-600 mt-2">{geocodeError}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <MapPin className="inline h-4 w-4 mr-1" />
+                                        Или выберите точку на карте
+                                    </label>
+                                    <div
+                                        ref={mapContainerRef}
+                                        className="w-full rounded-lg overflow-hidden border border-gray-300"
+                                        style={{ height: "380px" }}
+                                    />
+                                    {!mapReady && (
+                                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                            <Loader2 className="h-3 w-3 animate-spin" /> Загрузка карты...
+                                        </p>
+                                    )}
+                                    {mapReady && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Нажмите на карту, чтобы выбрать адрес доставки — расстояние рассчитается автоматически
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
