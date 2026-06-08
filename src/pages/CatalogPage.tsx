@@ -7,6 +7,7 @@ type Product = Database["public"]["Tables"]["products"]["Row"];
 
 interface CatalogPageProps {
     onNavigate: (page: string) => void;
+    initialCategory?: string;
 }
 
 interface CategoryWithSubcategories {
@@ -15,11 +16,11 @@ interface CategoryWithSubcategories {
     productCount: number;
 }
 
-export function CatalogPage({ onNavigate }: CatalogPageProps) {
+export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState<string>("all");
+    const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory || "all");
     const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
     const [categories, setCategories] = useState<CategoryWithSubcategories[]>([]);
@@ -27,6 +28,13 @@ export function CatalogPage({ onNavigate }: CatalogPageProps) {
     useEffect(() => {
         loadProducts();
     }, []);
+
+    useEffect(() => {
+        if (initialCategory) {
+            setSelectedCategory(initialCategory);
+            setExpandedCategories((prev) => new Set(prev).add(initialCategory));
+        }
+    }, [initialCategory]);
 
     async function loadProducts() {
         try {
