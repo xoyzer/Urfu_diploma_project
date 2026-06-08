@@ -111,7 +111,7 @@ export function Header({ onNavigate }: HeaderProps) {
                                     className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 transition-colors shadow-sm"
                                 >
                                     <User className="h-5 w-5" />
-                                    <span>CRM</span>
+                                    <span>Вход</span>
                                 </button>
                                 <button
                                     onClick={() => signOut()}
