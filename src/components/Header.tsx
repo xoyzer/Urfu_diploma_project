@@ -64,13 +64,13 @@ export function Header({ onNavigate }: HeaderProps) {
                                                 {cat.name}
                                             </button>
                                         ))}
-                                        <div className="border-t border-gray-100 my-1"></div>
+                                        <div className="border-t border-gray-300 my-1"></div>
                                         <button
                                             onClick={() => {
                                                 onNavigate("catalog");
                                                 setShowCatalogDropdown(false);
                                             }}
-                                            className="w-full text-left px-4 py-2 text-gray-500 hover:bg-yellow-50 hover:text-yellow-600 transition-colors text-sm"
+                                            className="w-full text-left px-4 py-2 text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors "
                                         >
                                             Все товары
                                         </button>
