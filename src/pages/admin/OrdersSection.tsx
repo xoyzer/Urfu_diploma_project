@@ -277,6 +277,34 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                 new_status: newStatus,
                 comment: `Статус изменен на: ${newStatus}`,
             });
+
+            if (newStatus === "Выполнен") {
+                const now = new Date().toISOString();
+                const today = now.split("T")[0];
+                // Mark active deliveries for this order as completed
+                const { data: activeDeliveries } = await supabase
+                    .from("deliveries")
+                    .select("id, vehicle_id")
+                    .eq("order_id", orderId)
+                    .neq("status", "Выполнена");
+                if (activeDeliveries && activeDeliveries.length > 0) {
+                    await supabase.from("deliveries").update({
+                        status: "Выполнена",
+                        completed_at: now,
+                        actual_date: today,
+                    }).eq("order_id", orderId).neq("status", "Выполнена");
+                    // Free up the vehicles
+                    for (const d of activeDeliveries) {
+                        if (d.vehicle_id) {
+                            await supabase.from("vehicles").update({
+                                operational_status: "active",
+                                is_active: true,
+                            }).eq("id", d.vehicle_id);
+                        }
+                    }
+                }
+            }
+
             loadOrders();
         } catch (error) {
             console.error("Error updating order:", error);

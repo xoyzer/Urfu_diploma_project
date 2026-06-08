@@ -204,6 +204,7 @@ export interface Database {
           capacity: number
           license_plate: string
           is_active: boolean
+          operational_status: string
           created_at: string
         }
         Insert: {
@@ -213,6 +214,7 @@ export interface Database {
           capacity: number
           license_plate: string
           is_active?: boolean
+          operational_status?: string
           created_at?: string
         }
         Update: {
@@ -222,6 +224,7 @@ export interface Database {
           capacity?: number
           license_plate?: string
           is_active?: boolean
+          operational_status?: string
           created_at?: string
         }
       }
@@ -234,6 +237,8 @@ export interface Database {
           actual_date: string | null
           status: string
           driver_notes: string
+          started_at: string | null
+          completed_at: string | null
           created_at: string
           updated_at: string
         }
@@ -245,6 +250,8 @@ export interface Database {
           actual_date?: string | null
           status?: string
           driver_notes?: string
+          started_at?: string | null
+          completed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -256,6 +263,8 @@ export interface Database {
           actual_date?: string | null
           status?: string
           driver_notes?: string
+          started_at?: string | null
+          completed_at?: string | null
           created_at?: string
           updated_at?: string
         }
