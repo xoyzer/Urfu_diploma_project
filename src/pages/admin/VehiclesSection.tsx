@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Calendar, Trash2, Play, CheckCircle, Wrench, XCircle, Truck } from "lucide-react";
+import { Plus, Calendar, Trash2, Play, CheckCircle2, Wrench, XCircle, Truck } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
@@ -156,15 +156,22 @@ export function VehiclesSection() {
     }
 
     async function setVehicleOperationalStatus(id: string, status: string) {
+        // Optimistic update
+        setVehicles((prev) =>
+            prev.map((v) =>
+                v.id === id
+                    ? { ...v, operational_status: status, is_active: status === "active" || status === "busy" }
+                    : v
+            )
+        );
         try {
-            const { error } = await supabase.from("vehicles").update({
+            await supabase.from("vehicles").update({
                 operational_status: status,
                 is_active: status === "active" || status === "busy",
             }).eq("id", id);
-            if (error) throw error;
-            loadVehicles();
         } catch (error) {
             console.error("Error updating vehicle status:", error);
+            loadVehicles(); // rollback on error
         }
     }
 
@@ -420,7 +427,7 @@ export function VehiclesSection() {
                                                 title="Пометить активным"
                                                 className="p-1 rounded text-green-600 hover:bg-green-50 transition-colors"
                                             >
-                                                <CheckCircle className="h-4 w-4" />
+                                                <CheckCircle2 className="h-4 w-4" />
                                             </button>
                                         )}
                                         {vehicle.operational_status !== "repair" && (
@@ -453,9 +460,9 @@ export function VehiclesSection() {
 
                 {/* Delivery schedule */}
                 <div className="bg-white rounded-lg shadow-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-semibold">График доставок</h2>
-                        <div className="flex items-center gap-2">
+                    <div className="mb-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-xl font-semibold">График доставок</h2>
                             <button
                                 onClick={() => setShowAddDelivery(true)}
                                 className="flex items-center space-x-1 bg-yellow-600 text-white px-3 py-2 rounded-lg hover:bg-yellow-700 transition-colors text-sm"
@@ -463,6 +470,8 @@ export function VehiclesSection() {
                                 <Plus className="h-4 w-4" />
                                 <span>Запланировать</span>
                             </button>
+                        </div>
+                        <div className="flex items-center gap-2">
                             <button
                                 type="button"
                                 onClick={() => setSelectedDate(TODAY)}
@@ -475,7 +484,7 @@ export function VehiclesSection() {
                                 type="date"
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
                             />
                         </div>
                     </div>
