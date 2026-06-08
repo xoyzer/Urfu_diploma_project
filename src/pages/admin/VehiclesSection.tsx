@@ -8,7 +8,9 @@ type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
 type Delivery = Database["public"]["Tables"]["deliveries"]["Row"] & {
     order: { order_number: string; delivery_address: string | null };
 };
-type Order = Database["public"]["Tables"]["orders"]["Row"];
+type Order = Database["public"]["Tables"]["orders"]["Row"] & {
+    customer: { name: string; phone: string } | null;
+};
 
 const VEHICLE_TYPES = ["Манипулятор 5т", "Манипулятор 8т", "Манипулятор 10т", "Фура 20т"];
 
@@ -84,10 +86,10 @@ export function VehiclesSection() {
         try {
             const { data, error } = await supabase
                 .from("orders")
-                .select("*")
+                .select("*, customer:customers(name, phone)")
                 .not("status", "in", '("Доставляется","Выполнен","Отменен")');
             if (error) throw error;
-            setOrders(data || []);
+            setOrders(data as Order[] || []);
         } catch (error) {
             console.error("Error loading orders:", error);
         }
@@ -549,7 +551,7 @@ export function VehiclesSection() {
                                     <option value="">Выберите заказ</option>
                                     {orders.map((o) => (
                                         <option key={o.id} value={o.id}>
-                                            #{o.order_number} — {o.delivery_address || "Адрес не указан"}
+                                            {o.customer ? `${o.customer.name} ${o.customer.phone}` : `Заказ #${o.order_number}`} — {o.delivery_address || "Адрес не указан"}
                                         </option>
                                     ))}
                                 </select>
