@@ -17,6 +17,7 @@ function AppContent() {
     return localStorage.getItem(PAGE_STORAGE_KEY) || 'home';
   });
   const [orderData, setOrderData] = useState<CalculatorResult | undefined>();
+  const [catalogCategory, setCatalogCategory] = useState<string | undefined>();
   const { user, loading } = useAuth();
 
   useEffect(() => {
@@ -37,11 +38,16 @@ function AppContent() {
     );
   }
 
-  const handleNavigate = (page: string, clearOrder = false) => {
+  const handleNavigate = (page: string, clearOrder = false, options?: { category?: string }) => {
     if (clearOrder) {
       setOrderData(undefined);
     }
     setCurrentPage(page);
+    if (page === 'catalog' && options?.category) {
+      setCatalogCategory(options.category);
+    } else if (page === 'catalog') {
+      setCatalogCategory(undefined);
+    }
   };
 
   const handleCalculatorResult = (data: CalculatorResult) => {
@@ -57,7 +63,7 @@ function AppContent() {
 
       {currentPage === 'home' && <HomePage onNavigate={handleNavigate} />}
       {currentPage === 'about' && <AboutPage />}
-      {currentPage === 'catalog' && <CatalogPage onNavigate={handleNavigate} />}
+      {currentPage === 'catalog' && <CatalogPage onNavigate={handleNavigate} initialCategory={catalogCategory} />}
       {currentPage === 'calculator' && <CalculatorPage onNavigate={handleCalculatorResult} />}
       {currentPage === 'contacts' && <ContactsPage />}
       {currentPage === 'order-form' && <OrderFormPage orderData={orderData} onNavigate={handleNavigate} />}
