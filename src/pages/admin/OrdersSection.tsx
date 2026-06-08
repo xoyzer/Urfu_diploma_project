@@ -27,7 +27,7 @@ interface EditableTrip {
 
 const VEHICLE_TYPES = ["манипулятор 5т", "манипулятор 8т", "манипулятор 10т", "фура 20т"];
 
-const ORDER_STATUSES = ["Новый", "В обработке", "Согласован", "Доставляется", "Выполнен", "Отменен"];
+const ORDER_STATUSES = ["Новый", "Согласован", "Доставляется", "Выполнен", "Отменен"];
 
 interface OrdersSectionProps {
     onNavigateToAddCustomer?: (data?: { name?: string; phone?: string }) => void;
@@ -469,7 +469,6 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
             Новый: "bg-blue-100 text-blue-800",
-            "В обработке": "bg-yellow-100 text-yellow-800",
             Согласован: "bg-green-100 text-green-800",
             Доставляется: "bg-purple-100 text-purple-800",
             Выполнен: "bg-gray-100 text-gray-800",

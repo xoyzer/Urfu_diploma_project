@@ -85,7 +85,10 @@ export function VehiclesSection() {
 
     async function loadOrders() {
         try {
-            const { data, error } = await supabase.from("orders").select("*").eq("status", "Согласован");
+            const { data, error } = await supabase
+                .from("orders")
+                .select("*")
+                .not("status", "in", '("Доставляется","Выполнен","Отменен")');
             if (error) throw error;
             setOrders(data || []);
         } catch (error) {
@@ -610,7 +613,7 @@ export function VehiclesSection() {
                                                 {!isInProgress && (
                                                     <button
                                                         onClick={() => startDelivery(delivery)}
-                                                        className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                                                        className="flex items-center gap-1 px-3 py-1 bg-amber-500 text-white text-xs rounded hover:bg-amber-600 transition-colors"
                                                     >
                                                         <Play className="h-3 w-3" />
                                                         Начать доставку
@@ -618,7 +621,7 @@ export function VehiclesSection() {
                                                 )}
                                                 <button
                                                     onClick={() => completeDelivery(delivery)}
-                                                    className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                                                    className="flex items-center gap-1 px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors"
                                                 >
                                                     <CheckCircle2 className="h-3 w-3" />
                                                     Завершить
