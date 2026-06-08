@@ -5,15 +5,12 @@ import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
 
 type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
-type Delivery = Database["public"]["Tables"]["deliveries"]["Row"] & { order: { order_number: string; delivery_address: string | null } };
+type Delivery = Database["public"]["Tables"]["deliveries"]["Row"] & {
+    order: { order_number: string; delivery_address: string | null };
+};
 type Order = Database["public"]["Tables"]["orders"]["Row"];
 
-const VEHICLE_TYPES = [
-    "манипулятор 5т",
-    "манипулятор 8т",
-    "манипулятор 10т",
-    "фура 20т",
-];
+const VEHICLE_TYPES = ["Манипулятор 5т", "Манипулятор 8т", "Манипулятор 10т", "Фура 20т"];
 
 const OPERATIONAL_STATUSES: { value: string; label: string; color: string }[] = [
     { value: "active", label: "Активен", color: "bg-green-100 text-green-800" },
@@ -130,12 +127,20 @@ export function VehiclesSection() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const { error } = await supabase.from("vehicles").insert([{
-                ...vehicleForm,
-                is_active: vehicleForm.operational_status === "active" || vehicleForm.operational_status === "busy",
-            }]);
+            const { error } = await supabase.from("vehicles").insert([
+                {
+                    ...vehicleForm,
+                    is_active: vehicleForm.operational_status === "active" || vehicleForm.operational_status === "busy",
+                },
+            ]);
             if (error) throw error;
-            setVehicleForm({ name: "", type: "манипулятор 5т", capacity: 5, license_plate: "", operational_status: "active" });
+            setVehicleForm({
+                name: "",
+                type: "манипулятор 5т",
+                capacity: 5,
+                license_plate: "",
+                operational_status: "active",
+            });
             setShowAddVehicle(false);
             loadVehicles();
         } catch (error) {
@@ -164,14 +169,17 @@ export function VehiclesSection() {
             prev.map((v) =>
                 v.id === id
                     ? { ...v, operational_status: status, is_active: status === "active" || status === "busy" }
-                    : v
-            )
+                    : v,
+            ),
         );
         try {
-            await supabase.from("vehicles").update({
-                operational_status: status,
-                is_active: status === "active" || status === "busy",
-            }).eq("id", id);
+            await supabase
+                .from("vehicles")
+                .update({
+                    operational_status: status,
+                    is_active: status === "active" || status === "busy",
+                })
+                .eq("id", id);
         } catch (error) {
             console.error("Error updating vehicle status:", error);
             loadVehicles(); // rollback on error
@@ -196,10 +204,13 @@ export function VehiclesSection() {
 
             // Mark vehicle as busy
             if (deliveryForm.vehicle_id) {
-                await supabase.from("vehicles").update({
-                    operational_status: "busy",
-                    is_active: true,
-                }).eq("id", deliveryForm.vehicle_id);
+                await supabase
+                    .from("vehicles")
+                    .update({
+                        operational_status: "busy",
+                        is_active: true,
+                    })
+                    .eq("id", deliveryForm.vehicle_id);
             }
 
             await supabase.from("orders").update({ status: "Доставляется" }).eq("id", deliveryForm.order_id);
@@ -219,13 +230,19 @@ export function VehiclesSection() {
 
     async function startDelivery(delivery: Delivery) {
         try {
-            await supabase.from("deliveries").update({
-                status: "Доставляется",
-                started_at: new Date().toISOString(),
-            }).eq("id", delivery.id);
+            await supabase
+                .from("deliveries")
+                .update({
+                    status: "Доставляется",
+                    started_at: new Date().toISOString(),
+                })
+                .eq("id", delivery.id);
             await supabase.from("orders").update({ status: "Доставляется" }).eq("id", delivery.order_id);
             if (delivery.vehicle_id) {
-                await supabase.from("vehicles").update({ operational_status: "busy", is_active: true }).eq("id", delivery.vehicle_id);
+                await supabase
+                    .from("vehicles")
+                    .update({ operational_status: "busy", is_active: true })
+                    .eq("id", delivery.vehicle_id);
             }
             loadAllDeliveries();
             loadVehicles();
@@ -236,14 +253,20 @@ export function VehiclesSection() {
 
     async function completeDelivery(delivery: Delivery) {
         try {
-            await supabase.from("deliveries").update({
-                status: "Выполнена",
-                completed_at: new Date().toISOString(),
-                actual_date: TODAY,
-            }).eq("id", delivery.id);
+            await supabase
+                .from("deliveries")
+                .update({
+                    status: "Выполнена",
+                    completed_at: new Date().toISOString(),
+                    actual_date: TODAY,
+                })
+                .eq("id", delivery.id);
             await supabase.from("orders").update({ status: "Выполнен" }).eq("id", delivery.order_id);
             if (delivery.vehicle_id) {
-                await supabase.from("vehicles").update({ operational_status: "active", is_active: true }).eq("id", delivery.vehicle_id);
+                await supabase
+                    .from("vehicles")
+                    .update({ operational_status: "active", is_active: true })
+                    .eq("id", delivery.vehicle_id);
             }
             loadAllDeliveries();
             loadVehicles();
@@ -267,12 +290,23 @@ export function VehiclesSection() {
 
     // Calendar helpers
     const daysWithDeliveries = new Set(
-        allDeliveries
-            .filter((d) => d.status !== "Выполнена")
-            .map((d) => d.scheduled_date)
+        allDeliveries.filter((d) => d.status !== "Выполнена").map((d) => d.scheduled_date),
     );
     const calendarCells = buildCalendar(calendarMonth.year, calendarMonth.month);
-    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    const monthNames = [
+        "Январь",
+        "Февраль",
+        "Март",
+        "Апрель",
+        "Май",
+        "Июнь",
+        "Июль",
+        "Август",
+        "Сентябрь",
+        "Октябрь",
+        "Ноябрь",
+        "Декабрь",
+    ];
 
     function prevMonth() {
         setCalendarMonth((p) => {
@@ -338,7 +372,9 @@ export function VehiclesSection() {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none"
                         >
                             {VEHICLE_TYPES.map((t) => (
-                                <option key={t} value={t}>{t}</option>
+                                <option key={t} value={t}>
+                                    {t}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -376,7 +412,9 @@ export function VehiclesSection() {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none"
                         >
                             {OPERATIONAL_STATUSES.map((s) => (
-                                <option key={s.value} value={s.value}>{s.label}</option>
+                                <option key={s.value} value={s.value}>
+                                    {s.label}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -492,7 +530,11 @@ export function VehiclesSection() {
                         </div>
                     </div>
 
-                    <Modal isOpen={showAddDelivery} title="Запланировать доставку" onClose={() => setShowAddDelivery(false)}>
+                    <Modal
+                        isOpen={showAddDelivery}
+                        title="Запланировать доставку"
+                        onClose={() => setShowAddDelivery(false)}
+                    >
                         <form onSubmit={handleAddDelivery} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -540,12 +582,16 @@ export function VehiclesSection() {
                                     type="date"
                                     required
                                     value={deliveryForm.scheduled_date}
-                                    onChange={(e) => setDeliveryForm({ ...deliveryForm, scheduled_date: e.target.value })}
+                                    onChange={(e) =>
+                                        setDeliveryForm({ ...deliveryForm, scheduled_date: e.target.value })
+                                    }
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Примечания водителя</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Примечания водителя
+                                </label>
                                 <textarea
                                     value={deliveryForm.driver_notes}
                                     onChange={(e) => setDeliveryForm({ ...deliveryForm, driver_notes: e.target.value })}
@@ -565,9 +611,7 @@ export function VehiclesSection() {
                     </Modal>
 
                     {deliveries.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            Нет доставок на выбранную дату
-                        </div>
+                        <div className="text-center py-8 text-gray-500">Нет доставок на выбранную дату</div>
                     ) : (
                         <div className="space-y-3">
                             {deliveries.map((delivery) => {
@@ -582,14 +626,18 @@ export function VehiclesSection() {
                                                     Заказ #{delivery.order?.order_number}
                                                 </p>
                                                 {delivery.order?.delivery_address && (
-                                                    <p className="text-xs text-gray-500 mt-0.5">{delivery.order.delivery_address}</p>
+                                                    <p className="text-xs text-gray-500 mt-0.5">
+                                                        {delivery.order.delivery_address}
+                                                    </p>
                                                 )}
                                                 <p className="text-sm text-gray-600 mt-1">
                                                     {vehicle?.name || "Транспорт не назначен"}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <span className={`px-2 py-1 text-xs rounded font-medium ${getDeliveryStatusBadge(delivery.status)}`}>
+                                                <span
+                                                    className={`px-2 py-1 text-xs rounded font-medium ${getDeliveryStatusBadge(delivery.status)}`}
+                                                >
                                                     {delivery.status}
                                                 </span>
                                                 <button
@@ -605,7 +653,11 @@ export function VehiclesSection() {
                                         )}
                                         {delivery.started_at && !isDone && (
                                             <p className="text-xs text-blue-600 mb-2">
-                                                Начало: {new Date(delivery.started_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
+                                                Начало:{" "}
+                                                {new Date(delivery.started_at).toLocaleTimeString("ru-RU", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
                                             </p>
                                         )}
                                         {!isDone && (
@@ -613,7 +665,7 @@ export function VehiclesSection() {
                                                 {!isInProgress && (
                                                     <button
                                                         onClick={() => startDelivery(delivery)}
-                                                        className="flex items-center gap-1 px-3 py-1 bg-amber-500 text-white text-xs rounded hover:bg-amber-600 transition-colors"
+                                                        className="flex items-center gap-1 px-3 py-1 bg-amber-600 text-white text-xs rounded hover:bg-amber-700 transition-colors"
                                                     >
                                                         <Play className="h-3 w-3" />
                                                         Начать доставку
@@ -630,7 +682,11 @@ export function VehiclesSection() {
                                         )}
                                         {isDone && delivery.completed_at && (
                                             <p className="text-xs text-green-600 mt-1">
-                                                Завершено: {new Date(delivery.completed_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
+                                                Завершено:{" "}
+                                                {new Date(delivery.completed_at).toLocaleTimeString("ru-RU", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
                                             </p>
                                         )}
                                     </div>
@@ -664,7 +720,9 @@ export function VehiclesSection() {
                     </div>
                     <div className="grid grid-cols-7 text-center text-xs font-semibold text-gray-500 mb-1">
                         {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((d) => (
-                            <div key={d} className="py-1">{d}</div>
+                            <div key={d} className="py-1">
+                                {d}
+                            </div>
                         ))}
                     </div>
                     <div className="grid grid-cols-7 gap-y-1">

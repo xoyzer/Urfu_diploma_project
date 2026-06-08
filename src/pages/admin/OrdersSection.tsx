@@ -288,18 +288,25 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                     .eq("order_id", orderId)
                     .neq("status", "Выполнена");
                 if (activeDeliveries && activeDeliveries.length > 0) {
-                    await supabase.from("deliveries").update({
-                        status: "Выполнена",
-                        completed_at: now,
-                        actual_date: today,
-                    }).eq("order_id", orderId).neq("status", "Выполнена");
+                    await supabase
+                        .from("deliveries")
+                        .update({
+                            status: "Выполнена",
+                            completed_at: now,
+                            actual_date: today,
+                        })
+                        .eq("order_id", orderId)
+                        .neq("status", "Выполнена");
                     // Free up the vehicles
                     for (const d of activeDeliveries) {
                         if (d.vehicle_id) {
-                            await supabase.from("vehicles").update({
-                                operational_status: "active",
-                                is_active: true,
-                            }).eq("id", d.vehicle_id);
+                            await supabase
+                                .from("vehicles")
+                                .update({
+                                    operational_status: "active",
+                                    is_active: true,
+                                })
+                                .eq("id", d.vehicle_id);
                         }
                     }
                 }
@@ -383,7 +390,9 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
         setEditSaving(true);
         try {
             const productTotal = editItems.reduce((sum, i) => sum + i.subtotal, 0);
-            const deliveryCost = editIsPickup ? 0 : editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
+            const deliveryCost = editIsPickup
+                ? 0
+                : editTrips.reduce((sum, t) => sum + t.trip_count * t.cost_per_trip, 0);
             const totalAmount = productTotal + deliveryCost;
             const deliveryType = editIsPickup
                 ? "Самовывоз"
@@ -469,9 +478,9 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
             Новый: "bg-blue-100 text-blue-800",
-            Согласован: "bg-green-100 text-green-800",
+            Согласован: "bg-amber-100 text-amber-600",
             Доставляется: "bg-purple-100 text-purple-800",
-            Выполнен: "bg-gray-100 text-gray-800",
+            Выполнен: "bg-green-100 text-green-800",
             Отменен: "bg-red-100 text-red-800",
         };
         return colors[status] || "bg-gray-100 text-gray-800";
@@ -571,7 +580,9 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                                     <div className="font-semibold text-gray-900">{c.name}</div>
                                                     <div className="text-sm text-gray-600">
                                                         {c.phone}
-                                                        {c.company_name && <span className="ml-2">({c.company_name})</span>}
+                                                        {c.company_name && (
+                                                            <span className="ml-2">({c.company_name})</span>
+                                                        )}
                                                     </div>
                                                 </button>
                                             ))
@@ -1033,7 +1044,8 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                                                                 const u = [...prev];
                                                                                 u[idx] = {
                                                                                     ...u[idx],
-                                                                                    trip_count: parseInt(e.target.value) || 1,
+                                                                                    trip_count:
+                                                                                        parseInt(e.target.value) || 1,
                                                                                 };
                                                                                 return u;
                                                                             })
@@ -1065,11 +1077,13 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                                                     />
                                                                 </div>
                                                                 <div>
-                                                                    <label className="text-gray-500 text-xs">Итого</label>
+                                                                    <label className="text-gray-500 text-xs">
+                                                                        Итого
+                                                                    </label>
                                                                     <div className="px-2 py-1 bg-white border border-gray-200 rounded text-center font-semibold">
-                                                                        {(trip.trip_count * trip.cost_per_trip).toLocaleString(
-                                                                            "ru-RU",
-                                                                        )}{" "}
+                                                                        {(
+                                                                            trip.trip_count * trip.cost_per_trip
+                                                                        ).toLocaleString("ru-RU")}{" "}
                                                                         ₽
                                                                     </div>
                                                                 </div>
@@ -1077,7 +1091,9 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                                             {editTrips.length > 1 && (
                                                                 <button
                                                                     onClick={() =>
-                                                                        setEditTrips((prev) => prev.filter((_, i) => i !== idx))
+                                                                        setEditTrips((prev) =>
+                                                                            prev.filter((_, i) => i !== idx),
+                                                                        )
                                                                     }
                                                                     className="text-xs text-red-600 hover:text-red-800 flex items-center space-x-1"
                                                                 >
@@ -1404,7 +1420,7 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                     <select
                                         value={order.status}
                                         onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                        className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(order.status)}`}
+                                        className={`px-3 py-1 rounded-full text-sm font-semibold  ${getStatusColor(order.status)}`}
                                     >
                                         {ORDER_STATUSES.map((status) => (
                                             <option key={status} value={status}>
