@@ -14,7 +14,7 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
         phone: "",
         email: "",
         company: "",
-        address: "",
+        address: orderData?.deliveryAddress ?? "",
         notes: "",
     });
     const [loading, setLoading] = useState(false);

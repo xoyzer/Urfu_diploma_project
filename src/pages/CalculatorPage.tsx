@@ -27,6 +27,7 @@ export interface CalculatorResult {
     items: CartItem[];
     deliveryType: string;
     vehicleType: string;
+    deliveryAddress: string;
     distance: number;
     totalWeight: number;
     productCost: number;
@@ -310,6 +311,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
             items,
             deliveryType: isPickup ? "Самовывоз" : selectedTransport.label,
             vehicleType: isPickup ? "" : selectedTransport.vehicleType,
+            deliveryAddress: isPickup ? "" : destAddress,
             distance: isPickup ? 0 : distance,
             totalWeight,
             productCost,
