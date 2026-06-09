@@ -14,7 +14,7 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
         phone: "",
         email: "",
         company: "",
-        address: "",
+        address: orderData?.deliveryAddress ?? "",
         notes: "",
     });
     const [loading, setLoading] = useState(false);
@@ -70,6 +70,15 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
 
             const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
             if (itemsError) throw itemsError;
+
+            if (!orderData.isPickup && orderData.vehicleType) {
+                await supabase.from("order_delivery_trips").insert({
+                    order_id: order.id,
+                    vehicle_type: orderData.vehicleType,
+                    trip_count: 1,
+                    cost_per_trip: orderData.deliveryCost,
+                });
+            }
 
             await supabase.from("order_history").insert({
                 order_id: order.id,
