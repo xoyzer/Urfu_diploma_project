@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, DollarSign, ShoppingCart, Users } from "lucide-react";
+import { TrendingUp, RussianRuble, ShoppingCart, Users } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 interface Stats {
@@ -128,7 +128,7 @@ export function AnalyticsSection() {
                 <div className="bg-white rounded-lg shadow-lg p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 bg-green-100 rounded-lg">
-                            <DollarSign className="h-6 w-6 text-green-600" />
+                            <RussianRuble className="h-6 w-6 text-green-600" />
                         </div>
                     </div>
                     <div className="text-3xl font-bold text-gray-900">
@@ -209,18 +209,18 @@ export function AnalyticsSection() {
                 </div>
             </div>
 
-            <div className="bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-lg shadow-lg p-8 text-white">
-                <h2 className="text-2xl font-bold mb-6">Последние 30 дней</h2>
+            <div className="bg-yellow-500/15 text-amber-700 py-16 hover:bg-yellow-500/15 transition-colors duration-700 shadow-lg p-8 rounded-lg text-yellow-700">
+                <h2 className="text-2xl font-bold mb-6 ">Последние 30 дней</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                         <div className="text-4xl font-bold mb-2">{stats.recentOrders.count}</div>
-                        <div className="text-yellow-100">Новых заказов</div>
+                        <div className="text-yellow-700">Новых заказов</div>
                     </div>
                     <div>
-                        <div className="text-4xl font-bold mb-2">
+                        <div className="text-4xl font-bold mb-2 ">
                             {stats.recentOrders.revenue.toLocaleString("ru-RU", { maximumFractionDigits: 0 })} ₽
                         </div>
-                        <div className="text-yellow-100">Выручка за период</div>
+                        <div className="text-yellow-700">Выручка за период</div>
                     </div>
                 </div>
             </div>
