@@ -26,6 +26,7 @@ export interface CartItem {
 export interface CalculatorResult {
     items: CartItem[];
     deliveryType: string;
+    vehicleType: string;
     distance: number;
     totalWeight: number;
     productCost: number;
@@ -51,16 +52,19 @@ interface Transport {
     name: string;
     capacityKg: number;
     baseCost: number;
+    perKmRate: number;
+    vehicleType: string;
     label: string;
 }
 
 const TRANSPORT_OPTIONS: Transport[] = [
-    { name: "manipulator_5t", capacityKg: 5000, baseCost: 6000, label: "Манипулятор 5т" },
-    { name: "manipulator_8t", capacityKg: 8000, baseCost: 9000, label: "Манипулятор 8т" },
-    { name: "manipulator_10t_truck", capacityKg: Infinity, baseCost: 19000, label: "Манипулятор 10т / Фура" },
+    { name: "manipulator_5t", capacityKg: 5000, baseCost: 6000, perKmRate: 100, vehicleType: "манипулятор 5т", label: "Манипулятор 5т" },
+    { name: "manipulator_8t", capacityKg: 8000, baseCost: 9000, perKmRate: 100, vehicleType: "манипулятор 8т", label: "Манипулятор 8т" },
+    { name: "manipulator_10t_truck", capacityKg: Infinity, baseCost: 19000, perKmRate: 140, vehicleType: "манипулятор 10т", label: "Манипулятор 10т / Фура" },
 ];
 
-const PER_KM_RATE = 100;
+// Approximate road distance from the base to MKAD (Щёлковское шоссе)
+const BASE_TO_MKAD_KM = 22;
 
 const ORIGIN = {
     address: "Московская обл., Щёлковский р-н, д. Долгое Ледово, ул. Академическая, 5",
@@ -266,7 +270,11 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     const totalWeight = items.reduce((sum, i) => sum + i.weight, 0);
     const productCost = items.reduce((sum, i) => sum + i.subtotal, 0);
     const selectedTransport = pickTransport(totalWeight);
-    const deliveryCost = isPickup || items.length === 0 ? 0 : selectedTransport.baseCost + distance * PER_KM_RATE;
+    const billedKm =
+        selectedTransport.name === "manipulator_10t_truck"
+            ? Math.max(0, distance - BASE_TO_MKAD_KM)
+            : distance;
+    const deliveryCost = isPickup || items.length === 0 ? 0 : selectedTransport.baseCost + billedKm * selectedTransport.perKmRate;
 
     const totalCost = productCost + deliveryCost;
     const handleCalculateDistance = async () => {
@@ -301,6 +309,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
         onNavigate({
             items,
             deliveryType: isPickup ? "Самовывоз" : selectedTransport.label,
+            vehicleType: isPickup ? "" : selectedTransport.vehicleType,
             distance: isPickup ? 0 : distance,
             totalWeight,
             productCost,
@@ -503,17 +512,11 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                     </label>
                                     <input
                                         type="number"
-                                        min="0"
-                                        step="1"
+                                        readOnly
                                         value={distance || ""}
-                                        onChange={(e) => setDistance(parseFloat(e.target.value) || 0)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                        placeholder="Введите вручную или используйте автоматический расчёт"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-default"
+                                        placeholder="Будет рассчитано автоматически"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Расстояние можно отредактировать вручную, если автоматический расчёт отличается
-                                        от реального маршрута.
-                                    </p>
                                 </div>
                             </div>
                         )}
@@ -527,14 +530,21 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                 <div className="flex items-baseline justify-between">
                                     <span className="text-xl font-bold text-yellow-700">{selectedTransport.label}</span>
                                     <span className="text-sm text-gray-600">
-                                        Подача {selectedTransport.baseCost.toLocaleString("ru-RU")} ₽ + {PER_KM_RATE}{" "}
-                                        ₽/км
+                                        Подача {selectedTransport.baseCost.toLocaleString("ru-RU")} ₽ +{" "}
+                                        {selectedTransport.perKmRate} ₽/км
+                                        {selectedTransport.name === "manipulator_10t_truck" && " от МКАД"}
                                     </span>
                                 </div>
                                 <div className="mt-2 text-sm text-gray-600">
                                     Общий вес груза:{" "}
                                     <span className="font-semibold">{totalWeight.toLocaleString("ru-RU")} кг</span>
                                 </div>
+                                {selectedTransport.name === "manipulator_10t_truck" && distance > 0 && (
+                                    <div className="mt-1 text-sm text-gray-500">
+                                        Км от МКАД: <span className="font-semibold">{billedKm} км</span>
+                                        {" "}(маршрут {distance} км − {BASE_TO_MKAD_KM} км до МКАД)
+                                    </div>
+                                )}
                             </div>
                         )}
 
