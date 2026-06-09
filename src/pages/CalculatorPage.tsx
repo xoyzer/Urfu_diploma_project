@@ -57,7 +57,7 @@ interface Transport {
 const TRANSPORT_OPTIONS: Transport[] = [
     { name: "manipulator_5t", capacityKg: 5000, baseCost: 6000, label: "Манипулятор 5т" },
     { name: "manipulator_8t", capacityKg: 8000, baseCost: 9000, label: "Манипулятор 8т" },
-    { name: "manipulator_10t_truck", capacityKg: Infinity, baseCost: 17000, label: "Манипулятор 10т / Фура" },
+    { name: "manipulator_10t_truck", capacityKg: Infinity, baseCost: 19000, label: "Манипулятор 10т / Фура" },
 ];
 
 const PER_KM_RATE = 100;
