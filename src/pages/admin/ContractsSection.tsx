@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { FileText, Plus, Trash2, Download, Upload, CheckCircle, File } from "lucide-react";
+import { FileText, Plus, Trash2, Download, Upload, CheckCircle } from "lucide-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { useAuth } from "../../contexts/AuthContext";
-import { buildContractPrintHtml } from "../../lib/contractPdf";
 
 type Unit = "М2" | "Шт" | "Рейс";
 
@@ -21,6 +20,7 @@ interface ContractFormData {
     totalAmount: number | "";
     advance: number | "";
     address: string;
+    contractDate: string;
 }
 
 const TEMPLATE_STORAGE_KEY = "contract_template_b64";
@@ -38,6 +38,7 @@ const DEFAULT_FORM: ContractFormData = {
     totalAmount: "",
     advance: "",
     address: "",
+    contractDate: "",
 };
 
 function formatDate(date: Date): string {
@@ -91,13 +92,17 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 }
 
 function loadForm(): ContractFormData {
+    const today = formatDate(new Date());
     try {
         const raw = localStorage.getItem(FORM_STORAGE_KEY);
-        if (raw) return { ...DEFAULT_FORM, ...JSON.parse(raw) };
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            return { ...DEFAULT_FORM, contractDate: today, ...parsed };
+        }
     } catch {
         // ignore
     }
-    return { ...DEFAULT_FORM };
+    return { ...DEFAULT_FORM, contractDate: today };
 }
 
 function loadItems(): SpecItem[] {
@@ -119,12 +124,9 @@ export function ContractsSection() {
     const [form, setForm] = useState<ContractFormData>(loadForm);
     const [items, setItems] = useState<SpecItem[]>(loadItems);
     const [generating, setGenerating] = useState(false);
-    const [generatingPdf, setGeneratingPdf] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [templateLoaded, setTemplateLoaded] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const today = formatDate(new Date());
 
     useEffect(() => {
         const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
@@ -183,6 +185,7 @@ export function ContractsSection() {
     async function handleGenerate() {
         setError(null);
         if (!form.fullName.trim()) { setError("Укажите ФИО"); return; }
+        if (!form.contractDate.trim()) { setError("Укажите дату заключения"); return; }
         if (!form.phone.trim()) { setError("Укажите номер телефона"); return; }
         if (!form.deliverySchedule.trim()) { setError("Укажите график поставки"); return; }
         if (form.totalAmount === "") { setError("Укажите итоговую стоимость"); return; }
@@ -216,7 +219,7 @@ export function ContractsSection() {
             doc.render({
                 "ФИО": form.fullName.trim(),
                 "Фамилия и инициалы": formatInitials(form.fullName),
-                "Дата заключения": today,
+                "Дата заключения": form.contractDate.trim(),
                 "адрес": form.address.trim(),
                 "итоговая стоимость": String(form.totalAmount || 0),
                 "номер телефона": form.phone.trim(),
@@ -243,42 +246,6 @@ export function ContractsSection() {
             setGenerating(false);
         }
     }
-    async function handleGeneratePdf() {
-        setError(null);
-        if (!form.fullName.trim()) { setError("Укажите ФИО"); return; }
-        if (!form.phone.trim()) { setError("Укажите номер телефона"); return; }
-        if (!form.deliverySchedule.trim()) { setError("Укажите график поставки"); return; }
-        if (form.totalAmount === "") { setError("Укажите итоговую стоимость"); return; }
-        if (form.advance === "") { setError("Укажите аванс"); return; }
-        if (!form.address.trim()) { setError("Укажите адрес доставки"); return; }
-        if (items.some((item) => !item.name.trim())) { setError("Укажите наименование для всех позиций"); return; }
-
-        setGeneratingPdf(true);
-        try {
-            const html = buildContractPrintHtml({
-                fullName: form.fullName.trim(),
-                address: form.address.trim(),
-                totalAmount: form.totalAmount || 0,
-                advance: form.advance || 0,
-                deliverySchedule: form.deliverySchedule.trim(),
-                today,
-                items,
-            });
-
-            const win = window.open("", "_blank", "width=800,height=900");
-            if (!win) {
-                setError("Не удалось открыть окно печати. Разрешите всплывающие окна для этого сайта.");
-                return;
-            }
-            win.document.write(html);
-            win.document.close();
-            win.focus();
-            setTimeout(() => { win.print(); }, 300);
-        } finally {
-            setGeneratingPdf(false);
-        }
-    }
-
     return (
         <div className="space-y-8">
             <div className="flex items-center space-x-3">
@@ -345,12 +312,15 @@ export function ContractsSection() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Дата заключения</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Дата заключения <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="text"
-                            readOnly
-                            value={today}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 text-sm cursor-default"
+                            value={form.contractDate}
+                            onChange={(e) => setForm({ ...form, contractDate: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                            placeholder="11.06.2026г"
                         />
                     </div>
 
@@ -538,24 +508,14 @@ export function ContractsSection() {
                 <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
             )}
 
-            <div className="flex items-center space-x-3 flex-wrap gap-y-3">
-                <button
-                    onClick={handleGenerate}
-                    disabled={generating || !templateLoaded}
-                    className="flex items-center space-x-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-                >
-                    <Download className="h-5 w-5" />
-                    <span>{generating ? "Генерация..." : "Скачать .docx"}</span>
-                </button>
-                <button
-                    onClick={handleGeneratePdf}
-                    disabled={generatingPdf}
-                    className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-                >
-                    <File className="h-5 w-5" />
-                    <span>{generatingPdf ? "Подготовка..." : "Скачать .pdf"}</span>
-                </button>
-            </div>
+            <button
+                onClick={handleGenerate}
+                disabled={generating || !templateLoaded}
+                className="flex items-center space-x-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            >
+                <Download className="h-5 w-5" />
+                <span>{generating ? "Генерация..." : "Сформировать договор"}</span>
+            </button>
         </div>
     );
 }
