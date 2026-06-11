@@ -85,7 +85,7 @@ export function ContractsSection() {
 
         setGenerating(true);
         try {
-            const response = await fetch("/ДОГОВОР_Шаблон.docx");
+            const response = await fetch("/ДОГОВОР Шаблон.docx");
             if (!response.ok) throw new Error(`Шаблон не найден (${response.status})`);
             const templateBuffer = await response.arrayBuffer();
             if (templateBuffer.byteLength === 0) throw new Error("Файл шаблона пустой");
@@ -105,18 +105,23 @@ export function ContractsSection() {
             }));
 
             doc.render({
-                "ФИО": form.fullName.trim(),
+                ФИО: form.fullName.trim(),
                 "Фамилия и инициалы": formatInitials(form.fullName),
-                "Дата": today,
-                "Телефон": form.phone.trim(),
+                Дата: today,
+                Телефон: form.phone.trim(),
                 "График поставки": form.deliverySchedule.trim(),
                 "Итоговая стоимость": Number(form.totalAmount || 0).toLocaleString("ru-RU"),
-                "Аванс": Number(form.advance || 0).toLocaleString("ru-RU"),
-                "Адрес": form.address.trim(),
+                Аванс: Number(form.advance || 0).toLocaleString("ru-RU"),
+                Адрес: form.address.trim(),
                 rows: specRows,
             });
 
-            const blob = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+            const blob = doc
+                .getZip()
+                .generate({
+                    type: "blob",
+                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
@@ -198,7 +203,9 @@ export function ContractsSection() {
                         <input
                             type="number"
                             value={form.totalAmount}
-                            onChange={(e) => setForm({ ...form, totalAmount: e.target.value === "" ? "" : Number(e.target.value) })}
+                            onChange={(e) =>
+                                setForm({ ...form, totalAmount: e.target.value === "" ? "" : Number(e.target.value) })
+                            }
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
                             placeholder="193470"
                         />
@@ -209,7 +216,9 @@ export function ContractsSection() {
                         <input
                             type="number"
                             value={form.advance}
-                            onChange={(e) => setForm({ ...form, advance: e.target.value === "" ? "" : Number(e.target.value) })}
+                            onChange={(e) =>
+                                setForm({ ...form, advance: e.target.value === "" ? "" : Number(e.target.value) })
+                            }
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
                             placeholder="60000"
                         />
@@ -331,9 +340,7 @@ export function ContractsSection() {
             </div>
 
             {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
-                    {error}
-                </div>
+                <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
             )}
 
             <button
