@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { FileText, Plus, Trash2, Download, Upload, CheckCircle } from "lucide-react";
+import { FileText, Plus, Trash2, Download, Upload, CheckCircle, Lock } from "lucide-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
+import { useAuth } from "../../contexts/AuthContext";
 
 type Unit = "М2" | "Шт" | "Рейс";
 
@@ -22,6 +23,21 @@ interface ContractFormData {
 }
 
 const TEMPLATE_STORAGE_KEY = "contract_template_b64";
+const FORM_STORAGE_KEY = "contract_form_draft";
+const ITEMS_STORAGE_KEY = "contract_items_draft";
+const ALLOWED_EMAIL = "yobaboba80@gmail.com";
+
+const MAX_ITEMS = 8;
+const EMPTY_ITEM: SpecItem = { name: "", unit: "М2", quantity: 0, price: 0 };
+
+const DEFAULT_FORM: ContractFormData = {
+    fullName: "",
+    phone: "",
+    deliverySchedule: "",
+    totalAmount: "",
+    advance: "",
+    address: "",
+};
 
 function formatDate(date: Date): string {
     const d = String(date.getDate()).padStart(2, "0");
@@ -46,6 +62,15 @@ function getLastName(fullName: string): string {
     return fullName.trim().split(/\s+/)[0] || "Договор";
 }
 
+function replaceQuotes(text: string): string {
+    let open = true;
+    return text.replace(/"/g, () => {
+        const q = open ? "«" : "»";
+        open = !open;
+        return q;
+    });
+}
+
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
     let binary = "";
@@ -64,19 +89,34 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
     return bytes.buffer;
 }
 
-const MAX_ITEMS = 8;
-const EMPTY_ITEM: SpecItem = { name: "", unit: "М2", quantity: 0, price: 0 };
+function loadForm(): ContractFormData {
+    try {
+        const raw = localStorage.getItem(FORM_STORAGE_KEY);
+        if (raw) return { ...DEFAULT_FORM, ...JSON.parse(raw) };
+    } catch {
+        // ignore
+    }
+    return { ...DEFAULT_FORM };
+}
+
+function loadItems(): SpecItem[] {
+    try {
+        const raw = localStorage.getItem(ITEMS_STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+    } catch {
+        // ignore
+    }
+    return [{ ...EMPTY_ITEM }];
+}
 
 export function ContractsSection() {
-    const [form, setForm] = useState<ContractFormData>({
-        fullName: "",
-        phone: "",
-        deliverySchedule: "",
-        totalAmount: "",
-        advance: "",
-        address: "",
-    });
-    const [items, setItems] = useState<SpecItem[]>([{ ...EMPTY_ITEM }]);
+    const { user } = useAuth();
+
+    const [form, setForm] = useState<ContractFormData>(loadForm);
+    const [items, setItems] = useState<SpecItem[]>(loadItems);
     const [generating, setGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [templateLoaded, setTemplateLoaded] = useState(false);
@@ -88,6 +128,24 @@ export function ContractsSection() {
         const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
         if (stored) setTemplateLoaded(true);
     }, []);
+
+    useEffect(() => {
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(form));
+    }, [form]);
+
+    useEffect(() => {
+        localStorage.setItem(ITEMS_STORAGE_KEY, JSON.stringify(items));
+    }, [items]);
+
+    if (user?.email !== ALLOWED_EMAIL) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 space-y-4 text-center">
+                <Lock className="h-12 w-12 text-gray-300" />
+                <h2 className="text-xl font-semibold text-gray-700">Доступ ограничен</h2>
+                <p className="text-sm text-gray-500">Этот раздел доступен только авторизованному администратору.</p>
+            </div>
+        );
+    }
 
     function handleTemplateUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -107,7 +165,13 @@ export function ContractsSection() {
         reader.readAsArrayBuffer(file);
     }
 
-    function updateItem(index: number, field: keyof SpecItem, value: string | number) {
+    function updateItemName(index: number, raw: string) {
+        setItems((prev) =>
+            prev.map((item, i) => (i === index ? { ...item, name: replaceQuotes(raw) } : item))
+        );
+    }
+
+    function updateItem(index: number, field: Exclude<keyof SpecItem, "name">, value: string | number) {
         setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     }
 
@@ -150,8 +214,8 @@ export function ContractsSection() {
                 наименование: item.name,
                 единица: item.unit,
                 количество: String(item.quantity),
-                цена: Number(item.price).toLocaleString("ru-RU"),
-                итого: (item.quantity * item.price).toLocaleString("ru-RU"),
+                цена: String(item.price),
+                итого: String(item.quantity * item.price),
             }));
 
             doc.render({
@@ -159,9 +223,9 @@ export function ContractsSection() {
                 "Фамилия и инициалы": formatInitials(form.fullName),
                 "Дата заключения": today,
                 "адрес": form.address.trim(),
-                "итоговая стоимость": Number(form.totalAmount || 0).toLocaleString("ru-RU"),
+                "итоговая стоимость": String(form.totalAmount || 0),
                 "номер телефона": form.phone.trim(),
-                "аванс": Number(form.advance || 0).toLocaleString("ru-RU"),
+                "аванс": String(form.advance || 0),
                 "график поставки": form.deliverySchedule.trim(),
                 "позиции заказа": specRows,
             });
@@ -359,7 +423,7 @@ export function ContractsSection() {
                                         <input
                                             type="text"
                                             value={item.name}
-                                            onChange={(e) => updateItem(index, "name", e.target.value)}
+                                            onChange={(e) => updateItemName(index, e.target.value)}
                                             className="w-full px-2 py-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-amber-500 focus:border-transparent"
                                             placeholder="Плитка тротуарная"
                                         />
