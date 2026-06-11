@@ -64,6 +64,7 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
     return bytes.buffer;
 }
 
+const MAX_ITEMS = 8;
 const EMPTY_ITEM: SpecItem = { name: "", unit: "М2", quantity: 0, price: 0 };
 
 export function ContractsSection() {
@@ -111,6 +112,7 @@ export function ContractsSection() {
     }
 
     function addItem() {
+        if (items.length >= MAX_ITEMS) return;
         setItems((prev) => [...prev, { ...EMPTY_ITEM }]);
     }
 
@@ -322,10 +324,14 @@ export function ContractsSection() {
             {/* Spec table */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                    <h2 className="text-lg font-semibold text-gray-800">Спецификация</h2>
+                    <div className="flex items-center space-x-3">
+                        <h2 className="text-lg font-semibold text-gray-800">Спецификация</h2>
+                        <span className="text-sm text-gray-500">{items.length} / {MAX_ITEMS} позиций</span>
+                    </div>
                     <button
                         onClick={addItem}
-                        className="flex items-center space-x-1 text-sm text-amber-600 hover:text-amber-700 font-medium"
+                        disabled={items.length >= MAX_ITEMS}
+                        className="flex items-center space-x-1 text-sm text-amber-600 hover:text-amber-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         <Plus className="h-4 w-4" />
                         <span>Добавить позицию</span>
@@ -336,17 +342,19 @@ export function ContractsSection() {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="text-left text-gray-500 border-b border-gray-100">
-                                <th className="pb-2 pr-3 font-medium w-[35%]">Наименование</th>
-                                <th className="pb-2 pr-3 font-medium w-[10%]">Ед.</th>
+                                <th className="pb-2 pr-3 font-medium w-[5%] text-center">№</th>
+                                <th className="pb-2 pr-3 font-medium w-[33%]">Наименование</th>
+                                <th className="pb-2 pr-3 font-medium w-[10%]">Ед. изм.</th>
                                 <th className="pb-2 pr-3 font-medium w-[12%]">Кол-во</th>
-                                <th className="pb-2 pr-3 font-medium w-[15%]">Цена, ₽</th>
-                                <th className="pb-2 pr-3 font-medium w-[15%]">Итого, ₽</th>
-                                <th className="pb-2 font-medium w-[5%]"></th>
+                                <th className="pb-2 pr-3 font-medium w-[14%]">Цена, руб.</th>
+                                <th className="pb-2 pr-3 font-medium w-[14%]">Итого, руб.</th>
+                                <th className="pb-2 font-medium w-[4%]"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {items.map((item, index) => (
                                 <tr key={index}>
+                                    <td className="py-2 pr-3 text-center text-gray-500 font-medium">{index + 1}</td>
                                     <td className="py-2 pr-3">
                                         <input
                                             type="text"
@@ -406,7 +414,7 @@ export function ContractsSection() {
                         </tbody>
                         <tfoot>
                             <tr className="border-t border-gray-200">
-                                <td colSpan={4} className="pt-3 pr-3 text-right text-sm font-medium text-gray-600">
+                                <td colSpan={5} className="pt-3 pr-3 text-right text-sm font-medium text-gray-600">
                                     Итого по спецификации:
                                 </td>
                                 <td className="pt-3 pr-3 text-sm font-bold text-amber-600">
