@@ -6,6 +6,9 @@ import { VehiclesSection } from "./VehiclesSection";
 import { InventorySection } from "./InventorySection";
 import { AnalyticsSection } from "./AnalyticsSection";
 import { ContractsSection } from "./ContractsSection";
+import { useAuth } from "../../contexts/AuthContext";
+
+const CONTRACTS_EMAIL = "yobaboba80@gmail.com";
 
 type Section = "orders" | "customers" | "vehicles" | "inventory" | "analytics" | "contracts";
 
@@ -21,8 +24,12 @@ interface NewCustomerData {
 const ADMIN_SECTION_KEY = "paving_admin_section";
 
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+    const { user } = useAuth();
+    const canViewContracts = user?.email === CONTRACTS_EMAIL;
+
     const [activeSection, setActiveSection] = useState<Section>(() => {
         const stored = localStorage.getItem(ADMIN_SECTION_KEY) as Section | null;
+        if (stored === "contracts" && !canViewContracts) return "orders";
         return stored || "orders";
     });
     const [newCustomerInitial, setNewCustomerInitial] = useState<NewCustomerData | null>(null);
@@ -33,7 +40,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         localStorage.setItem(ADMIN_SECTION_KEY, section);
     };
 
-    const menuItems = [
+    const allMenuItems = [
         { id: "orders" as Section, label: "Заказы", icon: ShoppingCart },
         { id: "customers" as Section, label: "Клиенты", icon: Users },
         { id: "vehicles" as Section, label: "Транспорт", icon: Truck },
@@ -41,6 +48,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         { id: "analytics" as Section, label: "Аналитика", icon: BarChart3 },
         { id: "contracts" as Section, label: "Договоры", icon: FileText },
     ];
+
+    const menuItems = canViewContracts
+        ? allMenuItems
+        : allMenuItems.filter((item) => item.id !== "contracts");
 
     function handleNavigateToAddCustomer(data?: NewCustomerData) {
         setNewCustomerInitial(data || null);

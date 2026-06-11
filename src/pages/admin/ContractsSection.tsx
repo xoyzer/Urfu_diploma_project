@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { FileText, Plus, Trash2, Download, Upload, CheckCircle, Lock } from "lucide-react";
+import { FileText, Plus, Trash2, Download, Upload, CheckCircle } from "lucide-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { useAuth } from "../../contexts/AuthContext";
@@ -138,13 +138,7 @@ export function ContractsSection() {
     }, [items]);
 
     if (user?.email !== ALLOWED_EMAIL) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 space-y-4 text-center">
-                <Lock className="h-12 w-12 text-gray-300" />
-                <h2 className="text-xl font-semibold text-gray-700">Доступ ограничен</h2>
-                <p className="text-sm text-gray-500">Этот раздел доступен только авторизованному администратору.</p>
-            </div>
-        );
+        return null;
     }
 
     function handleTemplateUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -186,14 +180,13 @@ export function ContractsSection() {
 
     async function handleGenerate() {
         setError(null);
-        if (!form.fullName.trim()) {
-            setError("Укажите ФИО");
-            return;
-        }
-        if (items.some((item) => !item.name.trim())) {
-            setError("Укажите наименование для всех позиций");
-            return;
-        }
+        if (!form.fullName.trim()) { setError("Укажите ФИО"); return; }
+        if (!form.phone.trim()) { setError("Укажите номер телефона"); return; }
+        if (!form.deliverySchedule.trim()) { setError("Укажите график поставки"); return; }
+        if (form.totalAmount === "") { setError("Укажите итоговую стоимость"); return; }
+        if (form.advance === "") { setError("Укажите аванс"); return; }
+        if (!form.address.trim()) { setError("Укажите адрес доставки"); return; }
+        if (items.some((item) => !item.name.trim())) { setError("Укажите наименование для всех позиций"); return; }
 
         const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
         if (!stored) {
@@ -325,7 +318,9 @@ export function ContractsSection() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Телефон <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="text"
                             value={form.phone}
@@ -336,7 +331,9 @@ export function ContractsSection() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">График поставки</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            График поставки <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="text"
                             value={form.deliverySchedule}
@@ -347,7 +344,9 @@ export function ContractsSection() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Итоговая стоимость, ₽</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Итоговая стоимость, ₽ <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="number"
                             value={form.totalAmount}
@@ -360,7 +359,9 @@ export function ContractsSection() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Аванс, ₽</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Аванс, ₽ <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="number"
                             value={form.advance}
@@ -374,7 +375,9 @@ export function ContractsSection() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Адрес доставки</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Адрес доставки <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="text"
                         value={form.address}
