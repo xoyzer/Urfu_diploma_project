@@ -86,8 +86,9 @@ export function ContractsSection() {
         setGenerating(true);
         try {
             const response = await fetch("/ДОГОВОР_Шаблон.docx");
-            if (!response.ok) throw new Error("Шаблон не найден");
+            if (!response.ok) throw new Error(`Шаблон не найден (${response.status})`);
             const templateBuffer = await response.arrayBuffer();
+            if (templateBuffer.byteLength === 0) throw new Error("Файл шаблона пустой");
 
             const zip = new PizZip(templateBuffer);
             const doc = new Docxtemplater(zip, {
@@ -123,8 +124,9 @@ export function ContractsSection() {
             a.click();
             URL.revokeObjectURL(url);
         } catch (err) {
-            console.error(err);
-            setError("Ошибка при генерации документа. Убедитесь, что шаблон загружен корректно.");
+            console.error("Contract generation error:", err);
+            const message = err instanceof Error ? err.message : String(err);
+            setError(`Ошибка при генерации документа: ${message}`);
         } finally {
             setGenerating(false);
         }
