@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { LayoutDashboard, ShoppingCart, Users, Truck, Package, BarChart3, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Users, Truck, Package, BarChart3, ArrowLeft, FileText } from "lucide-react";
 import { OrdersSection } from "./OrdersSection";
 import { CustomersSection } from "./CustomersSection";
 import { VehiclesSection } from "./VehiclesSection";
 import { InventorySection } from "./InventorySection";
 import { AnalyticsSection } from "./AnalyticsSection";
+import { ContractsSection } from "./ContractsSection";
 
-type Section = "orders" | "customers" | "vehicles" | "inventory" | "analytics";
+type Section = "orders" | "customers" | "vehicles" | "inventory" | "analytics" | "contracts";
 
 interface AdminDashboardProps {
     onNavigate?: (page: string) => void;
@@ -38,6 +39,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         { id: "vehicles" as Section, label: "Транспорт", icon: Truck },
         { id: "inventory" as Section, label: "Склад", icon: Package },
         { id: "analytics" as Section, label: "Аналитика", icon: BarChart3 },
+        { id: "contracts" as Section, label: "Договоры", icon: FileText },
     ];
 
     function handleNavigateToAddCustomer(data?: NewCustomerData) {
@@ -112,6 +114,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     {activeSection === "vehicles" && <VehiclesSection />}
                     {activeSection === "inventory" && <InventorySection />}
                     {activeSection === "analytics" && <AnalyticsSection />}
+                    {activeSection === "contracts" && <ContractsSection />}
                 </main>
             </div>
         </div>
