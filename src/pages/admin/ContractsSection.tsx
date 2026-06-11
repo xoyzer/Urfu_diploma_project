@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FileText, Plus, Trash2, Download } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { FileText, Plus, Trash2, Download, Upload, CheckCircle } from "lucide-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 
@@ -21,6 +21,8 @@ interface ContractFormData {
     address: string;
 }
 
+const TEMPLATE_STORAGE_KEY = "contract_template_b64";
+
 function formatDate(date: Date): string {
     const d = String(date.getDate()).padStart(2, "0");
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -34,13 +36,32 @@ function formatInitials(fullName: string): string {
     const lastName = parts[0];
     const initials = parts
         .slice(1)
-        .map((p) => p[0]?.toUpperCase() + ".")
+        .map((p) => (p[0] ? p[0].toUpperCase() + "." : ""))
+        .filter(Boolean)
         .join(" ");
     return initials ? `${lastName} ${initials}` : lastName;
 }
 
 function getLastName(fullName: string): string {
     return fullName.trim().split(/\s+/)[0] || "Договор";
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
 }
 
 const EMPTY_ITEM: SpecItem = { name: "", unit: "М2", quantity: 0, price: 0 };
@@ -57,8 +78,33 @@ export function ContractsSection() {
     const [items, setItems] = useState<SpecItem[]>([{ ...EMPTY_ITEM }]);
     const [generating, setGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [templateLoaded, setTemplateLoaded] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const today = formatDate(new Date());
+
+    useEffect(() => {
+        const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+        if (stored) setTemplateLoaded(true);
+    }, []);
+
+    function handleTemplateUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const buffer = ev.target?.result as ArrayBuffer;
+            if (!buffer || buffer.byteLength === 0) {
+                setError("Файл пустой или повреждён");
+                return;
+            }
+            const b64 = arrayBufferToBase64(buffer);
+            localStorage.setItem(TEMPLATE_STORAGE_KEY, b64);
+            setTemplateLoaded(true);
+            setError(null);
+        };
+        reader.readAsArrayBuffer(file);
+    }
 
     function updateItem(index: number, field: keyof SpecItem, value: string | number) {
         setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
@@ -83,14 +129,16 @@ export function ContractsSection() {
             return;
         }
 
+        const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+        if (!stored) {
+            setError("Сначала загрузите шаблон договора");
+            return;
+        }
+
         setGenerating(true);
         try {
-            const response = await fetch("/ДОГОВОР Шаблон.docx");
-            if (!response.ok) throw new Error(`Шаблон не найден (${response.status})`);
-            const templateBuffer = await response.arrayBuffer();
-            if (templateBuffer.byteLength === 0) throw new Error("Файл шаблона пустой");
-
-            const zip = new PizZip(templateBuffer);
+            const buffer = base64ToArrayBuffer(stored);
+            const zip = new PizZip(buffer);
             const doc = new Docxtemplater(zip, {
                 paragraphLoop: true,
                 linebreaks: true,
@@ -99,29 +147,27 @@ export function ContractsSection() {
             const specRows = items.map((item) => ({
                 наименование: item.name,
                 единица: item.unit,
-                количество: item.quantity,
+                количество: String(item.quantity),
                 цена: Number(item.price).toLocaleString("ru-RU"),
                 итого: (item.quantity * item.price).toLocaleString("ru-RU"),
             }));
 
             doc.render({
-                ФИО: form.fullName.trim(),
+                "ФИО": form.fullName.trim(),
                 "Фамилия и инициалы": formatInitials(form.fullName),
-                Дата: today,
-                Телефон: form.phone.trim(),
-                "График поставки": form.deliverySchedule.trim(),
-                "Итоговая стоимость": Number(form.totalAmount || 0).toLocaleString("ru-RU"),
-                Аванс: Number(form.advance || 0).toLocaleString("ru-RU"),
-                Адрес: form.address.trim(),
-                rows: specRows,
+                "Дата заключения": today,
+                "адрес": form.address.trim(),
+                "итоговая стоимость": Number(form.totalAmount || 0).toLocaleString("ru-RU"),
+                "номер телефона": form.phone.trim(),
+                "аванс": Number(form.advance || 0).toLocaleString("ru-RU"),
+                "график поставки": form.deliverySchedule.trim(),
+                "позиции заказа": specRows,
             });
 
-            const blob = doc
-                .getZip()
-                .generate({
-                    type: "blob",
-                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                });
+            const blob = doc.getZip().generate({
+                type: "blob",
+                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
@@ -144,6 +190,42 @@ export function ContractsSection() {
                 <h1 className="text-2xl font-bold text-gray-900">Составление договора</h1>
             </div>
 
+            {/* Template upload */}
+            <div className={`rounded-lg border p-4 flex items-center justify-between ${templateLoaded ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}`}>
+                <div className="flex items-center space-x-3">
+                    {templateLoaded ? (
+                        <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    ) : (
+                        <Upload className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                    )}
+                    <div>
+                        <p className={`text-sm font-medium ${templateLoaded ? "text-green-800" : "text-amber-800"}`}>
+                            {templateLoaded ? "Шаблон загружен" : "Шаблон не загружен"}
+                        </p>
+                        <p className={`text-xs ${templateLoaded ? "text-green-600" : "text-amber-600"}`}>
+                            {templateLoaded
+                                ? "Шаблон сохранён в браузере. Можно заменить, загрузив новый файл."
+                                : "Загрузите файл ДОГОВОР Шаблон.docx со своего компьютера"}
+                        </p>
+                    </div>
+                </div>
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center space-x-2 text-sm font-medium px-4 py-2 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-700 transition-colors flex-shrink-0"
+                >
+                    <Upload className="h-4 w-4" />
+                    <span>{templateLoaded ? "Заменить шаблон" : "Загрузить шаблон"}</span>
+                </button>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".docx"
+                    className="hidden"
+                    onChange={handleTemplateUpload}
+                />
+            </div>
+
+            {/* Form */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
                 <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-100 pb-3">Данные договора</h2>
 
@@ -237,6 +319,7 @@ export function ContractsSection() {
                 </div>
             </div>
 
+            {/* Spec table */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                     <h2 className="text-lg font-semibold text-gray-800">Спецификация</h2>
@@ -345,7 +428,7 @@ export function ContractsSection() {
 
             <button
                 onClick={handleGenerate}
-                disabled={generating}
+                disabled={generating || !templateLoaded}
                 className="flex items-center space-x-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
                 <Download className="h-5 w-5" />
