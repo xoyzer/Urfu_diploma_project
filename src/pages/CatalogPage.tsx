@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { getCached, setCached } from "../lib/queryCache";
 import { Database } from "../types/database";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -14,6 +15,24 @@ interface CategoryWithSubcategories {
     name: string;
     subcategories: string[];
     productCount: number;
+}
+
+const CATALOG_CACHE_KEY = "catalog_products";
+
+function buildCategories(data: Product[]): CategoryWithSubcategories[] {
+    const categoryMap = new Map<string, Set<string>>();
+    const categoryCount = new Map<string, number>();
+    data.forEach((p) => {
+        const cats = categoryMap.get(p.category) || new Set<string>();
+        if (p.subcategory) cats.add(p.subcategory);
+        categoryMap.set(p.category, cats);
+        categoryCount.set(p.category, (categoryCount.get(p.category) || 0) + 1);
+    });
+    const list: CategoryWithSubcategories[] = [];
+    categoryMap.forEach((subs, cat) => {
+        list.push({ name: cat, subcategories: Array.from(subs).sort(), productCount: categoryCount.get(cat) || 0 });
+    });
+    return list;
 }
 
 export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
@@ -37,6 +56,22 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
     }, [initialCategory]);
 
     async function loadProducts() {
+        const cached = getCached<Product[]>(CATALOG_CACHE_KEY);
+        if (cached) {
+            setProducts(cached);
+            setCategories(buildCategories(cached));
+            setLoading(false);
+            supabase.from("products").select("*").eq("is_active", true)
+                .order("category").order("subcategory").order("name")
+                .then(({ data }) => {
+                    if (data) {
+                        setCached(CATALOG_CACHE_KEY, data);
+                        setProducts(data);
+                        setCategories(buildCategories(data));
+                    }
+                });
+            return;
+        }
         try {
             const { data, error } = await supabase
                 .from("products")
@@ -48,30 +83,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
             if (error) throw error;
 
-            setProducts(data || []);
-
-            const categoryMap = new Map<string, Set<string>>();
-            const categoryCount = new Map<string, number>();
-
-            (data || []).forEach((p) => {
-                const cats = categoryMap.get(p.category) || new Set<string>();
-                if (p.subcategory) {
-                    cats.add(p.subcategory);
-                }
-                categoryMap.set(p.category, cats);
-                categoryCount.set(p.category, (categoryCount.get(p.category) || 0) + 1);
-            });
-
-            const categoryList: CategoryWithSubcategories[] = [];
-            categoryMap.forEach((subs, cat) => {
-                categoryList.push({
-                    name: cat,
-                    subcategories: Array.from(subs).sort(),
-                    productCount: categoryCount.get(cat) || 0,
-                });
-            });
-
-            setCategories(categoryList);
+            const products = data || [];
+            setCached(CATALOG_CACHE_KEY, products);
+            setProducts(products);
+            setCategories(buildCategories(products));
         } catch (error) {
             console.error("Error loading products:", error);
         } finally {
