@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, Eye, CreditCard as Edit2, Check, X, Search } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { getCached, setCached, invalidateCache } from "../../lib/queryCache";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
 
@@ -117,25 +118,66 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
         setShowCustomerDropdown(false);
     }
 
-    async function loadCustomersAndProducts() {
+    async function loadCustomersAndProducts(force = false) {
+        const KEY = "admin_customers_products";
+        if (!force) {
+            const cached = getCached<{ customers: Customer[]; products: Product[] }>(KEY);
+            if (cached) {
+                setCustomers(cached.customers);
+                setProducts(cached.products);
+                Promise.all([
+                    supabase.from("customers").select("*"),
+                    supabase.from("products").select("*").eq("is_active", true),
+                ]).then(([{ data: c }, { data: p }]) => {
+                    const result = { customers: c || [], products: p || [] };
+                    setCached(KEY, result);
+                    setCustomers(result.customers);
+                    setProducts(result.products);
+                });
+                return;
+            }
+        }
         try {
-            const { data: customersData } = await supabase.from("customers").select("*");
-            const { data: productsData } = await supabase.from("products").select("*").eq("is_active", true);
-            setCustomers(customersData || []);
-            setProducts(productsData || []);
+            const [{ data: customersData }, { data: productsData }] = await Promise.all([
+                supabase.from("customers").select("*"),
+                supabase.from("products").select("*").eq("is_active", true),
+            ]);
+            const result = { customers: customersData || [], products: productsData || [] };
+            setCached(KEY, result);
+            setCustomers(result.customers);
+            setProducts(result.products);
         } catch (error) {
             console.error("Error loading data:", error);
         }
     }
 
-    async function loadOrders() {
+    async function loadOrders(force = false) {
+        const KEY = "admin_orders";
+        if (!force) {
+            const cached = getCached<(Order & { customer: Customer })[]>(KEY);
+            if (cached) {
+                setOrders(cached);
+                setLoading(false);
+                supabase.from("orders").select("*, customer:customers(*)")
+                    .order("created_at", { ascending: false })
+                    .then(({ data }) => {
+                        if (data) {
+                            setCached(KEY, data as (Order & { customer: Customer })[]);
+                            setOrders(data as (Order & { customer: Customer })[]);
+                        }
+                    });
+                return;
+            }
+        }
         try {
             const { data, error } = await supabase
                 .from("orders")
                 .select("*, customer:customers(*)")
                 .order("created_at", { ascending: false });
             if (error) throw error;
-            setOrders(data as (Order & { customer: Customer })[]);
+            const orders = data as (Order & { customer: Customer })[];
+            setCached(KEY, orders);
+            setOrders(orders);
         } catch (error) {
             console.error("Error loading orders:", error);
         } finally {
@@ -258,7 +300,7 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
             setCustomerSearch("");
             setShowCustomerDropdown(false);
             setShowAddOrder(false);
-            loadOrders();
+            loadOrders(true);
         } catch (error) {
             console.error("Error adding order:", error);
             alert("Ошибка при создании заказа");
@@ -312,7 +354,7 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                 }
             }
 
-            loadOrders();
+            loadOrders(true);
         } catch (error) {
             console.error("Error updating order:", error);
         }
@@ -452,7 +494,7 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
             };
             setSelectedOrder(updatedOrder as Order & { customer: Customer });
             await openOrderDetails(updatedOrder as Order & { customer: Customer });
-            loadOrders();
+            loadOrders(true);
         } catch (error) {
             console.error("Error saving order:", error);
             alert("Ошибка при сохранении изменений");
@@ -466,7 +508,7 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
         try {
             const { error } = await supabase.from("orders").delete().eq("id", orderId);
             if (error) throw error;
-            loadOrders();
+            loadOrders(true);
         } catch (error) {
             console.error("Error deleting order:", error);
             alert("Ошибка при удалении заказа");

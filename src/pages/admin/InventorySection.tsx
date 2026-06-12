@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Package, TrendingDown, TrendingUp, Trash2, Send } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { getCached, setCached, invalidateCache } from "../../lib/queryCache";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
 
@@ -51,13 +52,25 @@ export function InventorySection() {
         loadDeliveryOrders();
     }, []);
 
-    async function loadInventory() {
+    async function loadInventory(force = false) {
+        const KEY = "inv_products";
+        if (!force) {
+            const cached = getCached<Product[]>(KEY);
+            if (cached) {
+                setProducts(cached);
+                setLoading(false);
+                supabase.from("products").select("*").order("stock_quantity", { ascending: true })
+                    .then(({ data }) => { if (data) { setCached(KEY, data); setProducts(data); } });
+                return;
+            }
+        }
         try {
             const { data, error } = await supabase
                 .from("products")
                 .select("*")
                 .order("stock_quantity", { ascending: true });
             if (error) throw error;
+            setCached(KEY, data || []);
             setProducts(data || []);
         } catch (err) {
             console.error("Error loading inventory:", err);
@@ -66,7 +79,19 @@ export function InventorySection() {
         }
     }
 
-    async function loadTransactions() {
+    async function loadTransactions(force = false) {
+        const KEY = "inv_transactions";
+        if (!force) {
+            const cached = getCached<InventoryTransaction[]>(KEY);
+            if (cached) {
+                setTransactions(cached);
+                supabase.from("inventory_transactions")
+                    .select("*, product:products(name, unit)")
+                    .order("created_at", { ascending: false }).limit(20)
+                    .then(({ data }) => { if (data) { setCached(KEY, data as InventoryTransaction[]); setTransactions(data as InventoryTransaction[]); } });
+                return;
+            }
+        }
         try {
             const { data, error } = await supabase
                 .from("inventory_transactions")
@@ -74,13 +99,27 @@ export function InventorySection() {
                 .order("created_at", { ascending: false })
                 .limit(20);
             if (error) throw error;
+            setCached(KEY, data as InventoryTransaction[]);
             setTransactions(data as InventoryTransaction[]);
         } catch (err) {
             console.error("Error loading transactions:", err);
         }
     }
 
-    async function loadDeliveryOrders() {
+    async function loadDeliveryOrders(force = false) {
+        const KEY = "inv_delivery_orders";
+        if (!force) {
+            const cached = getCached<OrderOption[]>(KEY);
+            if (cached) {
+                setOrders(cached);
+                supabase.from("orders")
+                    .select(`id, order_number, status, customer:customers(name), items:order_items(id, product_id, quantity, product:products(name, unit))`)
+                    .in("status", ["Доставляется", "Подтвержден", "В обработке"])
+                    .order("created_at", { ascending: false })
+                    .then(({ data }) => { if (data) { setCached(KEY, data as unknown as OrderOption[]); setOrders(data as unknown as OrderOption[]); } });
+                return;
+            }
+        }
         try {
             const { data, error } = await supabase
                 .from("orders")
@@ -94,6 +133,7 @@ export function InventorySection() {
                 .in("status", ["Доставляется", "Подтвержден", "В обработке"])
                 .order("created_at", { ascending: false });
             if (error) throw error;
+            setCached(KEY, (data as unknown as OrderOption[]) || []);
             setOrders((data as unknown as OrderOption[]) || []);
         } catch (err) {
             console.error("Error loading orders:", err);
@@ -153,8 +193,9 @@ export function InventorySection() {
 
             setReceivingForm({ product_id: "", quantity: 0, notes: "" });
             setShowAddReceiving(false);
-            loadInventory();
-            loadTransactions();
+            invalidateCache("inv_products", "inv_transactions");
+            loadInventory(true);
+            loadTransactions(true);
         } catch (err) {
             console.error("Error adding receiving:", err);
             alert("Ошибка при добавлении прихода");
@@ -215,8 +256,9 @@ export function InventorySection() {
             setSelectedOrderId("");
             setShipmentMode("manual");
             setShowAddShipment(false);
-            loadInventory();
-            loadTransactions();
+            invalidateCache("inv_products", "inv_transactions");
+            loadInventory(true);
+            loadTransactions(true);
         } catch (err) {
             console.error("Error adding shipment:", err);
             alert("Ошибка при добавлении отгрузки");
@@ -250,8 +292,9 @@ export function InventorySection() {
                 if (updErr) throw updErr;
             }
 
-            loadInventory();
-            loadTransactions();
+            invalidateCache("inv_products", "inv_transactions");
+            loadInventory(true);
+            loadTransactions(true);
         } catch (err) {
             console.error("Error deleting transaction:", err);
             alert("Ошибка при удалении операции");

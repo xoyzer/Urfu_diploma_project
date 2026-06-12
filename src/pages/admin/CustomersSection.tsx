@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, Plus, Mail, Phone, Trash2, AlertCircle, CreditCard as Edit2, Check, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { getCached, setCached, invalidateCache } from "../../lib/queryCache";
 import { Modal } from "../../components/Modal";
 import { validatePhone, formatPhoneDisplay, validateEmail, validateName, validateAddress } from "../../lib/validators";
 import { Database } from "../../types/database";
@@ -45,13 +46,25 @@ export function CustomersSection({ initialData, onCustomerCreated }: CustomersSe
         }
     }, [initialData]);
 
-    async function loadCustomers() {
+    async function loadCustomers(force = false) {
+        const KEY = "admin_customers";
+        if (!force) {
+            const cached = getCached<Customer[]>(KEY);
+            if (cached) {
+                setCustomers(cached);
+                setLoading(false);
+                supabase.from("customers").select("*").order("created_at", { ascending: false })
+                    .then(({ data }) => { if (data) { setCached(KEY, data); setCustomers(data); } });
+                return;
+            }
+        }
         try {
             const { data, error } = await supabase
                 .from("customers")
                 .select("*")
                 .order("created_at", { ascending: false });
             if (error) throw error;
+            setCached(KEY, data || []);
             setCustomers(data || []);
         } catch (error) {
             console.error("Error loading customers:", error);
@@ -99,7 +112,8 @@ export function CustomersSection({ initialData, onCustomerCreated }: CustomersSe
             setErrors({});
             setTouched({});
             setShowModal(false);
-            loadCustomers();
+            invalidateCache("admin_customers", "admin_customers_products");
+            loadCustomers(true);
             if (data && onCustomerCreated) {
                 onCustomerCreated(data.id);
             }
@@ -139,7 +153,8 @@ export function CustomersSection({ initialData, onCustomerCreated }: CustomersSe
                 .eq("id", editingCustomer.id);
             if (error) throw error;
             setEditingCustomer(null);
-            loadCustomers();
+            invalidateCache("admin_customers", "admin_customers_products");
+            loadCustomers(true);
         } catch (error) {
             console.error("Error updating customer:", error);
             alert("Ошибка при сохранении клиента");
@@ -181,7 +196,8 @@ export function CustomersSection({ initialData, onCustomerCreated }: CustomersSe
         try {
             const { error } = await supabase.from("customers").delete().eq("id", id);
             if (error) throw error;
-            loadCustomers();
+            invalidateCache("admin_customers", "admin_customers_products");
+            loadCustomers(true);
         } catch (error) {
             console.error("Error deleting customer:", error);
             alert("Ошибка при удалении клиента");
