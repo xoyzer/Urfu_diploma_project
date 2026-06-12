@@ -380,6 +380,7 @@ export function ContractsSection() {
                         </label>
                         <input
                             type="number"
+                            min="0"
                             value={form.totalAmount}
                             onChange={(e) =>
                                 setForm({ ...form, totalAmount: e.target.value === "" ? "" : Number(e.target.value) })
@@ -395,6 +396,7 @@ export function ContractsSection() {
                         </label>
                         <input
                             type="number"
+                            min="0"
                             value={form.advance}
                             onChange={(e) =>
                                 setForm({ ...form, advance: e.target.value === "" ? "" : Number(e.target.value) })
