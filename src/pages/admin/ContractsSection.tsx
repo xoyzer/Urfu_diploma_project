@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { FileText, Plus, Trash2, Download, Upload, CheckCircle } from "lucide-react";
+import { FileText, Plus, Trash2, Download, Upload, CircleCheck } from "lucide-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { useAuth } from "../../contexts/AuthContext";
@@ -281,7 +281,7 @@ export function ContractsSection() {
             >
                 <div className="flex items-center space-x-3">
                     {templateLoaded ? (
-                        <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                        <CircleCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
                     ) : (
                         <Upload className="h-5 w-5 text-amber-600 flex-shrink-0" />
                     )}
