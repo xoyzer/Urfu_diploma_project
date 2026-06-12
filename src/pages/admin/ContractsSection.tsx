@@ -20,6 +20,7 @@ interface ContractFormData {
     totalAmount: number | "";
     advance: number | "";
     address: string;
+    contractDate: string;
 }
 
 const TEMPLATE_STORAGE_KEY = "contract_template_b64";
@@ -37,6 +38,7 @@ const DEFAULT_FORM: ContractFormData = {
     totalAmount: "",
     advance: "",
     address: "",
+    contractDate: "",
 };
 
 function formatDate(date: Date): string {
@@ -90,13 +92,17 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 }
 
 function loadForm(): ContractFormData {
+    const today = formatDate(new Date());
     try {
         const raw = localStorage.getItem(FORM_STORAGE_KEY);
-        if (raw) return { ...DEFAULT_FORM, ...JSON.parse(raw) };
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            return { ...DEFAULT_FORM, contractDate: today, ...parsed };
+        }
     } catch {
         // ignore
     }
-    return { ...DEFAULT_FORM };
+    return { ...DEFAULT_FORM, contractDate: today };
 }
 
 function loadItems(): SpecItem[] {
@@ -121,8 +127,6 @@ export function ContractsSection() {
     const [error, setError] = useState<string | null>(null);
     const [templateLoaded, setTemplateLoaded] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const today = formatDate(new Date());
 
     useEffect(() => {
         const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
@@ -181,6 +185,7 @@ export function ContractsSection() {
     async function handleGenerate() {
         setError(null);
         if (!form.fullName.trim()) { setError("Укажите ФИО"); return; }
+        if (!form.contractDate.trim()) { setError("Укажите дату заключения"); return; }
         if (!form.phone.trim()) { setError("Укажите номер телефона"); return; }
         if (!form.deliverySchedule.trim()) { setError("Укажите график поставки"); return; }
         if (form.totalAmount === "") { setError("Укажите итоговую стоимость"); return; }
@@ -214,7 +219,7 @@ export function ContractsSection() {
             doc.render({
                 "ФИО": form.fullName.trim(),
                 "Фамилия и инициалы": formatInitials(form.fullName),
-                "Дата заключения": today,
+                "Дата заключения": form.contractDate.trim(),
                 "адрес": form.address.trim(),
                 "итоговая стоимость": String(form.totalAmount || 0),
                 "номер телефона": form.phone.trim(),
@@ -241,7 +246,6 @@ export function ContractsSection() {
             setGenerating(false);
         }
     }
-
     return (
         <div className="space-y-8">
             <div className="flex items-center space-x-3">
@@ -308,12 +312,15 @@ export function ContractsSection() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Дата заключения</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Дата заключения <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="text"
-                            readOnly
-                            value={today}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 text-sm cursor-default"
+                            value={form.contractDate}
+                            onChange={(e) => setForm({ ...form, contractDate: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                            placeholder="11.06.2026г"
                         />
                     </div>
 
