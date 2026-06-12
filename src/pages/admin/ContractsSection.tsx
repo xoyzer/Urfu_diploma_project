@@ -164,9 +164,7 @@ export function ContractsSection() {
     }
 
     function updateItemName(index: number, raw: string) {
-        setItems((prev) =>
-            prev.map((item, i) => (i === index ? { ...item, name: replaceQuotes(raw) } : item))
-        );
+        setItems((prev) => prev.map((item, i) => (i === index ? { ...item, name: replaceQuotes(raw) } : item)));
     }
 
     function updateItem(index: number, field: Exclude<keyof SpecItem, "name">, value: string | number) {
@@ -184,14 +182,38 @@ export function ContractsSection() {
 
     async function handleGenerate() {
         setError(null);
-        if (!form.fullName.trim()) { setError("Укажите ФИО"); return; }
-        if (!form.contractDate.trim()) { setError("Укажите дату заключения"); return; }
-        if (!form.phone.trim()) { setError("Укажите номер телефона"); return; }
-        if (!form.deliverySchedule.trim()) { setError("Укажите график поставки"); return; }
-        if (form.totalAmount === "") { setError("Укажите итоговую стоимость"); return; }
-        if (form.advance === "") { setError("Укажите аванс"); return; }
-        if (!form.address.trim()) { setError("Укажите адрес доставки"); return; }
-        if (items.some((item) => !item.name.trim())) { setError("Укажите наименование для всех позиций"); return; }
+        if (!form.fullName.trim()) {
+            setError("Укажите ФИО");
+            return;
+        }
+        if (!form.contractDate.trim()) {
+            setError("Укажите дату заключения");
+            return;
+        }
+        if (!form.phone.trim()) {
+            setError("Укажите номер телефона");
+            return;
+        }
+        if (!form.deliverySchedule.trim()) {
+            setError("Укажите график поставки");
+            return;
+        }
+        if (form.totalAmount === "") {
+            setError("Укажите итоговую стоимость");
+            return;
+        }
+        if (form.advance === "") {
+            setError("Укажите аванс");
+            return;
+        }
+        if (!form.address.trim()) {
+            setError("Укажите адрес доставки");
+            return;
+        }
+        if (items.some((item) => !item.name.trim())) {
+            setError("Укажите наименование для всех позиций");
+            return;
+        }
 
         const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
         if (!stored) {
@@ -217,13 +239,13 @@ export function ContractsSection() {
             }));
 
             doc.render({
-                "ФИО": form.fullName.trim(),
+                ФИО: form.fullName.trim(),
                 "Фамилия и инициалы": formatInitials(form.fullName),
                 "Дата заключения": form.contractDate.trim(),
-                "адрес": form.address.trim(),
+                адрес: form.address.trim(),
                 "итоговая стоимость": String(form.totalAmount || 0),
                 "номер телефона": form.phone.trim(),
-                "аванс": String(form.advance || 0),
+                аванс: String(form.advance || 0),
                 "график поставки": form.deliverySchedule.trim(),
                 "позиции заказа": specRows,
             });
@@ -254,7 +276,9 @@ export function ContractsSection() {
             </div>
 
             {/* Template upload */}
-            <div className={`rounded-lg border p-4 flex items-center justify-between ${templateLoaded ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}`}>
+            <div
+                className={`rounded-lg border p-4 flex items-center justify-between ${templateLoaded ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}`}
+            >
                 <div className="flex items-center space-x-3">
                     {templateLoaded ? (
                         <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
@@ -302,7 +326,7 @@ export function ContractsSection() {
                             value={form.fullName}
                             onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                            placeholder="Румелиоти Михаил Вячеславович"
+                            placeholder=""
                         />
                         {form.fullName.trim() && (
                             <p className="mt-1 text-xs text-gray-500">
@@ -320,7 +344,7 @@ export function ContractsSection() {
                             value={form.contractDate}
                             onChange={(e) => setForm({ ...form, contractDate: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                            placeholder="11.06.2026г"
+                            placeholder=""
                         />
                     </div>
 
@@ -333,7 +357,7 @@ export function ContractsSection() {
                             value={form.phone}
                             onChange={(e) => setForm({ ...form, phone: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                            placeholder="89031771025"
+                            placeholder=""
                         />
                     </div>
 
@@ -346,7 +370,7 @@ export function ContractsSection() {
                             value={form.deliverySchedule}
                             onChange={(e) => setForm({ ...form, deliverySchedule: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                            placeholder="11.06.2026. – 13.06.2026"
+                            placeholder=""
                         />
                     </div>
 
@@ -361,7 +385,7 @@ export function ContractsSection() {
                                 setForm({ ...form, totalAmount: e.target.value === "" ? "" : Number(e.target.value) })
                             }
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                            placeholder="193470"
+                            placeholder=""
                         />
                     </div>
 
@@ -376,7 +400,7 @@ export function ContractsSection() {
                                 setForm({ ...form, advance: e.target.value === "" ? "" : Number(e.target.value) })
                             }
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                            placeholder="60000"
+                            placeholder=""
                         />
                     </div>
                 </div>
@@ -390,7 +414,7 @@ export function ContractsSection() {
                         value={form.address}
                         onChange={(e) => setForm({ ...form, address: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                        placeholder="г. Москва, ул. Примерная, д. 123"
+                        placeholder=""
                     />
                 </div>
             </div>
@@ -400,7 +424,9 @@ export function ContractsSection() {
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                     <div className="flex items-center space-x-3">
                         <h2 className="text-lg font-semibold text-gray-800">Спецификация</h2>
-                        <span className="text-sm text-gray-500">{items.length} / {MAX_ITEMS} позиций</span>
+                        <span className="text-sm text-gray-500">
+                            {items.length} / {MAX_ITEMS} позиций
+                        </span>
                     </div>
                     <button
                         onClick={addItem}
@@ -435,7 +461,7 @@ export function ContractsSection() {
                                             value={item.name}
                                             onChange={(e) => updateItemName(index, e.target.value)}
                                             className="w-full px-2 py-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-amber-500 focus:border-transparent"
-                                            placeholder="Плитка тротуарная"
+                                            placeholder=""
                                         />
                                     </td>
                                     <td className="py-2 pr-3">
@@ -456,7 +482,6 @@ export function ContractsSection() {
                                             value={item.quantity || ""}
                                             onChange={(e) => updateItem(index, "quantity", Number(e.target.value))}
                                             className="w-full px-2 py-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-amber-500 focus:border-transparent"
-                                            placeholder="0"
                                         />
                                     </td>
                                     <td className="py-2 pr-3">
@@ -466,7 +491,7 @@ export function ContractsSection() {
                                             value={item.price || ""}
                                             onChange={(e) => updateItem(index, "price", Number(e.target.value))}
                                             className="w-full px-2 py-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-amber-500 focus:border-transparent"
-                                            placeholder="0"
+                                            placeholder=""
                                         />
                                     </td>
                                     <td className="py-2 pr-3">
