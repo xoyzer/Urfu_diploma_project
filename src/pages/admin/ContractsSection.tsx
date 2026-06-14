@@ -64,15 +64,6 @@ function getLastName(fullName: string): string {
     return fullName.trim().split(/\s+/)[0] || "Договор";
 }
 
-function replaceQuotes(text: string): string {
-    let open = true;
-    return text.replace(/"/g, () => {
-        const q = open ? "«" : "»";
-        open = !open;
-        return q;
-    });
-}
-
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
     let binary = "";
@@ -164,7 +155,7 @@ export function ContractsSection() {
     }
 
     function updateItemName(index: number, raw: string) {
-        setItems((prev) => prev.map((item, i) => (i === index ? { ...item, name: replaceQuotes(raw) } : item)));
+        setItems((prev) => prev.map((item, i) => (i === index ? { ...item, name: raw } : item)));
     }
 
     function updateItem(index: number, field: Exclude<keyof SpecItem, "name">, value: string | number) {
