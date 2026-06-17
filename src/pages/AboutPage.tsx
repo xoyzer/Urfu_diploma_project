@@ -80,7 +80,7 @@ export function AboutPage() {
                                 <TrendingUp className="h-8 w-8 text-yellow-600" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Опыт</h3>
-                            <p className="text-gray-600">Более 5 лет успешной работы на рынке</p>
+                            <p className="text-gray-600">Более 15 лет успешной работы на рынке</p>
                         </div>
                     </div>
                 </div>
