@@ -1,4 +1,4 @@
-import { Package, Truck, Calculator, ShieldCheck } from "lucide-react";
+import { Package, Truck, Calculator, ShieldCheck, HardHat } from "lucide-react";
 import { ReviewsWidget } from "../components/ReviewsWidget";
 
 interface HomePageProps {
@@ -27,8 +27,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                                 <span className="text-yellow-500">и бордюры</span>
                             </h1>
                             <p className="text-lg mb-8 text-stone-300 max-w-xl mx-auto lg:mx-0">
-                                Широкий ассортимент качественной продукции собственного производства с доставкой по
-                                Москве и области
+                                Изготовление современной высококачественной вибропрессованной тротуарной плитки
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                                 <button
@@ -96,13 +95,13 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
             <section className="py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
                         <div className="text-center p-6">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
                                 <Package className="h-8 w-8 text-yellow-700" />
                             </div>
                             <h3 className="text-xl font-semibold mb-2">Большой ассортимент</h3>
-                            <p className="text-gray-600">Более 50 видов брусчатки и бордюров</p>
+                            <p className="text-gray-600">Более 50 видов брусчатки/бордюров</p>
                         </div>
 
                         <div className="text-center p-6">
@@ -120,7 +119,13 @@ export function HomePage({ onNavigate }: HomePageProps) {
                             <h3 className="text-xl font-semibold mb-2">Быстрая доставка</h3>
                             <p className="text-gray-600">Быстрая доставка товара в срок</p>
                         </div>
-
+                        <div className="text-center p-6">
+                            <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
+                                <HardHat className="h-8 w-8 text-yellow-700" />
+                            </div>
+                            <h3 className="text-xl font-semibold mb-2">Качественная укладка</h3>
+                            <p className="text-gray-600">Опытная бригада монтажников</p>
+                        </div>
                         <div className="text-center p-6">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
                                 <Calculator className="h-8 w-8 text-yellow-700" />
