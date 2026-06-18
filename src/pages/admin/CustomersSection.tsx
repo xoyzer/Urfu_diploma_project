@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Mail, Phone, Trash2, AlertCircle, CreditCard as Edit2, Check, X } from "lucide-react";
+import { Search, Plus, Mail, Phone, Trash2, AlertCircle, UserRoundPen, Check, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { getCached, setCached, invalidateCache } from "../../lib/queryCache";
 import { Modal } from "../../components/Modal";
@@ -53,8 +53,16 @@ export function CustomersSection({ initialData, onCustomerCreated }: CustomersSe
             if (cached) {
                 setCustomers(cached);
                 setLoading(false);
-                supabase.from("customers").select("*").order("created_at", { ascending: false })
-                    .then(({ data }) => { if (data) { setCached(KEY, data); setCustomers(data); } });
+                supabase
+                    .from("customers")
+                    .select("*")
+                    .order("created_at", { ascending: false })
+                    .then(({ data }) => {
+                        if (data) {
+                            setCached(KEY, data);
+                            setCustomers(data);
+                        }
+                    });
                 return;
             }
         }
@@ -450,7 +458,7 @@ export function CustomersSection({ initialData, onCustomerCreated }: CustomersSe
                         <button
                             onClick={handleSaveCustomer}
                             disabled={editSaving}
-                            className="flex-1 flex items-center justify-center space-x-2 bg-amber-100 text-amber-600 py-2 rounded-lg hover:bg-amber-200 disabled:bg-gray-300 transition-colors font-semibold"
+                            className="flex-1 flex items-center justify-center space-x-2 bg-amber-100 text-amber-600 py-2 rounded-lg hover:bg-amber-50 disabled:bg-gray-300 transition-colors font-semibold"
                         >
                             <Check className="h-4 w-4" />
                             <span>{editSaving ? "Сохранение..." : "Сохранить"}</span>
@@ -499,7 +507,7 @@ export function CustomersSection({ initialData, onCustomerCreated }: CustomersSe
                                     className="text-yellow-600 hover:text-yellow-800 transition-colors"
                                     title="Редактировать"
                                 >
-                                    <Edit2 className="h-4 w-4" />
+                                    <UserRoundPen className="h-5 w-5" />
                                 </button>
                                 <button
                                     onClick={() => deleteCustomer(customer.id)}
