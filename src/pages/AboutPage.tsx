@@ -19,34 +19,50 @@ export function AboutPage() {
                 </div>
             </section>
 
-            <section className="py-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
-                    <div className="grid items-center">
-                        <div>
-                            <h2 className="text-3xl font-bold text-gray-900 mb-6 r text-center">
-                                <span className="text-yellow-500">Фабрика Плитки</span> - ваш надежный партнер
-                            </h2>
-                            <div className="grid text-xl space-y-4 text-gray-700 leading-relaxed gap-2 py-4">
-                                <p>
-                                    Компания Фабрика Плитки специализируется на поставках качественной тротуарной
-                                    плитки, брусчатки и бордюров для частных и коммерческих проектов любого масштаба.
-                                </p>
-                                <p>
-                                    Мы работаем только с проверенными производителями и гарантируем высокое качество
-                                    всей продукции. Наш ассортимент включает более 50 наименований изделий различных
-                                    форм, размеров и цветов.
-                                </p>
-                                <p>
-                                    Собственный парк транспорта позволяет нам обеспечивать быструю и надежную доставку
-                                    по всему региону. Мы осуществляем доставку как разными видами манипуляторов, так и
-                                    большегрузными автомобилями в зависимости от объема заказа.
-                                </p>
-                                <p>
-                                    Компания «Фабрика Плитки» также предоставляет услуги профессионального монтажа. В
-                                    нашем штате опытные бригады монтажников с общим стажем работы свыше 10 лет. Мы
-                                    гарантируем качественную укладку в соответствии с технологическими нормами.
-                                </p>
+            <section className="py-16 sm:py-20">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-12 text-center">
+                        <span className="text-yellow-500">Фабрика Плитки</span> — ваш надежный партнер
+                    </h2>
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex gap-5 items-start">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mt-0.5">
+                                <span className="text-amber-500 font-bold text-lg">01</span>
                             </div>
+                            <p className="text-gray-700 leading-relaxed text-lg">
+                                Компания Фабрика Плитки специализируется на поставках качественной тротуарной
+                                плитки, брусчатки и бордюров для частных и коммерческих проектов любого масштаба.
+                            </p>
+                        </div>
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex gap-5 items-start">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mt-0.5">
+                                <span className="text-amber-500 font-bold text-lg">02</span>
+                            </div>
+                            <p className="text-gray-700 leading-relaxed text-lg">
+                                Мы работаем только с проверенными производителями и гарантируем высокое качество
+                                всей продукции. Наш ассортимент включает более 50 наименований изделий различных
+                                форм, размеров и цветов.
+                            </p>
+                        </div>
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex gap-5 items-start">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mt-0.5">
+                                <span className="text-amber-500 font-bold text-lg">03</span>
+                            </div>
+                            <p className="text-gray-700 leading-relaxed text-lg">
+                                Собственный парк транспорта позволяет нам обеспечивать быструю и надежную доставку
+                                по всему региону. Мы осуществляем доставку как разными видами манипуляторов, так и
+                                большегрузными автомобилями в зависимости от объема заказа.
+                            </p>
+                        </div>
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex gap-5 items-start">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mt-0.5">
+                                <span className="text-amber-500 font-bold text-lg">04</span>
+                            </div>
+                            <p className="text-gray-700 leading-relaxed text-lg">
+                                Компания «Фабрика Плитки» также предоставляет услуги профессионального монтажа. В
+                                нашем штате опытные бригады монтажников с общим стажем работы свыше 10 лет. Мы
+                                гарантируем качественную укладку в соответствии с технологическими нормами.
+                            </p>
                         </div>
                     </div>
                 </div>
