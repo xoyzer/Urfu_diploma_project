@@ -537,14 +537,14 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-wrap gap-3 justify-between items-start mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Управление заказами</h1>
-                    <p className="text-gray-600 mt-2">Все заказы с сайта и по телефону</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Управление заказами</h1>
+                    <p className="text-gray-600 mt-1">Все заказы с сайта и по телефону</p>
                 </div>
                 <button
                     onClick={() => setShowAddOrder(true)}
-                    className="flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors"
+                    className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2.5 rounded-lg hover:bg-yellow-700 transition-colors whitespace-nowrap"
                 >
                     <Plus className="h-5 w-5" />
                     <span>Добавить заказ</span>
@@ -1407,8 +1407,8 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                 )}
             </Modal>
 
-            {/* Orders table */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            {/* Orders table — desktop */}
+            <div className="hidden sm:block bg-white rounded-lg shadow-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
@@ -1499,6 +1499,50 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Orders cards — mobile */}
+            <div className="sm:hidden space-y-3">
+                {filteredOrders.map((order) => (
+                    <div
+                        key={order.id}
+                        className="bg-white rounded-lg shadow-md p-4 cursor-pointer"
+                        onClick={() => openOrderDetails(order)}
+                    >
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <span className="font-semibold text-gray-900">#{order.order_number}</span>
+                                <span className="ml-2 text-sm text-gray-500">
+                                    {new Date(order.created_at).toLocaleDateString("ru-RU")}
+                                </span>
+                            </div>
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <select
+                                    value={order.status}
+                                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                    className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}
+                                >
+                                    {ORDER_STATUSES.map((status) => (
+                                        <option key={status} value={status}>{status}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="text-sm text-gray-900 font-medium">{order.customer?.name}</div>
+                        <div className="text-sm text-gray-600">{order.customer?.phone}</div>
+                        <div className="flex justify-between items-center mt-2">
+                            <span className="font-bold text-yellow-700">{order.total_amount.toLocaleString("ru-RU")} ₽</span>
+                            <div className="flex gap-3" onClick={(e) => e.stopPropagation()}>
+                                <button onClick={() => openOrderDetails(order)} className="text-blue-600">
+                                    <Eye className="h-4 w-4" />
+                                </button>
+                                <button onClick={() => deleteOrder(order.id)} className="text-red-600">
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
