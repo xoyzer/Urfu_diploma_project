@@ -386,7 +386,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     onChange={() =>
                                                         setAvailabilityFilter((prev) => toggleSet(prev, key))
                                                     }
-                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-100 focus:ring-yellow-500"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-700 focus:ring-yellow-500"
                                                 />
                                                 <span className="text-sm text-gray-700 group-hover:text-gray-900 ">
                                                     {label}
@@ -424,7 +424,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     type="checkbox"
                                                     checked={selectedShapes.has(shape)}
                                                     onChange={() => setSelectedShapes((prev) => toggleSet(prev, shape))}
-                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-100 focus:ring-yellow-500"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-700 focus:ring-yellow-500"
                                                 />
                                                 <span className="text-sm text-gray-700 group-hover:text-gray-900">
                                                     {shape}
@@ -468,7 +468,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                             onChange={() =>
                                                                 setSelectedColors((prev) => toggleSet(prev, color))
                                                             }
-                                                            className="w-4 h-4 rounded border-gray-300 accent-yellow-100 focus:ring-yellow-500"
+                                                            className="w-4 h-4 rounded border-gray-300 accent-yellow-700 focus:ring-yellow-500"
                                                         />
                                                         <span className="text-sm text-gray-700 group-hover:text-gray-900">
                                                             {color}
@@ -510,7 +510,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     onChange={() =>
                                                         setSelectedPurposes((prev) => toggleSet(prev, purpose))
                                                     }
-                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-100 focus:ring-yellow-500"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-700 focus:ring-yellow-500"
                                                 />
                                                 <span className="text-sm text-gray-700 group-hover:text-gray-900">
                                                     {purpose}
@@ -586,7 +586,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white"
+                                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white appearance-none"
                                 >
                                     {SORT_OPTIONS.map((opt) => (
                                         <option key={opt.value} value={opt.value}>
