@@ -352,7 +352,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     type="checkbox"
                                                     checked={availabilityFilter.has(key)}
                                                     onChange={() => setAvailabilityFilter((prev) => toggleSet(prev, key))}
-                                                    className="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-600 focus:ring-yellow-500"
                                                 />
                                                 <span className="text-sm text-gray-700 group-hover:text-gray-900">{label}</span>
                                             </label>
@@ -382,7 +382,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     type="checkbox"
                                                     checked={selectedShapes.has(shape)}
                                                     onChange={() => setSelectedShapes((prev) => toggleSet(prev, shape))}
-                                                    className="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-600 focus:ring-yellow-500"
                                                 />
                                                 <span className="text-sm text-gray-700 group-hover:text-gray-900">{shape}</span>
                                             </label>
@@ -416,7 +416,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                             type="checkbox"
                                                             checked={selectedColors.has(color)}
                                                             onChange={() => setSelectedColors((prev) => toggleSet(prev, color))}
-                                                            className="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                                                            className="w-4 h-4 rounded border-gray-300 accent-yellow-600 focus:ring-yellow-500"
                                                         />
                                                         <span className="text-sm text-gray-700 group-hover:text-gray-900">{color}</span>
                                                     </label>
@@ -448,7 +448,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     type="checkbox"
                                                     checked={selectedPurposes.has(purpose)}
                                                     onChange={() => setSelectedPurposes((prev) => toggleSet(prev, purpose))}
-                                                    className="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-600 focus:ring-yellow-500"
                                                 />
                                                 <span className="text-sm text-gray-700 group-hover:text-gray-900">{purpose}</span>
                                             </label>
