@@ -538,7 +538,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                             </div>
                         )}
 
-                        <div className="bg-yellow-50/50 p-4 sm:p-6 rounded-lg border-2 border-yellow-600">
+                        <div className="bg-yellow-50/50 p-4 sm:p-6 rounded-lg border-2 border-yellow-500">
                             <h3 className="text-lg font-semibold mb-4 text-gray-900">Расчет стоимости</h3>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-gray-700">
