@@ -199,11 +199,23 @@ export function ContactsPage() {
             </section>
 
             <section className="py-16 bg-gray-100">
-                {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-gradient-to-br from-gray-300 to-gray-400 rounded-lg h-96 flex items-center justify-center">
-                        <p className="text-gray-600 text-lg">Карта со схемой проезда</p>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Схема проезда</h2>
+                    <div className="rounded-xl overflow-hidden shadow-lg border border-gray-200">
+                        <iframe
+                            src="https://yandex.ru/map-widget/v1/?text=%D0%9C%D0%BE%D1%81%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B0%D1%8F+%D0%BE%D0%B1%D0%BB%D0%B0%D1%81%D1%82%D1%8C%2C+%D0%A9%D0%B5%D0%BB%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9+%D1%80%D0%B0%D0%B9%D0%BE%D0%BD%2C+%D0%94%D0%BE%D0%BB%D0%B3%D0%BE%D0%B5+%D0%9B%D0%B5%D0%B4%D0%BE%D0%B2%D0%BE%2C+%D1%83%D0%BB.+%D0%90%D0%BA%D0%B0%D0%B4%D0%B5%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F+5&z=15&l=map"
+                            width="100%"
+                            height="480"
+                            frameBorder="0"
+                            allowFullScreen
+                            title="Карта расположения"
+                            className="block"
+                        />
                     </div>
-                </div> */}
+                    <p className="mt-4 text-sm text-gray-500 text-center">
+                        Московская область, Щелковский район, д. Долгое Ледово, ул. Академическая 5
+                    </p>
+                </div>
             </section>
         </div>
     );
