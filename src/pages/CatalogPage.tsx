@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, ListFilter as Filter, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { getCached, setCached } from "../lib/queryCache";
 import { Database } from "../types/database";
@@ -83,10 +83,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
             if (error) throw error;
 
-            const products = data || [];
-            setCached(CATALOG_CACHE_KEY, products);
-            setProducts(products);
-            setCategories(buildCategories(products));
+            const prods = data || [];
+            setCached(CATALOG_CACHE_KEY, prods);
+            setProducts(prods);
+            setCategories(buildCategories(prods));
         } catch (error) {
             console.error("Error loading products:", error);
         } finally {
@@ -334,7 +334,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                             </div>
 
                                             <button
-                                                onClick={() => onNavigate("calculator")}
+                                                onClick={() => {
+                                                    localStorage.setItem("calculator_preselect_product", product.id);
+                                                    onNavigate("calculator");
+                                                }}
                                                 className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 transition-colors font-semibold"
                                             >
                                                 Рассчитать стоимость

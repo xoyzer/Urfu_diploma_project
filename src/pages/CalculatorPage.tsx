@@ -1,16 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-    Calculator,
-    Truck,
-    MapPin,
-    ShoppingCart,
-    Plus,
-    Trash2,
-    Search,
-    Loader2,
-    Info,
-    ArrowDownWideNarrow,
-} from "lucide-react";
+import { Calculator, Truck, MapPin, ShoppingCart, Plus, Trash2, Search, Loader as Loader2, Info, ArrowDownWideNarrow } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Database } from "../types/database";
 
@@ -143,6 +132,11 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     useEffect(() => {
         if (products.length > 0) {
             restoreCalculatorState();
+            const preselect = localStorage.getItem("calculator_preselect_product");
+            if (preselect) {
+                setSelectedProductId(preselect);
+                localStorage.removeItem("calculator_preselect_product");
+            }
         }
     }, [products]);
 
