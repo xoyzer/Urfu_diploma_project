@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, Clock, MessageCircleMore } from "lucide-react";
+import { Phone, MapPin, Clock, MessageCircleMore } from "lucide-react";
 
 export function ContactsPage() {
     return (
@@ -19,7 +19,7 @@ export function ContactsPage() {
 
             <section className="py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="grid grid-cols-2 lg:grid-cols-2 gap-12 items-start">
                         <div>
                             <h2 className="text-3xl font-bold text-gray-900 mb-8">Свяжитесь с нами</h2>
 
@@ -106,7 +106,6 @@ export function ContactsPage() {
                                         <p className="text-gray-600">
                                             Московская область, Щелковский район, д. Долгое Ледово, ул. Академическая 5.
                                         </p>
-                                        {/* <p className="text-gray-600">Производственная база и склад</p> */}
                                     </div>
                                 </div>
 
@@ -119,91 +118,27 @@ export function ContactsPage() {
                                     <div>
                                         <h3 className="text-lg font-semibold text-gray-900 mb-1">Режим работы</h3>
                                         <p className="text-gray-600">Пн-Вс: 08:00 - 22:00</p>
-                                        {/* <p className="text-gray-600">Сб: 09:00 - 15:00</p>
-                                        <p className="text-gray-600">Вс: выходной</p> */}
                                     </div>
                                 </div>
                             </div>
-
-                            {/* <div className="mt-12 p-6 bg-amber-50 border border-amber-200 rounded-lg">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-3">Как добраться</h3>
-                                <p className="text-gray-700 mb-4">
-                                    От метро Шоссе Энтузиастов: автобус №254 до остановки "Складская улица", далее 5
-                                    минут пешком.
-                                </p>
-                                <p className="text-gray-700">
-                                    На автомобиле: въезд с улицы Складская, есть удобная парковка для легковых
-                                    автомобилей и грузового транспорта.
-                                </p>
-                            </div> */}
                         </div>
-
-                        {/* <div className="bg-white rounded-lg shadow-lg p-8">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Отправить сообщение</h2>
-                            <form className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Имя <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                                        placeholder="Ваше имя"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Телефон <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        required
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                                        placeholder="+7 (999) 123-45-67"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                                    <input
-                                        type="email"
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                                        placeholder="example@mail.ru"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Сообщение <span className="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        required
-                                        rows={5}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                                        placeholder="Напишите ваше сообщение..."
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    className="w-full bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition-colors font-semibold"
-                                >
-                                    Отправить сообщение
-                                </button>
-                            </form>
-                        </div> */}
+                        <div>
+                            <h2 className="text-3xl font-bold text-gray-900 mb-8">Наше местоположение</h2>
+                            <div className="rounded-xl overflow-hidden shadow-lg border border-gray-200 min-h-[360px]">
+                                <iframe
+                                    src="https://yandex.ru/map-widget/v1/?text=%D0%9C%D0%BE%D1%81%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B0%D1%8F+%D0%BE%D0%B1%D0%BB%D0%B0%D1%81%D1%82%D1%8C%2C+%D0%A9%D0%B5%D0%BB%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9+%D1%80%D0%B0%D0%B9%D0%BE%D0%BD%2C+%D0%94%D0%BE%D0%BB%D0%B3%D0%BE%D0%B5+%D0%9B%D0%B5%D0%B4%D0%BE%D0%B2%D0%BE%2C+%D1%83%D0%BB.+%D0%90%D0%BA%D0%B0%D0%B4%D0%B5%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F+5&z=15&l=map"
+                                    width="100%"
+                                    height="100%"
+                                    style={{ minHeight: "360px" }}
+                                    frameBorder="0"
+                                    allowFullScreen
+                                    title="Карта расположения"
+                                    className="block"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
-
-            <section className="py-16 bg-gray-100">
-                {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-gradient-to-br from-gray-300 to-gray-400 rounded-lg h-96 flex items-center justify-center">
-                        <p className="text-gray-600 text-lg">Карта со схемой проезда</p>
-                    </div>
-                </div> */}
             </section>
         </div>
     );
