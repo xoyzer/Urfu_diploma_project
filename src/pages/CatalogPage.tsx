@@ -73,7 +73,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
     const [sortBy, setSortBy] = useState<SortOption>("default");
 
     const [expandedSections, setExpandedSections] = useState<Set<string>>(
-        new Set(["categories", "availability", "shape", "color", "purpose", "price"])
+        new Set(["categories", "availability", "shape", "color", "purpose", "price"]),
     );
 
     useEffect(() => {
@@ -131,7 +131,9 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
     const availableColors = useMemo(() => {
         const colors = new Set<string>();
-        products.forEach((p) => { if (p.color) colors.add(p.color); });
+        products.forEach((p) => {
+            if (p.color) colors.add(p.color);
+        });
         return Array.from(colors).sort();
     }, [products]);
 
@@ -173,7 +175,19 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
         if (sortBy === "popular") result = [...result].sort((a, b) => b.stock_quantity - a.stock_quantity);
 
         return result;
-    }, [products, searchTerm, selectedCategory, selectedSubcategory, availabilityFilter, selectedShapes, selectedColors, selectedPurposes, priceMin, priceMax, sortBy]);
+    }, [
+        products,
+        searchTerm,
+        selectedCategory,
+        selectedSubcategory,
+        availabilityFilter,
+        selectedShapes,
+        selectedColors,
+        selectedPurposes,
+        priceMin,
+        priceMax,
+        sortBy,
+    ]);
 
     const hasActiveFilters =
         selectedShapes.size > 0 ||
@@ -279,7 +293,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                 {expandedSections.has("categories") && (
                                     <div className="mt-3 space-y-1">
                                         <button
-                                            onClick={() => { setSelectedCategory("all"); setSelectedSubcategory("all"); }}
+                                            onClick={() => {
+                                                setSelectedCategory("all");
+                                                setSelectedSubcategory("all");
+                                            }}
                                             className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between text-sm ${
                                                 selectedCategory === "all"
                                                     ? "bg-yellow-100 text-yellow-800 font-semibold"
@@ -292,7 +309,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                         {categories.map((cat) => (
                                             <div key={cat.name}>
                                                 <div className="flex items-center">
-                                                    <button onClick={() => toggleCategory(cat.name)} className="p-1 hover:bg-gray-100 rounded">
+                                                    <button
+                                                        onClick={() => toggleCategory(cat.name)}
+                                                        className="p-1 hover:bg-gray-100 rounded"
+                                                    >
                                                         {expandedCategories.has(cat.name) ? (
                                                             <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
                                                         ) : (
@@ -308,16 +328,22 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                         }`}
                                                     >
                                                         <span>{cat.name}</span>
-                                                        <span className="text-xs text-gray-500">{cat.productCount}</span>
+                                                        <span className="text-xs text-gray-500">
+                                                            {cat.productCount}
+                                                        </span>
                                                     </button>
                                                 </div>
                                                 {expandedCategories.has(cat.name) &&
                                                     cat.subcategories.map((sub) => (
                                                         <button
                                                             key={sub}
-                                                            onClick={() => { setSelectedCategory(cat.name); setSelectedSubcategory(sub); }}
+                                                            onClick={() => {
+                                                                setSelectedCategory(cat.name);
+                                                                setSelectedSubcategory(sub);
+                                                            }}
                                                             className={`w-full text-left pl-9 pr-3 py-1.5 rounded text-xs transition-colors ml-1 ${
-                                                                selectedCategory === cat.name && selectedSubcategory === sub
+                                                                selectedCategory === cat.name &&
+                                                                selectedSubcategory === sub
                                                                     ? "bg-yellow-50 text-yellow-700 font-medium"
                                                                     : "text-gray-600 hover:bg-gray-50"
                                                             }`}
@@ -333,7 +359,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
                             {/* Availability */}
                             <div className="p-4">
-                                <button onClick={() => toggleSection("availability")} className="w-full flex items-center justify-between">
+                                <button
+                                    onClick={() => toggleSection("availability")}
+                                    className="w-full flex items-center justify-between"
+                                >
                                     <span className="font-semibold text-gray-900 text-sm">Наличие</span>
                                     {expandedSections.has("availability") ? (
                                         <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -351,10 +380,14 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                 <input
                                                     type="checkbox"
                                                     checked={availabilityFilter.has(key)}
-                                                    onChange={() => setAvailabilityFilter((prev) => toggleSet(prev, key))}
-                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-600"
+                                                    onChange={() =>
+                                                        setAvailabilityFilter((prev) => toggleSet(prev, key))
+                                                    }
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-300"
                                                 />
-                                                <span className="text-sm text-gray-700 group-hover:text-gray-900">{label}</span>
+                                                <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                                                    {label}
+                                                </span>
                                             </label>
                                         ))}
                                     </div>
@@ -363,7 +396,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
                             {/* Shape */}
                             <div className="p-4">
-                                <button onClick={() => toggleSection("shape")} className="w-full flex items-center justify-between">
+                                <button
+                                    onClick={() => toggleSection("shape")}
+                                    className="w-full flex items-center justify-between"
+                                >
                                     <span className="font-semibold text-gray-900 text-sm">
                                         Форма
                                         <CountBadge count={selectedShapes.size} />
@@ -377,14 +413,19 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                 {expandedSections.has("shape") && (
                                     <div className="mt-3 space-y-2.5">
                                         {SHAPES.map((shape) => (
-                                            <label key={shape} className="flex items-center gap-2.5 cursor-pointer group">
+                                            <label
+                                                key={shape}
+                                                className="flex items-center gap-2.5 cursor-pointer group"
+                                            >
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedShapes.has(shape)}
                                                     onChange={() => setSelectedShapes((prev) => toggleSet(prev, shape))}
-                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-600"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-300"
                                                 />
-                                                <span className="text-sm text-gray-700 group-hover:text-gray-900">{shape}</span>
+                                                <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                                                    {shape}
+                                                </span>
                                             </label>
                                         ))}
                                     </div>
@@ -393,7 +434,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
                             {/* Color */}
                             <div className="p-4">
-                                <button onClick={() => toggleSection("color")} className="w-full flex items-center justify-between">
+                                <button
+                                    onClick={() => toggleSection("color")}
+                                    className="w-full flex items-center justify-between"
+                                >
                                     <span className="font-semibold text-gray-900 text-sm">
                                         Цвет
                                         <CountBadge count={selectedColors.size} />
@@ -411,14 +455,21 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                         ) : (
                                             <div className="space-y-2.5 max-h-52 overflow-y-auto pr-1">
                                                 {availableColors.map((color) => (
-                                                    <label key={color} className="flex items-center gap-2.5 cursor-pointer group">
+                                                    <label
+                                                        key={color}
+                                                        className="flex items-center gap-2.5 cursor-pointer group"
+                                                    >
                                                         <input
                                                             type="checkbox"
                                                             checked={selectedColors.has(color)}
-                                                            onChange={() => setSelectedColors((prev) => toggleSet(prev, color))}
-                                                            className="w-4 h-4 rounded border-gray-300 accent-yellow-600"
+                                                            onChange={() =>
+                                                                setSelectedColors((prev) => toggleSet(prev, color))
+                                                            }
+                                                            className="w-4 h-4 rounded border-gray-300 accent-yellow-300"
                                                         />
-                                                        <span className="text-sm text-gray-700 group-hover:text-gray-900">{color}</span>
+                                                        <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                                                            {color}
+                                                        </span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -429,7 +480,10 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
                             {/* Purpose */}
                             <div className="p-4">
-                                <button onClick={() => toggleSection("purpose")} className="w-full flex items-center justify-between">
+                                <button
+                                    onClick={() => toggleSection("purpose")}
+                                    className="w-full flex items-center justify-between"
+                                >
                                     <span className="font-semibold text-gray-900 text-sm">
                                         Назначение
                                         <CountBadge count={selectedPurposes.size} />
@@ -443,14 +497,21 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                 {expandedSections.has("purpose") && (
                                     <div className="mt-3 space-y-2.5">
                                         {PURPOSES.map((purpose) => (
-                                            <label key={purpose} className="flex items-center gap-2.5 cursor-pointer group">
+                                            <label
+                                                key={purpose}
+                                                className="flex items-center gap-2.5 cursor-pointer group"
+                                            >
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedPurposes.has(purpose)}
-                                                    onChange={() => setSelectedPurposes((prev) => toggleSet(prev, purpose))}
-                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-600"
+                                                    onChange={() =>
+                                                        setSelectedPurposes((prev) => toggleSet(prev, purpose))
+                                                    }
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-300"
                                                 />
-                                                <span className="text-sm text-gray-700 group-hover:text-gray-900">{purpose}</span>
+                                                <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                                                    {purpose}
+                                                </span>
                                             </label>
                                         ))}
                                     </div>
@@ -459,10 +520,12 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
                             {/* Price */}
                             <div className="p-4">
-                                <button onClick={() => toggleSection("price")} className="w-full flex items-center justify-between">
+                                <button
+                                    onClick={() => toggleSection("price")}
+                                    className="w-full flex items-center justify-between"
+                                >
                                     <span className="font-semibold text-gray-900 text-sm">
-                                        Цена, ₽
-                                        {(priceMin !== "" || priceMax !== "") && <CountBadge count={1} />}
+                                        Цена, ₽{(priceMin !== "" || priceMax !== "") && <CountBadge count={1} />}
                                     </span>
                                     {expandedSections.has("price") ? (
                                         <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -519,7 +582,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white"
+                                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white appearance-none"
                                 >
                                     {SORT_OPTIONS.map((opt) => (
                                         <option key={opt.value} value={opt.value}>
@@ -536,11 +599,17 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                 {selectedCategory !== "all" && (
                                     <FilterChip
                                         label={selectedCategory}
-                                        onRemove={() => { setSelectedCategory("all"); setSelectedSubcategory("all"); }}
+                                        onRemove={() => {
+                                            setSelectedCategory("all");
+                                            setSelectedSubcategory("all");
+                                        }}
                                     />
                                 )}
                                 {selectedSubcategory !== "all" && (
-                                    <FilterChip label={selectedSubcategory} onRemove={() => setSelectedSubcategory("all")} />
+                                    <FilterChip
+                                        label={selectedSubcategory}
+                                        onRemove={() => setSelectedSubcategory("all")}
+                                    />
                                 )}
                                 {availabilityFilter.size === 1 &&
                                     Array.from(availabilityFilter).map((key) => (
@@ -551,18 +620,35 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                         />
                                     ))}
                                 {Array.from(selectedShapes).map((s) => (
-                                    <FilterChip key={s} label={s} onRemove={() => setSelectedShapes((prev) => toggleSet(prev, s))} />
+                                    <FilterChip
+                                        key={s}
+                                        label={s}
+                                        onRemove={() => setSelectedShapes((prev) => toggleSet(prev, s))}
+                                    />
                                 ))}
                                 {Array.from(selectedColors).map((c) => (
-                                    <FilterChip key={c} label={c} onRemove={() => setSelectedColors((prev) => toggleSet(prev, c))} />
+                                    <FilterChip
+                                        key={c}
+                                        label={c}
+                                        onRemove={() => setSelectedColors((prev) => toggleSet(prev, c))}
+                                    />
                                 ))}
                                 {Array.from(selectedPurposes).map((p) => (
-                                    <FilterChip key={p} label={p} onRemove={() => setSelectedPurposes((prev) => toggleSet(prev, p))} />
+                                    <FilterChip
+                                        key={p}
+                                        label={p}
+                                        onRemove={() => setSelectedPurposes((prev) => toggleSet(prev, p))}
+                                    />
                                 ))}
                                 {(priceMin !== "" || priceMax !== "") && (
                                     <FilterChip
-                                        label={[priceMin && `от ${priceMin} ₽`, priceMax && `до ${priceMax} ₽`].filter(Boolean).join(" ")}
-                                        onRemove={() => { setPriceMin(""); setPriceMax(""); }}
+                                        label={[priceMin && `от ${priceMin} ₽`, priceMax && `до ${priceMax} ₽`]
+                                            .filter(Boolean)
+                                            .join(" ")}
+                                        onRemove={() => {
+                                            setPriceMin("");
+                                            setPriceMax("");
+                                        }}
                                     />
                                 )}
                             </div>
@@ -623,7 +709,9 @@ function ProductCard({ product, onNavigate }: { product: Product; onNavigate: (p
                         {product.category}
                     </span>
                     {product.subcategory && (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{product.subcategory}</span>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                            {product.subcategory}
+                        </span>
                     )}
                     {product.shape && (
                         <span className="text-xs text-stone-600 bg-stone-100 px-2 py-0.5 rounded">{product.shape}</span>
@@ -652,12 +740,12 @@ function ProductCard({ product, onNavigate }: { product: Product; onNavigate: (p
                     </div>
                     <div
                         className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                            product.stock_quantity > 0
-                                ? "bg-green-100 text-green-700"
-                                : "bg-orange-100 text-orange-700"
+                            product.stock_quantity > 0 ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
                         }`}
                     >
-                        {product.stock_quantity > 0 ? `В наличии: ${product.stock_quantity} ${product.unit}` : "На заказ"}
+                        {product.stock_quantity > 0
+                            ? `В наличии: ${product.stock_quantity} ${product.unit}`
+                            : "На заказ"}
                     </div>
                 </div>
                 <button
