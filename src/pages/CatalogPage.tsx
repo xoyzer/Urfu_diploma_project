@@ -386,7 +386,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     onChange={() =>
                                                         setAvailabilityFilter((prev) => toggleSet(prev, key))
                                                     }
-                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-700 focus:ring-yellow-500"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-yellow-800 focus:ring-yellow-500"
                                                 />
                                                 <span className="text-sm text-gray-700 group-hover:text-gray-900 ">
                                                     {label}
