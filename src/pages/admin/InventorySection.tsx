@@ -59,8 +59,16 @@ export function InventorySection() {
             if (cached) {
                 setProducts(cached);
                 setLoading(false);
-                supabase.from("products").select("*").order("stock_quantity", { ascending: true })
-                    .then(({ data }) => { if (data) { setCached(KEY, data); setProducts(data); } });
+                supabase
+                    .from("products")
+                    .select("*")
+                    .order("stock_quantity", { ascending: true })
+                    .then(({ data }) => {
+                        if (data) {
+                            setCached(KEY, data);
+                            setProducts(data);
+                        }
+                    });
                 return;
             }
         }
@@ -85,10 +93,17 @@ export function InventorySection() {
             const cached = getCached<InventoryTransaction[]>(KEY);
             if (cached) {
                 setTransactions(cached);
-                supabase.from("inventory_transactions")
+                supabase
+                    .from("inventory_transactions")
                     .select("*, product:products(name, unit)")
-                    .order("created_at", { ascending: false }).limit(20)
-                    .then(({ data }) => { if (data) { setCached(KEY, data as InventoryTransaction[]); setTransactions(data as InventoryTransaction[]); } });
+                    .order("created_at", { ascending: false })
+                    .limit(20)
+                    .then(({ data }) => {
+                        if (data) {
+                            setCached(KEY, data as InventoryTransaction[]);
+                            setTransactions(data as InventoryTransaction[]);
+                        }
+                    });
                 return;
             }
         }
@@ -112,11 +127,19 @@ export function InventorySection() {
             const cached = getCached<OrderOption[]>(KEY);
             if (cached) {
                 setOrders(cached);
-                supabase.from("orders")
-                    .select(`id, order_number, status, customer:customers(name), items:order_items(id, product_id, quantity, product:products(name, unit))`)
+                supabase
+                    .from("orders")
+                    .select(
+                        `id, order_number, status, customer:customers(name), items:order_items(id, product_id, quantity, product:products(name, unit))`,
+                    )
                     .in("status", ["Доставляется", "Подтвержден", "В обработке"])
                     .order("created_at", { ascending: false })
-                    .then(({ data }) => { if (data) { setCached(KEY, data as unknown as OrderOption[]); setOrders(data as unknown as OrderOption[]); } });
+                    .then(({ data }) => {
+                        if (data) {
+                            setCached(KEY, data as unknown as OrderOption[]);
+                            setOrders(data as unknown as OrderOption[]);
+                        }
+                    });
                 return;
             }
         }
@@ -317,7 +340,7 @@ export function InventorySection() {
                 <div className="flex space-x-3">
                     <button
                         onClick={() => setShowAddShipment(true)}
-                        className="flex items-center space-x-2 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
+                        className="flex items-center space-x-2 bg-amber-100 text-amber-700 px-6 py-3 rounded-lg hover:bg-yellow-500 hover:text-white transition-colors  "
                     >
                         <Send className="h-5 w-5" />
                         <span>Отгрузка</span>
@@ -359,7 +382,7 @@ export function InventorySection() {
                             {receivingForm.product_id
                                 ? ` (${products.find((p) => p.id === receivingForm.product_id)?.unit || ""})`
                                 : ""}{" "}
-                            <span className="text-red-500">*</span>
+                            <span className="text-amber-500">*</span>
                         </label>
                         <input
                             type="number"
@@ -407,7 +430,7 @@ export function InventorySection() {
             >
                 <form onSubmit={handleAddShipment} className="space-y-5">
                     {/* Mode toggle */}
-                    <div className="flex rounded-lg overflow-hidden border border-gray-300">
+                    <div className="flex rounded-lg overflow-hidden">
                         <button
                             type="button"
                             onClick={() => {
@@ -417,8 +440,8 @@ export function InventorySection() {
                             }}
                             className={`flex-1 py-2 text-sm font-semibold transition-colors ${
                                 shipmentMode === "manual"
-                                    ? "bg-red-600 text-white"
-                                    : "bg-white text-gray-600 hover:bg-gray-50"
+                                    ? "bg-amber-100 text-amber-600 border border-gray-200"
+                                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                             }`}
                         >
                             Вручную
@@ -431,8 +454,8 @@ export function InventorySection() {
                             }}
                             className={`flex-1 py-2 text-sm font-semibold transition-colors ${
                                 shipmentMode === "order"
-                                    ? "bg-red-600 text-white"
-                                    : "bg-white text-gray-600 hover:bg-gray-50"
+                                    ? "bg-amber-100 text-amber-600 border border-gray-200"
+                                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                             }`}
                         >
                             По заказу
@@ -448,7 +471,7 @@ export function InventorySection() {
                             <select
                                 value={selectedOrderId}
                                 onChange={(e) => handleOrderSelect(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 appearance-none"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg  appearance-none"
                             >
                                 <option value="">Выберите заказ</option>
                                 {orders.map((o) => (
@@ -473,7 +496,7 @@ export function InventorySection() {
                                 <button
                                     type="button"
                                     onClick={addShipmentLine}
-                                    className="text-xs text-red-600 hover:text-red-800 font-semibold flex items-center space-x-1"
+                                    className="text-xs text-amber-600 hover:text-amber-700 font-semibold flex items-center space-x-1"
                                 >
                                     <Plus className="h-3 w-3" />
                                     <span>Добавить строку</span>
@@ -491,7 +514,7 @@ export function InventorySection() {
                                                 value={line.product_id}
                                                 disabled={shipmentMode === "order" && !!selectedOrderId}
                                                 onChange={(e) => updateShipmentLine(idx, "product_id", e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 text-sm disabled:bg-gray-100 appearance-none"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg  appearance-none"
                                             >
                                                 <option value="">Выберите товар</option>
                                                 {products.map((p) => (
@@ -511,7 +534,7 @@ export function InventorySection() {
                                                 onChange={(e) =>
                                                     updateShipmentLine(idx, "quantity", parseInt(e.target.value) || 0)
                                                 }
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 text-sm"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                                                 placeholder="Кол-во"
                                             />
                                             {selectedProduct && (
@@ -560,7 +583,7 @@ export function InventorySection() {
                             value={shipmentNotes}
                             onChange={(e) => setShipmentNotes(e.target.value)}
                             rows={2}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg "
                             placeholder="Номер накладной, получатель, и т.д."
                         />
                     </div>
@@ -568,7 +591,7 @@ export function InventorySection() {
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 disabled:bg-gray-300 transition-colors font-semibold"
+                        className="w-full bg-amber-100 text-amber-600 py-2 rounded-lg hover:bg-amber-50 disabled:bg-gray-300 transition-colors font-semibold"
                     >
                         {submitting ? "Оформление..." : "Оформить отгрузку"}
                     </button>
