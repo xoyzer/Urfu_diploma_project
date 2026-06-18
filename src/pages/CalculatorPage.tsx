@@ -549,7 +549,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                     <span>Стоимость доставки:</span>
                                     <span className="font-semibold">{deliveryCost.toLocaleString("ru-RU")} ₽</span>
                                 </div>
-                                <div className="border-t-2 border-yellow-600 pt-2 mt-2 flex justify-between text-xl font-bold text-yellow-700">
+                                <div className="border-t-2 border-yellow-600/30 pt-2 mt-2 flex justify-between text-xl font-bold text-yellow-700">
                                     <span>Итого:</span>
                                     <span>{totalCost.toLocaleString("ru-RU")} ₽</span>
                                 </div>
