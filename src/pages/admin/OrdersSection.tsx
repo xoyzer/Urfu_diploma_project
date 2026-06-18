@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Eye, CreditCard as Edit2, Check, X, Search } from "lucide-react";
+import { Plus, Trash2, Eye, CreditCard as Edit2, Check, X, Search, ChevronDown } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { getCached, setCached, invalidateCache } from "../../lib/queryCache";
 import { Modal } from "../../components/Modal";
@@ -29,6 +29,15 @@ interface EditableTrip {
 const VEHICLE_TYPES = ["манипулятор 5т", "манипулятор 8т", "манипулятор 10т", "фура 20т"];
 
 const ORDER_STATUSES = ["Новый", "Согласован", "Доставляется", "Выполнен", "Отменен"];
+
+function SelectWrap({ children, className }: { children: React.ReactNode; className?: string }) {
+    return (
+        <div className={`relative ${className ?? "w-full"}`}>
+            {children}
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-current opacity-60" />
+        </div>
+    );
+}
 
 interface OrdersSectionProps {
     onNavigateToAddCustomer?: (data?: { name?: string; phone?: string }) => void;
@@ -641,25 +650,29 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">Источник</label>
-                            <select
-                                value={formData.source}
-                                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
-                            >
-                                <option value="phone">Телефон</option>
-                                <option value="website">Сайт</option>
-                            </select>
+                            <SelectWrap>
+                                <select
+                                    value={formData.source}
+                                    onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none pr-8"
+                                >
+                                    <option value="phone">Телефон</option>
+                                    <option value="website">Сайт</option>
+                                </select>
+                            </SelectWrap>
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">Способ получения</label>
-                            <select
-                                value={formData.is_pickup ? "pickup" : "delivery"}
-                                onChange={(e) => setFormData({ ...formData, is_pickup: e.target.value === "pickup" })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
-                            >
-                                <option value="delivery">Доставка</option>
-                                <option value="pickup">Самовывоз</option>
-                            </select>
+                            <SelectWrap>
+                                <select
+                                    value={formData.is_pickup ? "pickup" : "delivery"}
+                                    onChange={(e) => setFormData({ ...formData, is_pickup: e.target.value === "pickup" })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none pr-8"
+                                >
+                                    <option value="delivery">Доставка</option>
+                                    <option value="pickup">Самовывоз</option>
+                                </select>
+                            </SelectWrap>
                         </div>
                     </div>
 
@@ -683,27 +696,29 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                         <div className="grid grid-cols-12 gap-2 items-end">
                             <div className="col-span-7">
                                 <label className="block text-xs text-gray-600 mb-1">Товар</label>
-                                <select
-                                    value={newItemProductId}
-                                    onChange={(e) => setNewItemProductId(e.target.value)}
-                                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm appearance-none"
-                                >
-                                    <option value="">Выберите товар</option>
-                                    {Object.entries(
-                                        products.reduce<Record<string, Product[]>>((acc, p) => {
-                                            (acc[p.category] = acc[p.category] || []).push(p);
-                                            return acc;
-                                        }, {}),
-                                    ).map(([cat, list]) => (
-                                        <optgroup key={cat} label={cat}>
-                                            {list.map((p) => (
-                                                <option key={p.id} value={p.id}>
-                                                    {p.name} — {p.price_per_sqm} ₽/{p.unit}
-                                                </option>
-                                            ))}
-                                        </optgroup>
-                                    ))}
-                                </select>
+                                <SelectWrap>
+                                    <select
+                                        value={newItemProductId}
+                                        onChange={(e) => setNewItemProductId(e.target.value)}
+                                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm appearance-none pr-8"
+                                    >
+                                        <option value="">Выберите товар</option>
+                                        {Object.entries(
+                                            products.reduce<Record<string, Product[]>>((acc, p) => {
+                                                (acc[p.category] = acc[p.category] || []).push(p);
+                                                return acc;
+                                            }, {}),
+                                        ).map(([cat, list]) => (
+                                            <optgroup key={cat} label={cat}>
+                                                {list.map((p) => (
+                                                    <option key={p.id} value={p.id}>
+                                                        {p.name} — {p.price_per_sqm} ₽/{p.unit}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                </SelectWrap>
                             </div>
                             <div className="col-span-3">
                                 <label className="block text-xs text-gray-600 mb-1">
@@ -814,23 +829,25 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                         <div className="grid grid-cols-3 gap-2 mb-1">
                                             <div className="col-span-3">
                                                 <label className="text-xs text-gray-500">Тип транспорта</label>
-                                                <select
-                                                    value={trip.vehicle_type}
-                                                    onChange={(e) =>
-                                                        setNewTrips((prev) => {
-                                                            const u = [...prev];
-                                                            u[idx] = { ...u[idx], vehicle_type: e.target.value };
-                                                            return u;
-                                                        })
-                                                    }
-                                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-yellow-500 appearance-none"
-                                                >
-                                                    {VEHICLE_TYPES.map((vt) => (
-                                                        <option key={vt} value={vt}>
-                                                            {vt}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                <SelectWrap>
+                                                    <select
+                                                        value={trip.vehicle_type}
+                                                        onChange={(e) =>
+                                                            setNewTrips((prev) => {
+                                                                const u = [...prev];
+                                                                u[idx] = { ...u[idx], vehicle_type: e.target.value };
+                                                                return u;
+                                                            })
+                                                        }
+                                                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-yellow-500 appearance-none pr-8"
+                                                    >
+                                                        {VEHICLE_TYPES.map((vt) => (
+                                                            <option key={vt} value={vt}>
+                                                                {vt}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </SelectWrap>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-gray-500">Кол-во рейсов</label>
@@ -1000,14 +1017,16 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                 <div className="space-y-3 text-sm">
                                     <div>
                                         <label className="text-gray-600">Способ получения</label>
-                                        <select
-                                            value={editIsPickup ? "pickup" : "delivery"}
-                                            onChange={(e) => setEditIsPickup(e.target.value === "pickup")}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none"
-                                        >
-                                            <option value="delivery">Доставка</option>
-                                            <option value="pickup">Самовывоз</option>
-                                        </select>
+                                        <SelectWrap>
+                                            <select
+                                                value={editIsPickup ? "pickup" : "delivery"}
+                                                onChange={(e) => setEditIsPickup(e.target.value === "pickup")}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 appearance-none pr-8"
+                                            >
+                                                <option value="delivery">Доставка</option>
+                                                <option value="pickup">Самовывоз</option>
+                                            </select>
+                                        </SelectWrap>
                                     </div>
 
                                     {!editIsPickup && (
@@ -1051,26 +1070,28 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                                                     <label className="text-gray-500 text-xs">
                                                                         Тип транспорта
                                                                     </label>
-                                                                    <select
-                                                                        value={trip.vehicle_type}
-                                                                        onChange={(e) =>
-                                                                            setEditTrips((prev) => {
-                                                                                const u = [...prev];
-                                                                                u[idx] = {
-                                                                                    ...u[idx],
-                                                                                    vehicle_type: e.target.value,
-                                                                                };
-                                                                                return u;
-                                                                            })
-                                                                        }
-                                                                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500 appearance-none"
-                                                                    >
-                                                                        {VEHICLE_TYPES.map((vt) => (
-                                                                            <option key={vt} value={vt}>
-                                                                                {vt}
-                                                                            </option>
-                                                                        ))}
-                                                                    </select>
+                                                                    <SelectWrap>
+                                                                        <select
+                                                                            value={trip.vehicle_type}
+                                                                            onChange={(e) =>
+                                                                                setEditTrips((prev) => {
+                                                                                    const u = [...prev];
+                                                                                    u[idx] = {
+                                                                                        ...u[idx],
+                                                                                        vehicle_type: e.target.value,
+                                                                                    };
+                                                                                    return u;
+                                                                                })
+                                                                            }
+                                                                            className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500 appearance-none pr-8"
+                                                                        >
+                                                                            {VEHICLE_TYPES.map((vt) => (
+                                                                                <option key={vt} value={vt}>
+                                                                                    {vt}
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </SelectWrap>
                                                                 </div>
                                                                 <div>
                                                                     <label className="text-gray-500 text-xs">
@@ -1226,31 +1247,33 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                         <div key={idx} className="p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
                                             <div>
                                                 <label className="text-gray-600">Товар</label>
-                                                <select
-                                                    value={item.product_id}
-                                                    onChange={(e) => {
-                                                        const prod = products.find((p) => p.id === e.target.value);
-                                                        const price = prod ? prod.price_per_sqm : item.price_per_sqm;
-                                                        setEditItems((prev) => {
-                                                            const updated = [...prev];
-                                                            updated[idx] = {
-                                                                ...updated[idx],
-                                                                product_id: e.target.value,
-                                                                price_per_sqm: price,
-                                                                subtotal: updated[idx].quantity * price,
-                                                            };
-                                                            return updated;
-                                                        });
-                                                    }}
-                                                    className="w-full px-2 py-1 border border-gray-300 rounded appearance-none"
-                                                >
-                                                    <option value="">Выберите товар</option>
-                                                    {products.map((p) => (
-                                                        <option key={p.id} value={p.id}>
-                                                            {p.name} - {p.price_per_sqm} ₽/{p.unit}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                <SelectWrap>
+                                                    <select
+                                                        value={item.product_id}
+                                                        onChange={(e) => {
+                                                            const prod = products.find((p) => p.id === e.target.value);
+                                                            const price = prod ? prod.price_per_sqm : item.price_per_sqm;
+                                                            setEditItems((prev) => {
+                                                                const updated = [...prev];
+                                                                updated[idx] = {
+                                                                    ...updated[idx],
+                                                                    product_id: e.target.value,
+                                                                    price_per_sqm: price,
+                                                                    subtotal: updated[idx].quantity * price,
+                                                                };
+                                                                return updated;
+                                                            });
+                                                        }}
+                                                        className="w-full px-2 py-1 border border-gray-300 rounded appearance-none pr-8"
+                                                    >
+                                                        <option value="">Выберите товар</option>
+                                                        {products.map((p) => (
+                                                            <option key={p.id} value={p.id}>
+                                                                {p.name} - {p.price_per_sqm} ₽/{p.unit}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </SelectWrap>
                                             </div>
                                             <div className="grid grid-cols-3 gap-2">
                                                 <div>
@@ -1459,17 +1482,19 @@ export function OrdersSection({ onNavigateToAddCustomer, selectedCustomerId, onC
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                                    <select
-                                        value={order.status}
-                                        onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                        className={`px-3 py-1 rounded-full text-sm font-semibold  ${getStatusColor(order.status)}`}
-                                    >
-                                        {ORDER_STATUSES.map((status) => (
-                                            <option key={status} value={status}>
-                                                {status}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <SelectWrap className="inline-block">
+                                        <select
+                                            value={order.status}
+                                            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                            className={`px-3 py-1 pr-8 rounded-full text-sm font-semibold appearance-none cursor-pointer ${getStatusColor(order.status)}`}
+                                        >
+                                            {ORDER_STATUSES.map((status) => (
+                                                <option key={status} value={status}>
+                                                    {status}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </SelectWrap>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                     {new Date(order.created_at).toLocaleDateString("ru-RU")}

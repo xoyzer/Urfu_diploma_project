@@ -22,6 +22,9 @@ export interface Database {
           stock_quantity: number
           is_active: boolean
           unit: string
+          shape: string | null
+          color: string | null
+          purpose: string | null
           created_at: string
           updated_at: string
         }
@@ -37,6 +40,9 @@ export interface Database {
           stock_quantity?: number
           is_active?: boolean
           unit?: string
+          shape?: string | null
+          color?: string | null
+          purpose?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -52,6 +58,9 @@ export interface Database {
           stock_quantity?: number
           is_active?: boolean
           unit?: string
+          shape?: string | null
+          color?: string | null
+          purpose?: string | null
           created_at?: string
           updated_at?: string
         }
