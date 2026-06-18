@@ -115,6 +115,9 @@ export function Header({ onNavigate }: HeaderProps) {
                             <Phone className="h-4 w-4" />
                             <a href="tel:+79126719311">+7 (912) 671-93-11</a>
                         </div>
+                    </div>
+
+                    <div className="hidden md:flex items-center space-x-4">
                         {user ? (
                             <>
                                 <button
