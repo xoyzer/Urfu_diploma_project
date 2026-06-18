@@ -3,7 +3,7 @@ import { Award, Users, TrendingUp, Clock } from "lucide-react";
 export function AboutPage() {
     return (
         <div className="min-h-screen bg-gray-50">
-            <section className="relative bg-gradient-to-br from-stone-900 via-neutral-900 to-stone-800 text-white py-24 overflow-hidden">
+            <section className="relative bg-gradient-to-br from-stone-900 via-neutral-900 to-stone-800 text-white py-16 sm:py-24 overflow-hidden">
                 <div
                     className="absolute inset-0 opacity-10"
                     style={{
@@ -12,7 +12,7 @@ export function AboutPage() {
                     }}
                 ></div>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h1 className="text-6xl font-bold mb-6">О компании</h1>
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">О компании</h1>
                     <p className="text-xl text-amber-100 max-w-4xl">
                         Надежный поставщик тротуарной плитки и бордюров с многолетним опытом работы
                     </p>
@@ -101,7 +101,7 @@ export function AboutPage() {
                             Предоставляем гибкие условия оплаты, скидки при больших объемах и консультации по выбору
                             материалов
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-12">
                             <div>
                                 <div className="text-4xl font-bold mb-2 text-yellow-700">5+</div>
                                 <div className="text-yellow-800">лет на рынке</div>

@@ -8,7 +8,7 @@ interface HomePageProps {
 export function HomePage({ onNavigate }: HomePageProps) {
     return (
         <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white">
-            <section className="relative bg-gradient-to-br from-stone-900 via-neutral-900 to-stone-800 text-white py-24 overflow-hidden">
+            <section className="relative bg-gradient-to-br from-stone-900 via-neutral-900 to-stone-800 text-white py-16 sm:py-24 overflow-hidden">
                 <div
                     className="absolute inset-0 opacity-10"
                     style={{
@@ -22,7 +22,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                             <div className="inline-block border border-yellow-500/30 text-yellow-300 text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-wider">
                                 Производство полного цикла
                             </div>
-                            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">
                                 <span className="text-white">Тротуарная плитка </span>
                                 <span className="text-yellow-500">и бордюры</span>
                             </h1>

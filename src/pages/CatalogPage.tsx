@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, ChevronDown, ChevronRight } from "lucide-react";
+import React from "react";
+import { Search, ListFilter as Filter, ChevronDown, ChevronRight, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { getCached, setCached } from "../lib/queryCache";
 import { Database } from "../types/database";
@@ -35,6 +36,103 @@ function buildCategories(data: Product[]): CategoryWithSubcategories[] {
     return list;
 }
 
+interface FilterContentProps {
+    products: Product[];
+    categories: CategoryWithSubcategories[];
+    selectedCategory: string;
+    selectedSubcategory: string;
+    expandedCategories: Set<string>;
+    setSelectedCategory: (v: string) => void;
+    setSelectedSubcategory: (v: string) => void;
+    setExpandedCategories: React.Dispatch<React.SetStateAction<Set<string>>>;
+    toggleCategory: (name: string) => void;
+    selectCategory: (name: string) => void;
+    selectSubcategory: (name: string) => void;
+    onClose?: () => void;
+}
+
+function FilterContent({
+    products, categories, selectedCategory, selectedSubcategory,
+    expandedCategories, setSelectedCategory, setSelectedSubcategory,
+    toggleCategory, selectCategory, selectSubcategory, onClose,
+}: FilterContentProps) {
+    return (
+        <div className="space-y-1">
+            <button
+                onClick={() => {
+                    setSelectedCategory("all");
+                    setSelectedSubcategory("all");
+                    onClose?.();
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
+                    selectedCategory === "all"
+                        ? "bg-yellow-100 text-yellow-800 font-semibold"
+                        : "hover:bg-gray-100 text-gray-700"
+                }`}
+            >
+                <span>Все товары</span>
+                <span className="text-sm text-gray-500">{products.length}</span>
+            </button>
+
+            {categories.map((category) => (
+                <div key={category.name}>
+                    <div className="flex items-center">
+                        <button
+                            onClick={() => toggleCategory(category.name)}
+                            className="p-1 hover:bg-gray-100 rounded"
+                        >
+                            {expandedCategories.has(category.name) ? (
+                                <ChevronDown className="h-4 w-4 text-gray-500" />
+                            ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-500" />
+                            )}
+                        </button>
+                        <button
+                            onClick={() => { selectCategory(category.name); onClose?.(); }}
+                            className={`flex-1 text-left px-2 py-2 rounded-lg transition-colors flex items-center justify-between ${
+                                selectedCategory === category.name
+                                    ? "bg-yellow-100 text-yellow-800 font-semibold"
+                                    : "hover:bg-gray-100 text-gray-700"
+                            }`}
+                        >
+                            <span>{category.name}</span>
+                            <span className="text-sm text-gray-500">{category.productCount}</span>
+                        </button>
+                    </div>
+
+                    {expandedCategories.has(category.name) && category.subcategories.length > 0 && (
+                        <div className="ml-8 mt-1 space-y-1">
+                            {category.subcategories.map((sub) => (
+                                <button
+                                    key={sub}
+                                    onClick={() => {
+                                        selectCategory(category.name);
+                                        selectSubcategory(sub);
+                                        onClose?.();
+                                    }}
+                                    className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
+                                        selectedCategory === category.name && selectedSubcategory === sub
+                                            ? "bg-yellow-50 text-yellow-700 font-medium"
+                                            : "text-gray-600 hover:bg-gray-50"
+                                    }`}
+                                >
+                                    {sub}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {expandedCategories.has(category.name) && category.subcategories.length === 0 && (
+                        <div className="ml-8 mt-1">
+                            <span className="text-sm text-gray-400 px-3">Нет подкатегорий</span>
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -43,6 +141,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
     const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
     const [categories, setCategories] = useState<CategoryWithSubcategories[]>([]);
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
     useEffect(() => {
         loadProducts();
@@ -145,14 +244,14 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">Каталог продукции</h1>
-                    <p className="text-lg text-gray-600">Выберите подходящий материал для вашего проекта</p>
+                <div className="mb-6 sm:mb-8">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">Каталог продукции</h1>
+                    <p className="text-base sm:text-lg text-gray-600">Выберите подходящий материал для вашего проекта</p>
                 </div>
 
-                <div className="mb-8 flex flex-col sm:flex-row gap-4">
+                <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                         <input
@@ -163,95 +262,76 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         />
                     </div>
+                    {/* Mobile filter button */}
+                    <button
+                        className="lg:hidden flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg font-medium text-gray-700"
+                        onClick={() => setMobileFiltersOpen(true)}
+                    >
+                        <Filter className="h-4 w-4" />
+                        Фильтры
+                        {selectedCategory !== "all" && (
+                            <span className="ml-1 bg-yellow-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">1</span>
+                        )}
+                    </button>
                 </div>
 
+                {/* Mobile filter drawer overlay */}
+                {mobileFiltersOpen && (
+                    <div className="fixed inset-0 z-50 lg:hidden">
+                        <div className="absolute inset-0 bg-black/40" onClick={() => setMobileFiltersOpen(false)} />
+                        <div className="absolute right-0 top-0 h-full w-72 bg-white shadow-xl flex flex-col">
+                            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+                                <h2 className="font-semibold text-gray-900 text-lg">Категории</h2>
+                                <button onClick={() => setMobileFiltersOpen(false)} className="p-1 text-gray-500">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto px-4 py-3">
+                                <FilterContent
+                                    products={products}
+                                    categories={categories}
+                                    selectedCategory={selectedCategory}
+                                    selectedSubcategory={selectedSubcategory}
+                                    expandedCategories={expandedCategories}
+                                    setSelectedCategory={setSelectedCategory}
+                                    setSelectedSubcategory={setSelectedSubcategory}
+                                    setExpandedCategories={setExpandedCategories}
+                                    toggleCategory={toggleCategory}
+                                    selectCategory={selectCategory}
+                                    selectSubcategory={selectSubcategory}
+                                    onClose={() => setMobileFiltersOpen(false)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex gap-8">
-                    {/* Sidebar filters */}
-                    <div className="w-64 flex-shrink-0">
+                    {/* Desktop sidebar */}
+                    <div className="hidden lg:block w-64 flex-shrink-0">
                         <div className="bg-white rounded-lg shadow-md p-4 sticky top-4">
                             <div className="flex items-center gap-2 mb-4">
                                 <Filter className="text-gray-400 h-5 w-5" />
                                 <h2 className="font-semibold text-gray-900">Категории</h2>
                             </div>
-
-                            <div className="space-y-1">
-                                <button
-                                    onClick={() => {
-                                        setSelectedCategory("all");
-                                        setSelectedSubcategory("all");
-                                    }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
-                                        selectedCategory === "all"
-                                            ? "bg-yellow-100 text-yellow-800 font-semibold"
-                                            : "hover:bg-gray-100 text-gray-700"
-                                    }`}
-                                >
-                                    <span>Все товары</span>
-                                    <span className="text-sm text-gray-500">{products.length}</span>
-                                </button>
-
-                                {categories.map((category) => (
-                                    <div key={category.name}>
-                                        <div className="flex items-center">
-                                            <button
-                                                onClick={() => toggleCategory(category.name)}
-                                                className="p-1 hover:bg-gray-100 rounded"
-                                            >
-                                                {expandedCategories.has(category.name) ? (
-                                                    <ChevronDown className="h-4 w-4 text-gray-500" />
-                                                ) : (
-                                                    <ChevronRight className="h-4 w-4 text-gray-500" />
-                                                )}
-                                            </button>
-                                            <button
-                                                onClick={() => selectCategory(category.name)}
-                                                className={`flex-1 text-left px-2 py-2 rounded-lg transition-colors flex items-center justify-between ${
-                                                    selectedCategory === category.name
-                                                        ? "bg-yellow-100 text-yellow-800 font-semibold"
-                                                        : "hover:bg-gray-100 text-gray-700"
-                                                }`}
-                                            >
-                                                <span>{category.name}</span>
-                                                <span className="text-sm text-gray-500">{category.productCount}</span>
-                                            </button>
-                                        </div>
-
-                                        {expandedCategories.has(category.name) && category.subcategories.length > 0 && (
-                                            <div className="ml-8 mt-1 space-y-1">
-                                                {category.subcategories.map((sub) => (
-                                                    <button
-                                                        key={sub}
-                                                        onClick={() => {
-                                                            setSelectedCategory(category.name);
-                                                            selectSubcategory(sub);
-                                                        }}
-                                                        className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
-                                                            selectedCategory === category.name &&
-                                                            selectedSubcategory === sub
-                                                                ? "bg-yellow-50 text-yellow-700 font-medium"
-                                                                : "text-gray-600 hover:bg-gray-50"
-                                                        }`}
-                                                    >
-                                                        {sub}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {expandedCategories.has(category.name) && category.subcategories.length === 0 && (
-                                            <div className="ml-8 mt-1">
-                                                <span className="text-sm text-gray-400 px-3">Нет подкатегорий</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                            <FilterContent
+                                products={products}
+                                categories={categories}
+                                selectedCategory={selectedCategory}
+                                selectedSubcategory={selectedSubcategory}
+                                expandedCategories={expandedCategories}
+                                setSelectedCategory={setSelectedCategory}
+                                setSelectedSubcategory={setSelectedSubcategory}
+                                setExpandedCategories={setExpandedCategories}
+                                toggleCategory={toggleCategory}
+                                selectCategory={selectCategory}
+                                selectSubcategory={selectSubcategory}
+                            />
                         </div>
                     </div>
 
                     {/* Products grid */}
-                    <div className="flex-1">
-                        {/* Active filters display */}
+                    <div className="flex-1 min-w-0">
                         {(selectedCategory !== "all" || selectedSubcategory !== "all") && (
                             <div className="mb-4 flex flex-wrap gap-2">
                                 {selectedCategory !== "all" && (
@@ -287,13 +367,13 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                 <p className="text-gray-600 text-lg">Товары не найдены</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                 {filteredProducts.map((product) => (
                                     <div
                                         key={product.id}
                                         className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow"
                                     >
-                                        <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center relative">
+                                        <div className="h-40 sm:h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center relative">
                                             {product.photo_url ? (
                                                 <img
                                                     src={product.photo_url}
@@ -301,11 +381,11 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <p className="text-gray-500">Фото скоро появится</p>
+                                                <p className="text-gray-500 text-sm">Фото скоро появится</p>
                                             )}
                                         </div>
-                                        <div className="p-5">
-                                            <div className="flex items-center gap-2 mb-2">
+                                        <div className="p-4 sm:p-5">
+                                            <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                 <span className="text-sm text-yellow-600 font-semibold bg-yellow-50 px-2 py-0.5 rounded">
                                                     {product.category}
                                                 </span>
@@ -315,19 +395,19 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
                                                     </span>
                                                 )}
                                             </div>
-                                            <h3 className="text-lg font-semibold mb-2 text-gray-900">{product.name}</h3>
+                                            <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">{product.name}</h3>
                                             <p className="text-gray-600 mb-4 text-sm line-clamp-2">{product.description}</p>
 
                                             <div className="flex justify-between items-center mb-4">
                                                 <div>
-                                                    <div className="text-xl font-bold text-yellow-600">
+                                                    <div className="text-lg sm:text-xl font-bold text-yellow-600">
                                                         {product.price_per_sqm} ₽
                                                     </div>
                                                     <div className="text-sm text-gray-500">за {product.unit}</div>
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="text-sm text-gray-500">В наличии:</div>
-                                                    <div className="text-lg font-semibold text-gray-700">
+                                                    <div className="text-base sm:text-lg font-semibold text-gray-700">
                                                         {product.stock_quantity} {product.unit}
                                                     </div>
                                                 </div>
@@ -335,7 +415,7 @@ export function CatalogPage({ onNavigate, initialCategory }: CatalogPageProps) {
 
                                             <button
                                                 onClick={() => onNavigate("calculator")}
-                                                className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 transition-colors font-semibold"
+                                                className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 transition-colors font-semibold text-sm sm:text-base"
                                             >
                                                 Рассчитать стоимость
                                             </button>
