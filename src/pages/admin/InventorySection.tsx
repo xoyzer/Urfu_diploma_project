@@ -340,7 +340,7 @@ export function InventorySection() {
                 <div className="flex space-x-3">
                     <button
                         onClick={() => setShowAddShipment(true)}
-                        className="flex items-center space-x-2 bg-amber-100 text-amber-700 px-6 py-3 rounded-lg hover:bg-yellow-500 hover:text-white transition-colors  "
+                        className="flex items-center space-x-2 bg-amber-100 text-amber-700 px-6 py-3 rounded-lg hover:bg-yellow-500 hover:text-white transition-colors font-semibold border"
                     >
                         <Send className="h-5 w-5" />
                         <span>Отгрузка</span>
