@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
-import { Calculator, Truck, MapPin, ShoppingCart, Plus, Trash2, Search, Loader as Loader2, Info, ArrowDownWideNarrow } from "lucide-react";
+import {
+    Calculator,
+    Truck,
+    MapPin,
+    ShoppingCart,
+    Plus,
+    Trash2,
+    Search,
+    Loader as Loader2,
+    Info,
+    ArrowDownWideNarrow,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Database } from "../types/database";
 
@@ -48,9 +59,30 @@ interface Transport {
 }
 
 const TRANSPORT_OPTIONS: Transport[] = [
-    { name: "manipulator_5t", capacityKg: 5000, baseCost: 6000, perKmRate: 100, vehicleType: "манипулятор 5т", label: "Манипулятор 5т" },
-    { name: "manipulator_8t", capacityKg: 8000, baseCost: 9000, perKmRate: 100, vehicleType: "манипулятор 8т", label: "Манипулятор 8т" },
-    { name: "manipulator_10t_truck", capacityKg: Infinity, baseCost: 19000, perKmRate: 140, vehicleType: "манипулятор 10т", label: "Манипулятор 10т / Фура" },
+    {
+        name: "manipulator_5t",
+        capacityKg: 5000,
+        baseCost: 6000,
+        perKmRate: 100,
+        vehicleType: "манипулятор 5т",
+        label: "Манипулятор 5т",
+    },
+    {
+        name: "manipulator_8t",
+        capacityKg: 8000,
+        baseCost: 9000,
+        perKmRate: 100,
+        vehicleType: "манипулятор 8т",
+        label: "Манипулятор 8т",
+    },
+    {
+        name: "manipulator_10t_truck",
+        capacityKg: Infinity,
+        baseCost: 19000,
+        perKmRate: 140,
+        vehicleType: "манипулятор 10т",
+        label: "Манипулятор 10т / Фура",
+    },
 ];
 
 // Approximate road distance from the base to MKAD (Щёлковское шоссе)
@@ -266,10 +298,9 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     const productCost = items.reduce((sum, i) => sum + i.subtotal, 0);
     const selectedTransport = pickTransport(totalWeight);
     const billedKm =
-        selectedTransport.name === "manipulator_10t_truck"
-            ? Math.max(0, distance - BASE_TO_MKAD_KM)
-            : distance;
-    const deliveryCost = isPickup || items.length === 0 ? 0 : selectedTransport.baseCost + billedKm * selectedTransport.perKmRate;
+        selectedTransport.name === "manipulator_10t_truck" ? Math.max(0, distance - BASE_TO_MKAD_KM) : distance;
+    const deliveryCost =
+        isPickup || items.length === 0 ? 0 : selectedTransport.baseCost + billedKm * selectedTransport.perKmRate;
 
     const totalCost = productCost + deliveryCost;
     const handleCalculateDistance = async () => {
@@ -389,9 +420,12 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                         >
                                             <div className="flex items-start justify-between gap-2 mb-3">
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="font-semibold text-gray-900 text-sm sm:text-base leading-snug">{item.product.name}</div>
+                                                    <div className="font-semibold text-gray-900 text-sm sm:text-base leading-snug">
+                                                        {item.product.name}
+                                                    </div>
                                                     <div className="text-xs sm:text-sm text-gray-600 mt-0.5">
-                                                        {item.product.category} · {item.product.price_per_sqm} ₽/{item.product.unit}
+                                                        {item.product.category} · {item.product.price_per_sqm} ₽/
+                                                        {item.product.unit}
                                                     </div>
                                                 </div>
                                                 <button
@@ -536,8 +570,8 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                 </div>
                                 {selectedTransport.name === "manipulator_10t_truck" && distance > 0 && (
                                     <div className="mt-1 text-sm text-gray-500">
-                                        Км от МКАД: <span className="font-semibold">{billedKm} км</span>
-                                        {" "}(маршрут {distance} км − {BASE_TO_MKAD_KM} км до МКАД)
+                                        Км от МКАД: <span className="font-semibold">{billedKm} км</span> (маршрут{" "}
+                                        {distance} км − {BASE_TO_MKAD_KM} км до МКАД)
                                     </div>
                                 )}
                             </div>
