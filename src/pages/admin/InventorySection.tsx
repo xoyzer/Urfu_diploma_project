@@ -332,12 +332,12 @@ export function InventorySection() {
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-wrap gap-3 justify-between items-start mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Складской учет</h1>
-                    <p className="text-gray-600 mt-2">Остатки продукции и движение товаров</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Складской учет</h1>
+                    <p className="text-gray-600 mt-1">Остатки продукции и движение товаров</p>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setShowAddShipment(true)}
                         className="flex items-center space-x-2 bg-amber-100 text-amber-700 px-6 py-3 rounded-lg hover:bg-yellow-50  transition-colors font-semibold border"
@@ -347,7 +347,7 @@ export function InventorySection() {
                     </button>
                     <button
                         onClick={() => setShowAddReceiving(true)}
-                        className="flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors"
+                        className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2.5 rounded-lg hover:bg-yellow-700 transition-colors whitespace-nowrap"
                     >
                         <Plus className="h-5 w-5" />
                         <span>Добавить приход</span>

@@ -226,14 +226,14 @@ export function CustomersSection({ initialData, onCustomerCreated }: CustomersSe
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-wrap gap-3 justify-between items-start mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">База клиентов</h1>
-                    <p className="text-gray-600 mt-2">Управление информацией о клиентах</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">База клиентов</h1>
+                    <p className="text-gray-600 mt-1">Управление информацией о клиентах</p>
                 </div>
                 <button
                     onClick={() => setShowModal(true)}
-                    className="flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors"
+                    className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2.5 rounded-lg hover:bg-yellow-700 transition-colors whitespace-nowrap"
                 >
                     <Plus className="h-5 w-5" />
                     <span>Добавить клиента</span>

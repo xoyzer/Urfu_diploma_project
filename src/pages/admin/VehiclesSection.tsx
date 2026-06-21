@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Calendar, Trash2, Play, CheckCircle2, Wrench, XCircle, Truck } from "lucide-react";
+import { Plus, Calendar, Trash2, Play, CircleCheck as CheckCircle2, Wrench, Circle as XCircle, Truck } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
@@ -336,14 +336,14 @@ export function VehiclesSection() {
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-wrap gap-3 justify-between items-start mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Управление транспортом</h1>
-                    <p className="text-gray-600 mt-2">Автопарк и график доставок</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Управление транспортом</h1>
+                    <p className="text-gray-600 mt-1">Автопарк и график доставок</p>
                 </div>
                 <button
                     onClick={() => setShowAddVehicle(true)}
-                    className="flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors"
+                    className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2.5 rounded-lg hover:bg-yellow-700 transition-colors whitespace-nowrap"
                 >
                     <Plus className="h-5 w-5" />
                     <span>Добавить транспорт</span>

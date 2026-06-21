@@ -316,19 +316,19 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="bg-white rounded-lg shadow-lg p-8">
-                    <div className="flex items-center mb-8">
-                        <Calculator className="h-8 w-8 text-yellow-600 mr-3" />
-                        <h1 className="text-3xl font-bold text-gray-900">Калькулятор стоимости</h1>
+                <div className="bg-white rounded-lg shadow-lg p-5 sm:p-8">
+                    <div className="flex items-center mb-6 sm:mb-8">
+                        <Calculator className="h-7 w-7 sm:h-8 sm:w-8 text-yellow-600 mr-3 flex-shrink-0" />
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Калькулятор стоимости</h1>
                     </div>
 
-                    <div className="space-y-8">
-                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-6">
+                    <div className="space-y-6 sm:space-y-8">
+                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 sm:p-6">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Добавить товар</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                                <div className="md:col-span-7">
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-end">
+                                <div className="sm:col-span-7">
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Продукт</label>
                                     <select
                                         value={selectedProductId}
@@ -347,7 +347,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="md:col-span-3">
+                                <div className="sm:col-span-3">
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                                         Количество (
                                         {(() => {
@@ -359,16 +359,13 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                     <input
                                         type="number"
                                         min="0"
-                                        // step={
-                                        //     products.find((p) => p.id === selectedProductId)?.unit === "шт" ? "1" : "1"
-                                        // }
                                         value={newQuantity || ""}
                                         onChange={(e) => setNewQuantity(parseFloat(e.target.value) || 0)}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-600 focus:border-transparent"
                                         placeholder="0"
                                     />
                                 </div>
-                                <div className="md:col-span-2">
+                                <div className="sm:col-span-2">
                                     <button
                                         onClick={addItem}
                                         disabled={!selectedProductId || newQuantity <= 0}
@@ -388,41 +385,43 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                     {items.map((item) => (
                                         <div
                                             key={item.product.id}
-                                            className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+                                            className="p-4 bg-gray-50 rounded-lg border border-gray-200"
                                         >
-                                            <div className="flex-1">
-                                                <div className="font-semibold text-gray-900">{item.product.name}</div>
-                                                <div className="text-sm text-gray-600">
-                                                    {item.product.category} • {item.product.price_per_sqm} ₽/
-                                                    {item.product.unit} • {getWeightPerUnit(item.product)} кг/
-                                                    {item.product.unit}
+                                            <div className="flex items-start justify-between gap-2 mb-3">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-semibold text-gray-900 text-sm sm:text-base leading-snug">{item.product.name}</div>
+                                                    <div className="text-xs sm:text-sm text-gray-600 mt-0.5">
+                                                        {item.product.category} · {item.product.price_per_sqm} ₽/{item.product.unit}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => removeItem(item.product.id)}
+                                                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                                                >
+                                                    <Trash2 className="h-5 w-5" />
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step={item.product.unit === "шт" ? "1" : "0.1"}
+                                                        value={item.quantity}
+                                                        onChange={(e) =>
+                                                            updateItemQuantity(
+                                                                item.product.id,
+                                                                parseFloat(e.target.value) || 0,
+                                                            )
+                                                        }
+                                                        className="w-20 sm:w-24 px-3 py-2 border border-gray-300 rounded-lg text-center text-sm"
+                                                    />
+                                                    <span className="text-sm text-gray-600">{item.product.unit}</span>
+                                                </div>
+                                                <div className="font-semibold text-gray-900 text-sm sm:text-base">
+                                                    {item.subtotal.toLocaleString("ru-RU")} ₽
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step={item.product.unit === "шт" ? "1" : "0.1"}
-                                                    value={item.quantity}
-                                                    onChange={(e) =>
-                                                        updateItemQuantity(
-                                                            item.product.id,
-                                                            parseFloat(e.target.value) || 0,
-                                                        )
-                                                    }
-                                                    className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                                                />
-                                                <span className="text-sm text-gray-600">{item.product.unit}</span>
-                                            </div>
-                                            <div className="w-28 text-right font-semibold text-gray-900">
-                                                {item.subtotal.toLocaleString("ru-RU")} ₽
-                                            </div>
-                                            <button
-                                                onClick={() => removeItem(item.product.id)}
-                                                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                            >
-                                                <Trash2 className="h-5 w-5" />
-                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -468,7 +467,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                         <MapPin className="inline h-4 w-4 mr-1" />
                                         Адрес доставки
                                     </label>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <input
                                             type="text"
                                             value={destAddress}
@@ -486,7 +485,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                             type="button"
                                             onClick={handleCalculateDistance}
                                             disabled={geocoding || !destAddress.trim()}
-                                            className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-3 rounded-lg hover:bg-yellow-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold whitespace-nowrap"
+                                            className="flex items-center justify-center space-x-2 bg-yellow-600 text-white px-4 py-3 rounded-lg hover:bg-yellow-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold whitespace-nowrap"
                                         >
                                             {geocoding ? (
                                                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -518,12 +517,12 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                         )}
 
                         {!isPickup && items.length > 0 && (
-                            <div className="bg-yellow-0 border-2 border-yellow-10 rounded-lg p-6">
+                            <div className="bg-yellow-0 border-2 border-yellow-10 rounded-lg p-4 sm:p-6">
                                 <div className="flex items-center mb-3">
-                                    <Truck className="h-6 w-6 text-yellow-600 mr-2" />
+                                    <Truck className="h-6 w-6 text-yellow-600 mr-2 flex-shrink-0" />
                                     <h3 className="text-lg font-semibold text-gray-900">Рекомендованный транспорт</h3>
                                 </div>
-                                <div className="flex items-baseline justify-between">
+                                <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
                                     <span className="text-xl font-bold text-yellow-700">{selectedTransport.label}</span>
                                     <span className="text-sm text-gray-600">
                                         Подача {selectedTransport.baseCost.toLocaleString("ru-RU")} ₽ +{" "}
@@ -544,7 +543,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                             </div>
                         )}
 
-                        <div className="bg-yellow-50/50 p-6 rounded-lg border-2 border-yellow-600">
+                        <div className="bg-yellow-50/50 p-4 sm:p-6 rounded-lg border-2 border-yellow-600/30">
                             <h3 className="text-lg font-semibold mb-4 text-gray-900">Расчет стоимости</h3>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-gray-700">
@@ -555,7 +554,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                     <span>Стоимость доставки:</span>
                                     <span className="font-semibold">{deliveryCost.toLocaleString("ru-RU")} ₽</span>
                                 </div>
-                                <div className="border-t-2 border-yellow-600 pt-2 mt-2 flex justify-between text-xl font-bold text-yellow-700">
+                                <div className="border-t-2 border-yellow-600/30 pt-2 mt-2 flex justify-between text-xl font-bold text-yellow-700">
                                     <span>Итого:</span>
                                     <span>{totalCost.toLocaleString("ru-RU")} ₽</span>
                                 </div>

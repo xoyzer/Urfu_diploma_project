@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingCart, CheckCircle, ArrowLeft } from "lucide-react";
+import { ShoppingCart, CircleCheck as CheckCircle, ArrowLeft } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { CalculatorResult } from "./CalculatorPage";
 
@@ -115,12 +115,12 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="bg-white rounded-lg shadow-lg p-8">
-                    <div className="flex items-center mb-8">
-                        <ShoppingCart className="h-8 w-8 text-amber-600 mr-3" />
-                        <h1 className="text-3xl font-bold text-gray-900">Оформление заявки</h1>
+                <div className="bg-white rounded-lg shadow-lg p-5 sm:p-8">
+                    <div className="flex items-center mb-6 sm:mb-8">
+                        <ShoppingCart className="h-7 w-7 sm:h-8 sm:w-8 text-amber-600 mr-3 flex-shrink-0" />
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Оформление заявки</h1>
                     </div>
 
                     {orderData && orderData.items.length > 0 && (
