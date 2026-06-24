@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Calendar, Trash2, Play, CircleCheck as CheckCircle2, Wrench, Circle as XCircle, Truck } from "lucide-react";
+import { Plus, Calendar, Trash2, Play, CircleCheck as CheckCircle2, Wrench, CircleX, Truck } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
@@ -89,7 +89,7 @@ export function VehiclesSection() {
                 .select("*, customer:customers(name, phone)")
                 .not("status", "in", '("Доставляется","Выполнен","Отменен")');
             if (error) throw error;
-            setOrders(data as Order[] || []);
+            setOrders((data as Order[]) || []);
         } catch (error) {
             console.error("Error loading orders:", error);
         }
@@ -488,7 +488,7 @@ export function VehiclesSection() {
                                                 title="Не активен / выведен из строя"
                                                 className="p-1 rounded text-gray-500 hover:bg-gray-100 transition-colors"
                                             >
-                                                <XCircle className="h-4 w-4" />
+                                                <CircleX className="h-4 w-4" />
                                             </button>
                                         )}
                                     </div>
@@ -551,7 +551,10 @@ export function VehiclesSection() {
                                     <option value="">Выберите заказ</option>
                                     {orders.map((o) => (
                                         <option key={o.id} value={o.id}>
-                                            {o.customer ? `${o.customer.name} ${o.customer.phone}` : `Заказ #${o.order_number}`} — {o.delivery_address || "Адрес не указан"}
+                                            {o.customer
+                                                ? `${o.customer.name} ${o.customer.phone}`
+                                                : `Заказ #${o.order_number}`}{" "}
+                                            — {o.delivery_address || "Адрес не указан"}
                                         </option>
                                     ))}
                                 </select>
