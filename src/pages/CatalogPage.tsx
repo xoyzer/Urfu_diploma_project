@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, ListFilter as Filter, ChevronDown, ChevronRight, X, SlidersHorizontal, RotateCcw, Sliders } from "lucide-react";
+import { Search, ListFilter as Filter, ChevronDown, ChevronRight, X, SlidersHorizontal, RotateCcw, FileSliders as Sliders } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { getCached, setCached } from "../lib/queryCache";
 import { Database } from "../types/database";
