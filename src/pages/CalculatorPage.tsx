@@ -468,7 +468,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                 type="checkbox"
                                 checked={isPickup}
                                 onChange={(e) => setIsPickup(e.target.checked)}
-                                className="h-5 w-5 text-yellow-600 rounded border-gray-300 focus:ring-yellow-600"
+                                className="h-5 w-5 text-yellow-600 rounded border-gray-300 focus:ring-yellow-600 accent-yellow-300"
                             />
                             <label
                                 htmlFor="pickup-checkbox"
