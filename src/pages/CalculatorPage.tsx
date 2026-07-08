@@ -1,16 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-    Calculator,
-    Truck,
-    MapPin,
-    ShoppingCart,
-    Plus,
-    Trash2,
-    Search,
-    Loader as Loader2,
-    Info,
-    ArrowDownWideNarrow,
-} from "lucide-react";
+import { Calculator, Truck, MapPin, ShoppingCart, Plus, Trash2, Search, Loader as Loader2, Info, ArrowDownWideNarrow, TriangleAlert as AlertTriangle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Database } from "../types/database";
 
@@ -329,8 +318,11 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
         }
     };
 
+    const stockOverflowItems = items.filter((item) => item.product.stock_quantity > 0 && item.quantity > item.product.stock_quantity);
+
     const handleOrder = () => {
         if (items.length === 0) return;
+        if (stockOverflowItems.length > 0) return;
         saveCalculatorState();
         onNavigate({
             items,
@@ -427,6 +419,17 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                                         {item.product.category} · {item.product.price_per_sqm} ₽/
                                                         {item.product.unit}
                                                     </div>
+                                                    <span
+                                                        className={`inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                            item.product.stock_quantity > 0
+                                                                ? "bg-green-100 text-green-700"
+                                                                : "bg-orange-100 text-orange-700"
+                                                        }`}
+                                                    >
+                                                        {item.product.stock_quantity > 0
+                                                            ? `В наличии: ${item.product.stock_quantity} ${item.product.unit}`
+                                                            : "На заказ"}
+                                                    </span>
                                                 </div>
                                                 <button
                                                     onClick={() => removeItem(item.product.id)}
@@ -456,6 +459,14 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                                     {item.subtotal.toLocaleString("ru-RU")} ₽
                                                 </div>
                                             </div>
+                                            {item.product.stock_quantity > 0 &&
+                                                item.quantity > item.product.stock_quantity && (
+                                                    <p className="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                                                        <AlertTriangle className="h-3.5 w-3.5" />
+                                                        Доступно только {item.product.stock_quantity}{" "}
+                                                        {item.product.unit}
+                                                    </p>
+                                                )}
                                         </div>
                                     ))}
                                 </div>
@@ -595,9 +606,27 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                             </div>
                         </div>
 
+                        {stockOverflowItems.length > 0 && (
+                            <div className="mb-3 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                                <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-semibold">Недостаточно товара на складе:</p>
+                                    <ul className="mt-1 space-y-0.5">
+                                        {stockOverflowItems.map((item) => (
+                                            <li key={item.product.id}>
+                                                {item.product.name} — в наличии {item.product.stock_quantity}{" "}
+                                                {item.product.unit}, в заказе {item.quantity} {item.product.unit}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <p className="mt-1.5 text-red-600">Уменьшите количество или оформите товар «на заказ».</p>
+                                </div>
+                            </div>
+                        )}
+
                         <button
                             onClick={handleOrder}
-                            disabled={items.length === 0}
+                            disabled={items.length === 0 || stockOverflowItems.length > 0}
                             className="w-full flex items-center justify-center space-x-2 bg-yellow-600 text-white py-4 rounded-lg hover:bg-yellow-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-lg font-semibold"
                         >
                             <ShoppingCart className="h-5 w-5" />
