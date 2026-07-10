@@ -462,44 +462,47 @@ export function InventorySection() {
             {/* Header */}
             <div className="flex flex-wrap gap-3 justify-between items-start mb-6">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Складской учет</h1>
-                    <p className="text-gray-600 mt-1">Остатки продукции и управление товарами</p>
+                    <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Складской учет</h1>
+                    <p className="text-gray-500 text-sm mt-0.5">Остатки продукции и управление товарами</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-2">
                     {activeTab === "stock" ? (
                         <>
                             <button
                                 onClick={() => setShowAddShipment(true)}
-                                className="flex items-center space-x-2 bg-amber-100 text-amber-700 px-4 py-2.5 rounded-lg hover:bg-yellow-50 transition-colors font-semibold border border-amber-200"
+                                className="flex items-center gap-1.5 bg-amber-100 text-amber-700 px-3 py-2 rounded-lg hover:bg-amber-50 transition-colors font-semibold border border-amber-200 text-sm"
                             >
-                                <Send className="h-5 w-5" />
-                                <span>Отгрузка</span>
+                                <Send className="h-4 w-4 flex-shrink-0" />
+                                <span className="hidden xs:inline">Отгрузка</span>
+                                <span className="xs:hidden">Отгрузка</span>
                             </button>
                             <button
                                 onClick={() => setShowAddReceiving(true)}
-                                className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2.5 rounded-lg hover:bg-yellow-700 transition-colors whitespace-nowrap"
+                                className="flex items-center gap-1.5 bg-yellow-600 text-white px-3 py-2 rounded-lg hover:bg-yellow-700 transition-colors text-sm font-semibold"
                             >
-                                <Plus className="h-5 w-5" />
-                                <span>Добавить приход</span>
+                                <Plus className="h-4 w-4 flex-shrink-0" />
+                                <span className="hidden sm:inline">Добавить приход</span>
+                                <span className="sm:hidden">Приход</span>
                             </button>
                         </>
                     ) : (
                         <button
                             onClick={openCreateProduct}
-                            className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2.5 rounded-lg hover:bg-yellow-700 transition-colors whitespace-nowrap"
+                            className="flex items-center gap-1.5 bg-yellow-600 text-white px-3 py-2 rounded-lg hover:bg-yellow-700 transition-colors text-sm font-semibold"
                         >
-                            <Plus className="h-5 w-5" />
-                            <span>Новый товар</span>
+                            <Plus className="h-4 w-4 flex-shrink-0" />
+                            <span className="hidden sm:inline">Новый товар</span>
+                            <span className="sm:hidden">Добавить</span>
                         </button>
                     )}
                 </div>
             </div>
 
             {/* Tab switcher */}
-            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-6 w-fit">
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-6 w-full sm:w-fit">
                 <button
                     onClick={() => setActiveTab("stock")}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
                         activeTab === "stock" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-800"
                     }`}
                 >
@@ -508,7 +511,7 @@ export function InventorySection() {
                 </button>
                 <button
                     onClick={() => setActiveTab("products")}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
                         activeTab === "products" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-800"
                     }`}
                 >
@@ -537,18 +540,18 @@ export function InventorySection() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h2 className="text-xl font-semibold mb-4">Остатки на складе</h2>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
+                        <div className="bg-white rounded-lg shadow-sm sm:shadow-lg p-4 sm:p-6">
+                            <h2 className="text-base sm:text-xl font-semibold mb-3 sm:mb-4">Остатки на складе</h2>
                             <div className="space-y-3">
                                 {products.map((product) => (
-                                    <div key={product.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                    <div key={product.id} className="flex items-center justify-between p-2.5 sm:p-3 border border-gray-200 rounded-lg">
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold text-gray-900 truncate">{product.name}</h3>
-                                            <p className="text-sm text-gray-600">{product.category}</p>
+                                            <h3 className="font-semibold text-gray-900 text-sm truncate">{product.name}</h3>
+                                            <p className="text-xs text-gray-600">{product.category}</p>
                                         </div>
                                         <div className="text-right ml-4">
-                                            <div className={`text-lg font-bold ${
+                                            <div className={`text-base sm:text-lg font-bold ${
                                                 product.stock_quantity < 50 ? "text-red-600"
                                                 : product.stock_quantity < 100 ? "text-yellow-600"
                                                 : "text-green-600"
@@ -562,11 +565,11 @@ export function InventorySection() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h2 className="text-xl font-semibold mb-4">Последние операции</h2>
+                        <div className="bg-white rounded-lg shadow-sm sm:shadow-lg p-4 sm:p-6">
+                            <h2 className="text-base sm:text-xl font-semibold mb-3 sm:mb-4">Последние операции</h2>
                             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                                 {transactions.map((transaction) => (
-                                    <div key={transaction.id} className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg">
+                                    <div key={transaction.id} className="flex items-start space-x-2.5 sm:space-x-3 p-2.5 sm:p-3 border border-gray-200 rounded-lg">
                                         <div className={`mt-1 ${transaction.transaction_type === "incoming" ? "text-green-600" : "text-red-600"}`}>
                                             {transaction.transaction_type === "incoming"
                                                 ? <TrendingUp className="h-5 w-5" />
@@ -575,7 +578,7 @@ export function InventorySection() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start">
                                                 <div className="min-w-0">
-                                                    <p className="font-semibold text-gray-900 truncate">{transaction.product?.name}</p>
+                                                    <p className="font-semibold text-gray-900 text-sm truncate">{transaction.product?.name}</p>
                                                     <p className="text-sm text-gray-600">
                                                         {transaction.transaction_type === "incoming" ? "Приход"
                                                         : transaction.transaction_type === "outgoing" ? "Отгрузка"
@@ -583,7 +586,7 @@ export function InventorySection() {
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center space-x-2 ml-2 shrink-0">
-                                                    <div className={`text-lg font-bold ${transaction.transaction_type === "incoming" ? "text-green-600" : "text-red-600"}`}>
+                                                    <div className={`text-base sm:text-lg font-bold ${transaction.transaction_type === "incoming" ? "text-green-600" : "text-red-600"}`}>
                                                         {transaction.quantity > 0 ? "+" : ""}{transaction.quantity} {transaction.product?.unit || ""}
                                                     </div>
                                                     <button onClick={() => deleteTransaction(transaction.id)} className="text-gray-400 hover:text-red-600 transition-colors">
@@ -601,26 +604,26 @@ export function InventorySection() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                        <h2 className="text-xl font-semibold mb-4">Статистика склада</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="text-center p-4 bg-blue-50 rounded-lg">
-                                <div className="text-3xl font-bold text-blue-600">{products.length}</div>
-                                <div className="text-sm text-gray-600 mt-1">Наименований</div>
+                    <div className="bg-white rounded-lg shadow-sm sm:shadow-lg p-4 sm:p-6">
+                        <h2 className="text-base sm:text-xl font-semibold mb-3 sm:mb-4">Статистика склада</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                                <div className="text-2xl sm:text-3xl font-bold text-blue-600">{products.length}</div>
+                                <div className="text-xs sm:text-sm text-gray-600 mt-1">Наименований</div>
                             </div>
-                            <div className="text-center p-4 bg-green-50 rounded-lg">
-                                <div className="text-3xl font-bold text-green-600">{products.reduce((s, p) => s + p.stock_quantity, 0).toFixed(0)}</div>
-                                <div className="text-sm text-gray-600 mt-1">Общий остаток</div>
+                            <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
+                                <div className="text-2xl sm:text-3xl font-bold text-green-600">{products.reduce((s, p) => s + p.stock_quantity, 0).toFixed(0)}</div>
+                                <div className="text-xs sm:text-sm text-gray-600 mt-1">Общий остаток</div>
                             </div>
-                            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                                <div className="text-3xl font-bold text-yellow-600">{lowStockProducts.length}</div>
-                                <div className="text-sm text-gray-600 mt-1">Низкий остаток</div>
+                            <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg">
+                                <div className="text-2xl sm:text-3xl font-bold text-yellow-600">{lowStockProducts.length}</div>
+                                <div className="text-xs sm:text-sm text-gray-600 mt-1">Низкий остаток</div>
                             </div>
-                            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                                <div className="text-3xl font-bold text-yellow-600">
+                            <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg">
+                                <div className="text-xl sm:text-3xl font-bold text-yellow-600">
                                     {products.reduce((s, p) => s + p.stock_quantity * p.price_per_sqm, 0).toLocaleString("ru-RU", { maximumFractionDigits: 0 })}
                                 </div>
-                                <div className="text-sm text-gray-600 mt-1">Стоимость (₽)</div>
+                                <div className="text-xs sm:text-sm text-gray-600 mt-1">Стоимость (₽)</div>
                             </div>
                         </div>
                     </div>
@@ -638,11 +641,71 @@ export function InventorySection() {
                             placeholder="Поиск по названию или категории..."
                             value={productSearch}
                             onChange={(e) => setProductSearch(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                            className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         />
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                    {/* Mobile card list */}
+                    <div className="sm:hidden space-y-3">
+                        {filteredProducts.map((product) => (
+                            <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3">
+                                {/* Photo */}
+                                <div className="flex-shrink-0">
+                                    {product.photo_url ? (
+                                        <img src={product.photo_url} alt={product.name} className="w-16 h-16 object-cover rounded-lg border border-gray-200" />
+                                    ) : (
+                                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                                            <Package className="h-6 w-6 text-gray-300" />
+                                        </div>
+                                    )}
+                                </div>
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{product.name}</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">{product.category}{product.subcategory ? ` · ${product.subcategory}` : ""}</p>
+                                        </div>
+                                        <button onClick={() => toggleProductActive(product)} className="flex-shrink-0 mt-0.5">
+                                            {product.is_active
+                                                ? <ToggleRight className="h-6 w-6 text-green-500" />
+                                                : <ToggleLeft className="h-6 w-6 text-gray-300" />}
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-2">
+                                        <div className="flex gap-3">
+                                            <span className="text-xs text-gray-600 font-medium">{product.price_per_sqm.toLocaleString("ru-RU")} ₽/{product.unit}</span>
+                                            <span className={`text-xs font-semibold ${
+                                                product.stock_quantity === 0 ? "text-orange-600"
+                                                : product.stock_quantity < 50 ? "text-red-600"
+                                                : "text-green-600"
+                                            }`}>
+                                                {product.stock_quantity} {product.unit}
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-1">
+                                            <button onClick={() => openEditProduct(product)}
+                                                className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors">
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
+                                            <button onClick={() => handleDeleteProduct(product)}
+                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {filteredProducts.length === 0 && (
+                            <div className="text-center text-gray-500 py-12 bg-white rounded-xl">
+                                {productSearch ? "Ничего не найдено" : "Товаров нет"}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop table */}
+                    <div className="hidden sm:block bg-white rounded-lg shadow-lg overflow-hidden">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
@@ -651,7 +714,7 @@ export function InventorySection() {
                                     <th className="text-left px-4 py-3 font-semibold text-gray-700 hidden md:table-cell">Категория</th>
                                     <th className="text-right px-4 py-3 font-semibold text-gray-700">Цена</th>
                                     <th className="text-right px-4 py-3 font-semibold text-gray-700">Остаток</th>
-                                    <th className="text-center px-4 py-3 font-semibold text-gray-700 hidden sm:table-cell">Видимость</th>
+                                    <th className="text-center px-4 py-3 font-semibold text-gray-700">Видимость</th>
                                     <th className="px-4 py-3"></th>
                                 </tr>
                             </thead>
@@ -680,7 +743,7 @@ export function InventorySection() {
                                                 {product.stock_quantity} {product.unit}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-center hidden sm:table-cell">
+                                        <td className="px-4 py-3 text-center">
                                             <button onClick={() => toggleProductActive(product)} title={product.is_active ? "Скрыть в каталоге" : "Показать в каталоге"}>
                                                 {product.is_active
                                                     ? <ToggleRight className="h-6 w-6 text-green-500 mx-auto" />
