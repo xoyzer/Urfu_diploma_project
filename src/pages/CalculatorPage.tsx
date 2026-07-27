@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calculator, Truck, MapPin, ShoppingCart, Plus, Trash2, Search, Loader as Loader2, Info, ArrowDownWideNarrow, TriangleAlert as AlertTriangle } from "lucide-react";
+import { Calculator, Truck, MapPin, ShoppingCart, Plus, Trash2, Search, Loader as Loader2, Info, TriangleAlert as AlertTriangle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Database } from "../types/database";
 
@@ -12,10 +12,19 @@ export interface CartItem {
     weight: number;
 }
 
+export interface FleetVehicleResult {
+    vehicleType: string;
+    label: string;
+    tripCount: number;
+    costPerTrip: number;
+    totalCost: number;
+}
+
 export interface CalculatorResult {
     items: CartItem[];
     deliveryType: string;
     vehicleType: string;
+    fleet: FleetVehicleResult[];
     deliveryAddress: string;
     distance: number;
     totalWeight: number;
@@ -45,6 +54,7 @@ interface Transport {
     perKmRate: number;
     vehicleType: string;
     label: string;
+    billsFromMkad: boolean;
 }
 
 const TRANSPORT_OPTIONS: Transport[] = [
@@ -55,6 +65,7 @@ const TRANSPORT_OPTIONS: Transport[] = [
         perKmRate: 100,
         vehicleType: "манипулятор 5т",
         label: "Манипулятор 5т",
+        billsFromMkad: false,
     },
     {
         name: "manipulator_8t",
@@ -63,16 +74,78 @@ const TRANSPORT_OPTIONS: Transport[] = [
         perKmRate: 100,
         vehicleType: "манипулятор 8т",
         label: "Манипулятор 8т",
+        billsFromMkad: false,
     },
     {
-        name: "manipulator_10t_truck",
-        capacityKg: Infinity,
+        name: "manipulator_10t",
+        capacityKg: 11000,
         baseCost: 19000,
         perKmRate: 140,
         vehicleType: "манипулятор 10т",
-        label: "Манипулятор 10т / Фура",
+        label: "Манипулятор 10т",
+        billsFromMkad: true,
+    },
+    {
+        name: "truck_20t",
+        capacityKg: 20000,
+        baseCost: 25000,
+        perKmRate: 160,
+        vehicleType: "фура 20т",
+        label: "Фура 20т",
+        billsFromMkad: true,
     },
 ];
+
+interface FleetVehicle {
+    transport: Transport;
+    tripCount: number;
+    costPerTrip: number;
+    totalCost: number;
+}
+
+function billedKmFor(transport: Transport, distanceKm: number): number {
+    return transport.billsFromMkad ? Math.max(0, distanceKm - BASE_TO_MKAD_KM) : distanceKm;
+}
+
+function tripCostFor(transport: Transport, distanceKm: number): number {
+    if (distanceKm === 0) return 0;
+    return transport.baseCost + billedKmFor(transport, distanceKm) * transport.perKmRate;
+}
+
+function computeFleet(totalWeightKg: number, distanceKm: number): FleetVehicle[] {
+    if (totalWeightKg <= 0) return [];
+    const largest = TRANSPORT_OPTIONS[TRANSPORT_OPTIONS.length - 1];
+    if (totalWeightKg <= largest.capacityKg) {
+        const transport = pickTransport(totalWeightKg);
+        const cost = tripCostFor(transport, distanceKm);
+        return [{ transport, tripCount: 1, costPerTrip: cost, totalCost: cost }];
+    }
+    const fleet: FleetVehicle[] = [];
+    let remaining = totalWeightKg;
+    while (remaining > 0) {
+        if (remaining <= largest.capacityKg) {
+            const t = pickTransport(remaining);
+            const cost = tripCostFor(t, distanceKm);
+            fleet.push({ transport: t, tripCount: 1, costPerTrip: cost, totalCost: cost });
+            remaining = 0;
+        } else {
+            const cost = tripCostFor(largest, distanceKm);
+            fleet.push({ transport: largest, tripCount: 1, costPerTrip: cost, totalCost: cost });
+            remaining -= largest.capacityKg;
+        }
+    }
+    const grouped = new Map<string, FleetVehicle>();
+    for (const v of fleet) {
+        const existing = grouped.get(v.transport.name);
+        if (existing) {
+            existing.tripCount += 1;
+            existing.totalCost += v.costPerTrip;
+        } else {
+            grouped.set(v.transport.name, { ...v });
+        }
+    }
+    return Array.from(grouped.values());
+}
 
 // Approximate road distance from the base to MKAD (Щёлковское шоссе)
 const BASE_TO_MKAD_KM = 22;
@@ -285,11 +358,8 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
 
     const totalWeight = items.reduce((sum, i) => sum + i.weight, 0);
     const productCost = items.reduce((sum, i) => sum + i.subtotal, 0);
-    const selectedTransport = pickTransport(totalWeight);
-    const billedKm =
-        selectedTransport.name === "manipulator_10t_truck" ? Math.max(0, distance - BASE_TO_MKAD_KM) : distance;
-    const deliveryCost =
-        isPickup || items.length === 0 ? 0 : selectedTransport.baseCost + billedKm * selectedTransport.perKmRate;
+    const fleet = isPickup || items.length === 0 ? [] : computeFleet(totalWeight, distance);
+    const deliveryCost = fleet.reduce((sum, v) => sum + v.totalCost, 0);
 
     const totalCost = productCost + deliveryCost;
     const handleCalculateDistance = async () => {
@@ -324,10 +394,22 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
         if (items.length === 0) return;
         if (stockOverflowItems.length > 0) return;
         saveCalculatorState();
+        const fleetResult: FleetVehicleResult[] = fleet.map((v) => ({
+            vehicleType: v.transport.vehicleType,
+            label: v.transport.label,
+            tripCount: v.tripCount,
+            costPerTrip: v.costPerTrip,
+            totalCost: v.totalCost,
+        }));
         onNavigate({
             items,
-            deliveryType: isPickup ? "Самовывоз" : selectedTransport.label,
-            vehicleType: isPickup ? "" : selectedTransport.vehicleType,
+            deliveryType: isPickup
+                ? "Самовывоз"
+                : fleet.length === 1
+                    ? fleet[0].transport.label
+                    : `${fleet.length} транспорта`,
+            vehicleType: isPickup ? "" : fleet.map((v) => v.transport.vehicleType).join(", "),
+            fleet: isPickup ? [] : fleetResult,
             deliveryAddress: isPickup ? "" : destAddress,
             distance: isPickup ? 0 : distance,
             totalWeight,
@@ -364,6 +446,9 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                                 {list.map((p) => (
                                                     <option key={p.id} value={p.id}>
                                                         {p.name} — {p.price_per_sqm} ₽/{p.unit}
+                                                        {p.stock_quantity > 0
+                                                            ? ` (в наличии: ${p.stock_quantity} ${p.unit})`
+                                                            : " (на заказ)"}
                                                     </option>
                                                 ))}
                                             </optgroup>
@@ -567,22 +652,55 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                     <Truck className="h-6 w-6 text-yellow-600 mr-2 flex-shrink-0" />
                                     <h3 className="text-lg font-semibold text-gray-900">Рекомендованный транспорт</h3>
                                 </div>
-                                <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
-                                    <span className="text-xl font-bold text-yellow-700">{selectedTransport.label}</span>
-                                    <span className="text-sm text-gray-600">
-                                        Подача {selectedTransport.baseCost.toLocaleString("ru-RU")} ₽ +{" "}
-                                        {selectedTransport.perKmRate} ₽/км
-                                        {selectedTransport.name === "manipulator_10t_truck" && " от МКАД"}
-                                    </span>
-                                </div>
-                                <div className="mt-2 text-sm text-gray-600">
-                                    Общий вес груза:{" "}
-                                    <span className="font-semibold">{totalWeight.toLocaleString("ru-RU")} кг</span>
-                                </div>
-                                {selectedTransport.name === "manipulator_10t_truck" && distance > 0 && (
-                                    <div className="mt-1 text-sm text-gray-500">
-                                        Км от МКАД: <span className="font-semibold">{billedKm} км</span> (маршрут{" "}
-                                        {distance} км − {BASE_TO_MKAD_KM} км до МКАД)
+                                {fleet.length === 0 ? (
+                                    <p className="text-sm text-gray-600">Самовывоз</p>
+                                ) : fleet.length === 1 ? (
+                                    <div>
+                                        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+                                            <span className="text-xl font-bold text-yellow-700">{fleet[0].transport.label}</span>
+                                            <span className="text-sm text-gray-600">
+                                                Подача {fleet[0].transport.baseCost.toLocaleString("ru-RU")} ₽ +{" "}
+                                                {fleet[0].transport.perKmRate} ₽/км
+                                                {fleet[0].transport.billsFromMkad && " от МКАД"}
+                                            </span>
+                                        </div>
+                                        <div className="mt-2 text-sm text-gray-600">
+                                            Общий вес груза:{" "}
+                                            <span className="font-semibold">{totalWeight.toLocaleString("ru-RU")} кг</span>
+                                        </div>
+                                        {fleet[0].transport.billsFromMkad && distance > 0 && (
+                                            <div className="mt-1 text-sm text-gray-500">
+                                                Км от МКАД: <span className="font-semibold">{billedKmFor(fleet[0].transport, distance)} км</span> (маршрут{" "}
+                                                {distance} км − {BASE_TO_MKAD_KM} км до МКАД)
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <div className="text-sm text-gray-600 mb-2">
+                                            Вес груза <span className="font-semibold">{totalWeight.toLocaleString("ru-RU")} кг</span> превышает вместимость одной фуры ({(20000).toLocaleString("ru-RU")} кг) — потребуется несколько транспортов:
+                                        </div>
+                                        <div className="space-y-2">
+                                            {fleet.map((v, idx) => (
+                                                <div key={idx} className="flex items-baseline justify-between bg-white rounded-lg p-3 border border-yellow-500">
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">
+                                                            {v.transport.label}
+                                                            {v.tripCount > 1 && <span className="text-amber-600 ml-1">× {v.tripCount} рейс(а)</span>}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {v.transport.baseCost.toLocaleString("ru-RU")} ₽ подача + {v.transport.perKmRate} ₽/км{v.transport.billsFromMkad ? " от МКАД" : ""}
+                                                        </div>
+                                                    </div>
+                                                    <div className="font-semibold text-yellow-700 text-sm whitespace-nowrap">
+                                                        {v.totalCost.toLocaleString("ru-RU")} ₽
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-2 text-sm text-gray-600">
+                                            Итого доставка: <span className="font-semibold text-yellow-700">{deliveryCost.toLocaleString("ru-RU")} ₽</span>
+                                        </div>
                                     </div>
                                 )}
                             </div>
