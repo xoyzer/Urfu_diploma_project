@@ -20,11 +20,11 @@ export function AboutPage() {
             </section>
 
             <section className="py-16 sm:py-20">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-12 text-center">
                         <span className="text-yellow-500">Фабрика Плитки</span> — ваш надежный партнер
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex gap-5 items-start">
                             <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mt-0.5">
                                 <span className="text-amber-500 font-bold text-lg">01</span>
