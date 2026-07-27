@@ -24,7 +24,7 @@ export function AboutPage() {
                     <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-12 text-center">
                         <span className="text-yellow-500">Фабрика Плитки</span> — ваш надежный партнер
                     </h2>
-                    <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 flex gap-5 items-start">
                             <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mt-0.5">
                                 <span className="text-amber-500 font-bold text-lg">01</span>
