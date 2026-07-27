@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Calculator, Truck, MapPin, ShoppingCart, Plus, Trash2, Search, Loader as Loader2, Info, TriangleAlert as AlertTriangle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Database } from "../types/database";
+import { YandexMapPicker } from "../components/YandexMapPicker";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
@@ -388,6 +389,25 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
         }
     };
 
+    const handleMapAddressSelect = async (address: string, coords: { lat: number; lon: number }) => {
+        setDestAddress(address);
+        setResolvedAddress(address);
+        setGeocodeError("");
+        setGeocoding(true);
+        try {
+            const km = await routeDistanceKm({ lat: ORIGIN.lat, lon: ORIGIN.lon }, coords);
+            if (km == null) {
+                setGeocodeError("Не удалось рассчитать расстояние. Введите значение вручную.");
+                return;
+            }
+            setDistance(km);
+        } catch {
+            setGeocodeError("Ошибка при расчёте. Попробуйте позже или введите расстояние вручную.");
+        } finally {
+            setGeocoding(false);
+        }
+    };
+
     const stockOverflowItems = items.filter((item) => item.product.stock_quantity > 0 && item.quantity > item.product.stock_quantity);
 
     const handleOrder = () => {
@@ -629,6 +649,14 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                         <p className="text-xs text-green-700 mt-2">Найдено: {resolvedAddress}</p>
                                     )}
                                     {geocodeError && <p className="text-xs text-red-600 mt-2">{geocodeError}</p>}
+                                    <div className="mt-3">
+                                        <YandexMapPicker
+                                            apiKey={import.meta.env.VITE_YANDEX_MAPS_API_KEY}
+                                            initialAddress={destAddress}
+                                            center={[ORIGIN.lat, ORIGIN.lon]}
+                                            onAddressSelect={handleMapAddressSelect}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div>
