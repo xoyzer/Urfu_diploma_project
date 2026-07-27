@@ -682,7 +682,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                         </div>
                                         <div className="space-y-2">
                                             {fleet.map((v, idx) => (
-                                                <div key={idx} className="flex items-baseline justify-between bg-white rounded-lg p-3 border border-yellow-400">
+                                                <div key={idx} className="flex items-baseline justify-between bg-white rounded-lg p-3 border border-yellow-500">
                                                     <div>
                                                         <div className="font-semibold text-gray-900">
                                                             {v.transport.label}
