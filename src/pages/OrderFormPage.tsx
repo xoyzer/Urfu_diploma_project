@@ -71,7 +71,15 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
             const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
             if (itemsError) throw itemsError;
 
-            if (!orderData.isPickup && orderData.vehicleType) {
+            if (!orderData.isPickup && orderData.fleet && orderData.fleet.length > 0) {
+                const trips = orderData.fleet.map((v) => ({
+                    order_id: order.id,
+                    vehicle_type: v.vehicleType,
+                    trip_count: v.tripCount,
+                    cost_per_trip: v.costPerTrip,
+                }));
+                await supabase.from("order_delivery_trips").insert(trips);
+            } else if (!orderData.isPickup && orderData.vehicleType) {
                 await supabase.from("order_delivery_trips").insert({
                     order_id: order.id,
                     vehicle_type: orderData.vehicleType,
@@ -143,9 +151,23 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
                                 ))}
                             </div>
                             <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <p className="text-gray-600">Транспорт:</p>
-                                    <p className="font-semibold">{orderData.deliveryType}</p>
+                                <div className="col-span-2">
+                                    <p className="text-gray-600 mb-1">Транспорт:</p>
+                                    {orderData.fleet && orderData.fleet.length > 1 ? (
+                                        <div className="space-y-1.5">
+                                            {orderData.fleet.map((v, idx) => (
+                                                <div key={idx} className="flex items-baseline justify-between bg-amber-50 rounded px-3 py-1.5 border border-amber-200">
+                                                    <span className="font-semibold text-gray-900">
+                                                        {v.label}
+                                                        {v.tripCount > 1 && <span className="text-amber-600 ml-1">× {v.tripCount} рейс(а)</span>}
+                                                    </span>
+                                                    <span className="text-amber-700 font-semibold text-sm">{v.totalCost.toLocaleString("ru-RU")} ₽</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="font-semibold">{orderData.deliveryType}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <p className="text-gray-600">Вес груза:</p>
