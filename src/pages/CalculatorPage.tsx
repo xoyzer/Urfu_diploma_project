@@ -86,12 +86,12 @@ const TRANSPORT_OPTIONS: Transport[] = [
         billsFromMkad: true,
     },
     {
-        name: "truck_25t",
-        capacityKg: 25000,
+        name: "truck_20t",
+        capacityKg: 20000,
         baseCost: 25000,
         perKmRate: 160,
-        vehicleType: "фура 25т",
-        label: "Фура 25т",
+        vehicleType: "фура 20т",
+        label: "Фура 20т",
         billsFromMkad: true,
     },
 ];
@@ -446,6 +446,9 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                                 {list.map((p) => (
                                                     <option key={p.id} value={p.id}>
                                                         {p.name} — {p.price_per_sqm} ₽/{p.unit}
+                                                        {p.stock_quantity > 0
+                                                            ? ` (в наличии: ${p.stock_quantity} ${p.unit})`
+                                                            : " (на заказ)"}
                                                     </option>
                                                 ))}
                                             </optgroup>
@@ -675,7 +678,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                 ) : (
                                     <div>
                                         <div className="text-sm text-gray-600 mb-2">
-                                            Вес груза <span className="font-semibold">{totalWeight.toLocaleString("ru-RU")} кг</span> превышает вместимость одной фуры ({(25000).toLocaleString("ru-RU")} кг) — потребуется несколько транспортов:
+                                            Вес груза <span className="font-semibold">{totalWeight.toLocaleString("ru-RU")} кг</span> превышает вместимость одной фуры ({(20000).toLocaleString("ru-RU")} кг) — потребуется несколько транспортов:
                                         </div>
                                         <div className="space-y-2">
                                             {fleet.map((v, idx) => (
