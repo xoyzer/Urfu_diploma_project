@@ -6,6 +6,7 @@ interface YandexMapPickerProps {
     initialAddress?: string;
     center?: [number, number];
     zoom?: number;
+    warehouse?: { lat: number; lon: number; address: string };
     onAddressSelect: (address: string, coords: { lat: number; lon: number }) => void;
 }
 
@@ -75,6 +76,7 @@ export function YandexMapPicker({
     initialAddress = "",
     center = [55.751244, 37.618423],
     zoom = 10,
+    warehouse,
     onAddressSelect,
 }: YandexMapPickerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -143,6 +145,15 @@ export function YandexMapPicker({
                     controls: ["zoomControl"],
                 });
                 mapRef.current = map;
+
+                if (warehouse) {
+                    const whPm = new ymaps.Placemark(
+                        [warehouse.lat, warehouse.lon],
+                        { balloonContent: "Склад: " + warehouse.address, hintContent: "Склад" },
+                        { preset: "islands#darkBlueHomeIcon" },
+                    );
+                    map.geoObjects.add(whPm);
+                }
 
                 map.events.add("click", async (e: Y2Event) => {
                     const coords = e.get("coords");

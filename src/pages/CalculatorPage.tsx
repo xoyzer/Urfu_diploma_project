@@ -654,6 +654,7 @@ export function CalculatorPage({ onNavigate }: CalculatorPageProps) {
                                             apiKey={import.meta.env.VITE_YANDEX_MAPS_API_KEY}
                                             initialAddress={destAddress}
                                             center={[ORIGIN.lat, ORIGIN.lon]}
+                                            warehouse={{ lat: ORIGIN.lat, lon: ORIGIN.lon, address: ORIGIN.address }}
                                             onAddressSelect={handleMapAddressSelect}
                                         />
                                     </div>
