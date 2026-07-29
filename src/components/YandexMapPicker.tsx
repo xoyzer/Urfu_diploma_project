@@ -9,36 +9,39 @@ interface YandexMapPickerProps {
     onAddressSelect: (address: string, coords: { lat: number; lon: number }) => void;
 }
 
-/*
- * Minimal, loosely-typed accessors for the Yandex Maps JS API v3.
- * The full type surface is large; we only use the handful of methods we need.
- */
-interface Y3Map {
-    addChild: (child: unknown) => void;
+interface Y2Map {
     setCenter: (coords: [number, number], zoom?: number) => void;
-    events: { add: (event: string, handler: (e: Y3Event) => void) => void };
+    events: { add: (event: string, handler: (e: Y2Event) => void) => void };
+    geoObjects: { add: (obj: Y2Placemark) => void; remove: (obj: Y2Placemark) => void };
 }
-interface Y3Event {
-    location?: { center?: [number, number]; screen?: { x: number; y: number } };
+interface Y2Event {
+    get: (key: string) => [number, number];
 }
-interface Y3Marker {
+interface Y2Placemark {
     geometry: { setCoordinates: (coords: [number, number]) => void };
 }
-interface Y3Suggest {
+interface Y2Suggest {
     events: { add: (event: string, handler: (e: { get: (key: string) => unknown }) => void) => void };
 }
-interface Y3NS {
-    ready: () => Promise<void>;
-    YMap: new (el: HTMLElement, props: { location: { center: [number, number]; zoom: number } }) => Y3Map;
-    YMapDefaultSchemeLayer: new () => unknown;
-    YMapDefaultFeaturesLayer: new () => unknown;
-    YMapMarker: new (props: { coordinates: [number, number] }, element: HTMLElement) => Y3Marker;
-    suggest: (el: HTMLElement) => Promise<Y3Suggest>;
+interface Y2GeoResult {
+    getAddress?: () => string;
+    geometry: { getCoordinates: () => [number, number] };
+    properties: { get: (key: string) => string };
+}
+interface Y2GeoCollection {
+    geoObjects: { get: (i: number) => Y2GeoResult };
+}
+interface Y2NS {
+    ready: (cb: () => void) => void;
+    Map: new (el: HTMLElement, props: { center: [number, number]; zoom: number; controls: string[] }) => Y2Map;
+    Placemark: new (coords: [number, number], props?: Record<string, unknown>, options?: Record<string, unknown>) => Y2Placemark;
+    SuggestControl: new (el: HTMLElement) => Y2Suggest;
+    geocode: (query: string | [number, number], options?: { results?: number; json?: boolean }) => Promise<{ geoObjects: Y2GeoCollection }>;
 }
 
 declare global {
     interface Window {
-        ymaps3?: Y3NS;
+        ymaps?: Y2NS;
     }
 }
 
@@ -47,16 +50,16 @@ let apiPromise: Promise<void> | null = null;
 function loadYandexMaps(apiKey: string): Promise<void> {
     if (apiPromise) return apiPromise;
     apiPromise = new Promise((resolve, reject) => {
-        if (window.ymaps3) {
-            window.ymaps3.ready().then(resolve).catch(reject);
+        if (window.ymaps) {
+            window.ymaps.ready(() => resolve());
             return;
         }
         const script = document.createElement("script");
-        script.src = `https://api-maps.yandex.ru/v3/?apikey=${apiKey}&lang=ru_RU`;
+        script.src = `https://api-maps.yandex.ru/2.1/?apikey=${apiKey}&lang=ru_RU`;
         script.async = true;
         script.onload = () => {
-            if (window.ymaps3) {
-                window.ymaps3.ready().then(resolve).catch(reject);
+            if (window.ymaps) {
+                window.ymaps.ready(() => resolve());
             } else {
                 reject(new Error("Yandex Maps API failed to load"));
             }
@@ -67,11 +70,6 @@ function loadYandexMaps(apiKey: string): Promise<void> {
     return apiPromise;
 }
 
-const mapPinSvg = `<svg width="28" height="40" viewBox="0 0 28 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.27 0 0 6.27 0 14c0 9.5 14 26 14 26s14-16.5 14-26C28 6.27 21.73 0 14 0z" fill="#ca8a04"/>
-  <circle cx="14" cy="14" r="5" fill="white"/>
-</svg>`;
-
 export function YandexMapPicker({
     apiKey,
     initialAddress = "",
@@ -81,88 +79,80 @@ export function YandexMapPicker({
 }: YandexMapPickerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
-    const mapRef = useRef<Y3Map | null>(null);
-    const markerRef = useRef<Y3Marker | null>(null);
+    const mapRef = useRef<Y2Map | null>(null);
+    const placemarkRef = useRef<Y2Placemark | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [searchValue, setSearchValue] = useState(initialAddress);
 
-    async function reverseGeocode(lat: number, lon: number): Promise<string> {
+    function placeMarker(ymaps: Y2NS, coords: [number, number]) {
+        if (!mapRef.current) return;
+        if (placemarkRef.current) {
+            mapRef.current.geoObjects.remove(placemarkRef.current);
+        }
+        const pm = new ymaps.Placemark(
+            coords,
+            {},
+            { preset: "islands#yellowDotIcon" },
+        );
+        mapRef.current.geoObjects.add(pm);
+        placemarkRef.current = pm;
+    }
+
+    function moveMarker(coords: [number, number]) {
+        placemarkRef.current?.geometry.setCoordinates(coords);
+        mapRef.current?.setCenter(coords, 16);
+    }
+
+    async function reverseGeocode(ymaps: Y2NS, lat: number, lon: number): Promise<string> {
         try {
-            const res = await fetch(
-                `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${lon},${lat}&lang=ru_RU&format=json`,
-            );
-            if (!res.ok) return "";
-            const data = await res.json();
-            const member = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
-            if (!member) return "";
-            const addr = member?.metaDataProperty?.GeocoderMetaData?.text;
-            return typeof addr === "string" ? addr : "";
+            const res = await ymaps.geocode([lat, lon], { results: 1 });
+            const first = res.geoObjects.get(0);
+            if (!first) return "";
+            return first.properties.get("text") || first.getAddress?.() || "";
         } catch {
             return "";
         }
     }
 
     async function forwardGeocode(
+        ymaps: Y2NS,
         address: string,
     ): Promise<{ lat: number; lon: number; displayName: string } | null> {
         try {
-            const res = await fetch(
-                `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${encodeURIComponent(address)}&lang=ru_RU&format=json`,
-            );
-            if (!res.ok) return null;
-            const data = await res.json();
-            const member = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
-            if (!member) return null;
-            const pos: string = member?.Point?.pos || "";
-            const [lonStr, latStr] = pos.split(" ");
-            const lat = parseFloat(latStr);
-            const lon = parseFloat(lonStr);
-            if (isNaN(lat) || isNaN(lon)) return null;
-            const displayName = member?.metaDataProperty?.GeocoderMetaData?.text || address;
-            return { lat, lon, displayName };
+            const res = await ymaps.geocode(address, { results: 1 });
+            const first = res.geoObjects.get(0);
+            if (!first) return null;
+            const coords = first.geometry.getCoordinates();
+            const displayName = first.properties.get("text") || address;
+            return { lat: coords[0], lon: coords[1], displayName };
         } catch {
             return null;
         }
-    }
-
-    function placeMarker(ymaps: Y3NS, coords: [number, number]) {
-        if (!mapRef.current) return;
-        const markerEl = document.createElement("div");
-        markerEl.style.transform = "translate(-50%, -100%)";
-        markerEl.innerHTML = mapPinSvg;
-        const marker = new ymaps.YMapMarker({ coordinates: coords }, markerEl);
-        mapRef.current.addChild(marker);
-        markerRef.current = marker;
-    }
-
-    function moveMarker(coords: [number, number]) {
-        markerRef.current?.geometry.setCoordinates(coords);
-        mapRef.current?.setCenter(coords, 16);
     }
 
     useEffect(() => {
         let cancelled = false;
         loadYandexMaps(apiKey)
             .then(() => {
-                if (cancelled || !containerRef.current || !window.ymaps3) return;
-                const ymaps = window.ymaps3;
-                const map = new ymaps.YMap(containerRef.current, {
-                    location: { center, zoom },
+                if (cancelled || !containerRef.current || !window.ymaps) return;
+                const ymaps = window.ymaps;
+                const map = new ymaps.Map(containerRef.current, {
+                    center,
+                    zoom,
+                    controls: ["zoomControl"],
                 });
-                map.addChild(new ymaps.YMapDefaultSchemeLayer());
-                map.addChild(new ymaps.YMapDefaultFeaturesLayer());
                 mapRef.current = map;
 
-                map.events.add("click", async (e: Y3Event) => {
-                    const coords = e.location?.center;
+                map.events.add("click", async (e: Y2Event) => {
+                    const coords = e.get("coords");
                     if (!coords) return;
-                    if (markerRef.current) {
+                    if (placemarkRef.current) {
                         moveMarker(coords);
                     } else {
                         placeMarker(ymaps, coords);
                     }
-                    const address = await reverseGeocode(coords[0], coords[1]);
+                    const address = await reverseGeocode(ymaps, coords[0], coords[1]);
                     if (address) {
                         setSearchValue(address);
                         onAddressSelect(address, { lat: coords[0], lon: coords[1] });
@@ -170,17 +160,14 @@ export function YandexMapPicker({
                 });
 
                 if (searchInputRef.current) {
-                    ymaps.suggest(searchInputRef.current).then((suggest) => {
-                        suggest.events.add("select", (event) => {
-                            const item = event.get("item") as { value?: string } | undefined;
-                            const addr = item?.value || "";
-                            if (addr) {
-                                setSearchValue(addr);
-                                handleSearchSubmit(addr);
-                            }
-                        });
-                    }).catch(() => {
-                        /* suggest is a progressive enhancement; ignore failures */
+                    const suggest = new ymaps.SuggestControl(searchInputRef.current);
+                    suggest.events.add("select", (event) => {
+                        const item = event.get("item") as { value?: string } | undefined;
+                        const addr = item?.value || "";
+                        if (addr) {
+                            setSearchValue(addr);
+                            handleSearchSubmit(addr);
+                        }
                     });
                 }
 
@@ -198,9 +185,10 @@ export function YandexMapPicker({
     }, []);
 
     async function handleSearchSubmit(address: string) {
-        if (!address.trim()) return;
+        if (!address.trim() || !window.ymaps) return;
+        const ymaps = window.ymaps;
         setLoading(true);
-        const geo = await forwardGeocode(address.trim());
+        const geo = await forwardGeocode(ymaps, address.trim());
         setLoading(false);
         if (!geo) {
             setError("Адрес не найден. Уточните запрос.");
@@ -208,10 +196,10 @@ export function YandexMapPicker({
         }
         setError("");
         setSearchValue(geo.displayName);
-        if (markerRef.current) {
+        if (placemarkRef.current) {
             moveMarker([geo.lat, geo.lon]);
-        } else if (window.ymaps3) {
-            placeMarker(window.ymaps3, [geo.lat, geo.lon]);
+        } else {
+            placeMarker(ymaps, [geo.lat, geo.lon]);
         }
         mapRef.current?.setCenter([geo.lat, geo.lon], 16);
         onAddressSelect(geo.displayName, { lat: geo.lat, lon: geo.lon });
