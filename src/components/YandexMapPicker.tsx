@@ -35,7 +35,7 @@ interface Y2NS {
     ready: (cb: () => void) => void;
     Map: new (el: HTMLElement, props: { center: [number, number]; zoom: number; controls: string[] }) => Y2Map;
     Placemark: new (coords: [number, number], props?: Record<string, unknown>, options?: Record<string, unknown>) => Y2Placemark;
-    SuggestControl: new (el: HTMLElement) => Y2Suggest;
+    SuggestView: new (el: HTMLElement, options?: Record<string, unknown>) => Y2Suggest;
     geocode: (query: string | [number, number], options?: { results?: number; json?: boolean }) => Promise<{ geoObjects: Y2GeoCollection }>;
 }
 
@@ -160,7 +160,7 @@ export function YandexMapPicker({
                 });
 
                 if (searchInputRef.current) {
-                    const suggest = new ymaps.SuggestControl(searchInputRef.current);
+                    const suggest = new ymaps.SuggestView(searchInputRef.current);
                     suggest.events.add("select", (event) => {
                         const item = event.get("item") as { value?: string } | undefined;
                         const addr = item?.value || "";
