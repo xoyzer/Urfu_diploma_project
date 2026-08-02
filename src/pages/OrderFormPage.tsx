@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingCart, CircleCheck as CheckCircle, ArrowLeft } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { CalculatorResult } from "./CalculatorPage";
@@ -8,17 +8,36 @@ interface OrderFormPageProps {
     onNavigate: (page: string, clearOrder?: boolean) => void;
 }
 
+const FORM_STORAGE_KEY = "order_form_state";
+
 export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
-    const [formData, setFormData] = useState({
-        name: "",
-        phone: "",
-        email: "",
-        company: "",
-        address: orderData?.deliveryAddress ?? "",
-        notes: "",
+    const [formData, setFormData] = useState(() => {
+        const defaults = {
+            name: "",
+            phone: "",
+            email: "",
+            company: "",
+            address: orderData?.deliveryAddress ?? "",
+            notes: "",
+        };
+        try {
+            const saved = localStorage.getItem(FORM_STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return { ...defaults, ...parsed, address: defaults.address };
+            }
+        } catch (error) {
+            console.error("Failed to restore order form state:", error);
+        }
+        return defaults;
     });
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+
+    useEffect(() => {
+        const { address, ...contactFields } = formData;
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(contactFields));
+    }, [formData]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -97,6 +116,7 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
 
             setSuccess(true);
             localStorage.removeItem("calculator_state");
+            localStorage.removeItem(FORM_STORAGE_KEY);
             setTimeout(() => {
                 onNavigate("home", true);
             }, 3000);
