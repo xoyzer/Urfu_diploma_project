@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Calendar, Trash2, Play, CircleCheck as CheckCircle2, Wrench, CircleX, Truck } from "lucide-react";
+import { Plus, Calendar, Trash2, Play, CircleCheck as CheckCircle2, Wrench, CircleX, Truck, Pencil } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
@@ -50,6 +50,8 @@ export function VehiclesSection() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddVehicle, setShowAddVehicle] = useState(false);
+    const [showEditVehicle, setShowEditVehicle] = useState(false);
+    const [editVehicleId, setEditVehicleId] = useState<string | null>(null);
     const [showAddDelivery, setShowAddDelivery] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string>(TODAY);
@@ -148,6 +150,53 @@ export function VehiclesSection() {
         } catch (error) {
             console.error("Error adding vehicle:", error);
             alert("Ошибка при добавлении транспорта");
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
+    function openEditVehicle(vehicle: Vehicle) {
+        setEditVehicleId(vehicle.id);
+        setVehicleForm({
+            name: vehicle.name,
+            type: vehicle.type,
+            capacity: vehicle.capacity,
+            license_plate: vehicle.license_plate,
+            operational_status: vehicle.operational_status || "active",
+        });
+        setShowEditVehicle(true);
+    }
+
+    async function handleEditVehicle(e: React.FormEvent) {
+        e.preventDefault();
+        if (!editVehicleId) return;
+        setSubmitting(true);
+        try {
+            const { error } = await supabase
+                .from("vehicles")
+                .update({
+                    name: vehicleForm.name,
+                    type: vehicleForm.type,
+                    capacity: vehicleForm.capacity,
+                    license_plate: vehicleForm.license_plate,
+                    operational_status: vehicleForm.operational_status,
+                    is_active: vehicleForm.operational_status === "active" || vehicleForm.operational_status === "busy",
+                })
+                .eq("id", editVehicleId);
+            if (error) throw error;
+            setShowEditVehicle(false);
+            setEditVehicleId(null);
+            setVehicleForm({
+                name: "",
+                type: "манипулятор 5т",
+                capacity: 5,
+                license_plate: "",
+                operational_status: "active",
+            });
+            loadVehicles();
+        } catch (error) {
+            console.error("Error editing vehicle:", error);
+            alert("Ошибка при редактировании транспорта");
         } finally {
             setSubmitting(false);
         }
@@ -430,6 +479,86 @@ export function VehiclesSection() {
                 </form>
             </Modal>
 
+            {/* Edit Vehicle Modal */}
+            <Modal isOpen={showEditVehicle} title="Редактировать транспорт" onClose={() => { setShowEditVehicle(false); setEditVehicleId(null); }}>
+                <form onSubmit={handleEditVehicle} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Название <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={vehicleForm.name}
+                            onChange={(e) => setVehicleForm({ ...vehicleForm, name: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                            placeholder="Манипулятор №1"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Тип</label>
+                        <select
+                            value={vehicleForm.type}
+                            onChange={(e) => setVehicleForm({ ...vehicleForm, type: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none"
+                        >
+                            {VEHICLE_TYPES.map((t) => (
+                                <option key={t} value={t}>
+                                    {t}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Грузоподъемность (тонн) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            required
+                            step="0.1"
+                            value={vehicleForm.capacity}
+                            onChange={(e) => setVehicleForm({ ...vehicleForm, capacity: parseFloat(e.target.value) })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Гос. номер <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={vehicleForm.license_plate}
+                            onChange={(e) => setVehicleForm({ ...vehicleForm, license_plate: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                            placeholder="А001АА77"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Статус</label>
+                        <select
+                            value={vehicleForm.operational_status}
+                            onChange={(e) => setVehicleForm({ ...vehicleForm, operational_status: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none"
+                        >
+                            {OPERATIONAL_STATUSES.map((s) => (
+                                <option key={s.value} value={s.value}>
+                                    {s.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 disabled:bg-gray-300 transition-colors font-semibold"
+                    >
+                        {submitting ? "Сохранение..." : "Сохранить изменения"}
+                    </button>
+                </form>
+            </Modal>
+
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
                 {/* Fleet */}
                 <div className="bg-white rounded-lg shadow-lg p-6">
@@ -452,12 +581,22 @@ export function VehiclesSection() {
                                                 {vehicle.type} • {vehicle.license_plate} • {vehicle.capacity}т
                                             </p>
                                         </div>
-                                        <button
-                                            onClick={() => deleteVehicle(vehicle.id)}
-                                            className="text-red-400 hover:text-red-600 ml-2"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
+                                        <div className="flex items-center gap-1 ml-2">
+                                            <button
+                                                onClick={() => openEditVehicle(vehicle)}
+                                                className="text-gray-400 hover:text-amber-600"
+                                                title="Редактировать"
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => deleteVehicle(vehicle.id)}
+                                                className="text-red-400 hover:text-red-600"
+                                                title="Удалить"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-2 flex-wrap mt-2">
                                         <span className={`px-2 py-1 text-xs rounded font-medium ${statusInfo.color}`}>
