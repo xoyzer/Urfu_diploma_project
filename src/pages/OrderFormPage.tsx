@@ -96,6 +96,7 @@ export function OrderFormPage({ orderData, onNavigate }: OrderFormPageProps) {
             });
 
             setSuccess(true);
+            localStorage.removeItem("calculator_state");
             setTimeout(() => {
                 onNavigate("home", true);
             }, 3000);
