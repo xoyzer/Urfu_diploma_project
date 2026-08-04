@@ -680,13 +680,12 @@ export function VehiclesSection() {
                             >
                                 <Calendar className="h-5 w-5" />
                             </button>
-                            <div className="flex-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-700 select-none">
-                                {new Date(selectedDate + "T00:00:00").toLocaleDateString("ru-RU", {
-                                    day: "2-digit",
-                                    month: "long",
-                                    year: "numeric",
-                                })}
-                            </div>
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                            />
                         </div>
                     </div>
 
@@ -748,7 +747,7 @@ export function VehiclesSection() {
                                     onChange={(e) =>
                                         setDeliveryForm({ ...deliveryForm, scheduled_date: e.target.value })
                                     }
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 accent-amber-600"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                                 />
                             </div>
                             <div>
