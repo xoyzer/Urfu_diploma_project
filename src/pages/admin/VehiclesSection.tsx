@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Calendar, Trash2, Play, CircleCheck as CheckCircle2, Wrench, CircleX, Truck, Pencil } from "lucide-react";
+import { Plus, Calendar, Trash2, Play, CircleCheck as CheckCircle2, Wrench, CircleX, Truck, Pencil, Clock } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { Modal } from "../../components/Modal";
 import { Database } from "../../types/database";
@@ -27,11 +27,19 @@ function getStatusInfo(status: string) {
 
 function getDeliveryStatusBadge(status: string) {
     if (status === "Доставлен" || status === "Выполнена") return "bg-green-100 text-green-800";
-    if (status === "Доставляется" || status === "В пути") return "bg-blue-100 text-blue-800";
+    if (status === "Доставляется" || status === "В пути") return "bg-amber-100 text-amber-800";
     return "bg-yellow-100 text-yellow-800";
 }
 
 const TODAY = new Date().toISOString().split("T")[0];
+
+function formatElapsed(startedAt: string, now: number) {
+    const elapsed = Math.floor((now - new Date(startedAt).getTime()) / 1000);
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
 
 function buildCalendar(year: number, month: number) {
     const firstDay = new Date(year, month, 1).getDay();
@@ -53,6 +61,7 @@ export function VehiclesSection() {
     const [showEditVehicle, setShowEditVehicle] = useState(false);
     const [editVehicleId, setEditVehicleId] = useState<string | null>(null);
     const [showAddDelivery, setShowAddDelivery] = useState(false);
+    const [confirmComplete, setConfirmComplete] = useState<Delivery | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string>(TODAY);
     const [calendarMonth, setCalendarMonth] = useState(() => {
@@ -83,6 +92,15 @@ export function VehiclesSection() {
     useEffect(() => {
         loadDeliveriesForDate(selectedDate);
     }, [selectedDate, allDeliveries]);
+
+    const [now, setNow] = useState(Date.now());
+
+    useEffect(() => {
+        const hasInProgress = deliveries.some((d) => d.status === "Доставляется");
+        if (!hasInProgress) return;
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, [deliveries]);
 
     async function loadOrders() {
         try {
@@ -795,14 +813,14 @@ export function VehiclesSection() {
                                         {delivery.driver_notes && (
                                             <p className="text-xs text-gray-500 mb-2">{delivery.driver_notes}</p>
                                         )}
-                                        {delivery.started_at && !isDone && (
-                                            <p className="text-xs text-blue-600 mb-2">
-                                                Начало:{" "}
-                                                {new Date(delivery.started_at).toLocaleTimeString("ru-RU", {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })}
-                                            </p>
+                                        {isInProgress && delivery.started_at && (
+                                            <div className="flex items-center gap-2 mb-2 mt-1 bg-amber-50 rounded-lg px-3 py-2 border border-amber-200">
+                                                <Clock className="h-4 w-4 text-amber-600 animate-pulse" />
+                                                <span className="text-sm font-mono font-semibold text-amber-700 tabular-nums">
+                                                    {formatElapsed(delivery.started_at, now)}
+                                                </span>
+                                                <span className="text-xs text-amber-600">в пути</span>
+                                            </div>
                                         )}
                                         {!isDone && (
                                             <div className="flex gap-2 mt-2">
@@ -816,7 +834,7 @@ export function VehiclesSection() {
                                                     </button>
                                                 )}
                                                 <button
-                                                    onClick={() => completeDelivery(delivery)}
+                                                    onClick={() => setConfirmComplete(delivery)}
                                                     className="flex items-center gap-1 px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors"
                                                 >
                                                     <CheckCircle2 className="h-3 w-3" />
@@ -923,14 +941,48 @@ export function VehiclesSection() {
                         </div>
                         <div className="text-sm text-gray-600 mt-1">В ремонте</div>
                     </div>
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-3xl font-bold text-blue-600">
+                    <div className="text-center p-4 bg-amber-50 rounded-lg">
+                        <div className="text-3xl font-bold text-amber-600">
                             {allDeliveries.filter((d) => d.status === "Доставляется").length}
                         </div>
                         <div className="text-sm text-gray-600 mt-1">Доставляется сейчас</div>
                     </div>
                 </div>
             </div>
+
+            {/* Complete delivery confirmation */}
+            <Modal
+                isOpen={confirmComplete !== null}
+                title="Подтверждение"
+                onClose={() => setConfirmComplete(null)}
+            >
+                <div className="space-y-4">
+                    <p className="text-gray-700">
+                        Вы уверены, что хотите завершить доставку
+                        {confirmComplete?.order?.order_number
+                            ? ` заказа #${confirmComplete.order.order_number}`
+                            : ""}
+                        ?
+                    </p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setConfirmComplete(null)}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-semibold"
+                        >
+                            Отмена
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (confirmComplete) completeDelivery(confirmComplete);
+                                setConfirmComplete(null);
+                            }}
+                            className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-semibold"
+                        >
+                            Завершить
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
