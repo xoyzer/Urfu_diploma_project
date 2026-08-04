@@ -263,12 +263,16 @@ export function VehiclesSection() {
             const isToday = deliveryForm.scheduled_date === TODAY;
             const deliveryStatus = isToday ? "Доставляется" : "Запланирована";
 
+            const selectedOrder = orders.find((o) => o.id === deliveryForm.order_id);
+            const previousStatus = selectedOrder?.status ?? null;
+
             const { error } = await supabase.from("deliveries").insert({
                 order_id: deliveryForm.order_id,
                 vehicle_id: deliveryForm.vehicle_id,
                 scheduled_date: deliveryForm.scheduled_date,
                 status: deliveryStatus,
                 driver_notes: deliveryForm.driver_notes,
+                previous_order_status: previousStatus,
             });
             if (error) throw error;
 
@@ -349,9 +353,31 @@ export function VehiclesSection() {
     async function deleteDelivery(id: string) {
         if (!confirm("Удалить доставку?")) return;
         try {
+            const { data: delivery, error: fetchError } = await supabase
+                .from("deliveries")
+                .select("order_id, vehicle_id, previous_order_status")
+                .eq("id", id)
+                .maybeSingle();
+            if (fetchError) throw fetchError;
+            if (delivery) {
+                if (delivery.previous_order_status) {
+                    await supabase
+                        .from("orders")
+                        .update({ status: delivery.previous_order_status })
+                        .eq("id", delivery.order_id);
+                }
+                if (delivery.vehicle_id) {
+                    await supabase
+                        .from("vehicles")
+                        .update({ operational_status: "active", is_active: true })
+                        .eq("id", delivery.vehicle_id);
+                }
+            }
             const { error } = await supabase.from("deliveries").delete().eq("id", id);
             if (error) throw error;
+            loadVehicles();
             loadAllDeliveries();
+            loadOrders();
         } catch (error) {
             console.error("Error deleting delivery:", error);
             alert("Ошибка при удалении доставки");

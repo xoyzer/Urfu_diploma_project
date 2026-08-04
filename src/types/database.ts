@@ -246,6 +246,7 @@ export interface Database {
           actual_date: string | null
           status: string
           driver_notes: string
+          previous_order_status: string | null
           started_at: string | null
           completed_at: string | null
           created_at: string
@@ -259,6 +260,7 @@ export interface Database {
           actual_date?: string | null
           status?: string
           driver_notes?: string
+          previous_order_status?: string | null
           started_at?: string | null
           completed_at?: string | null
           created_at?: string
@@ -272,6 +274,7 @@ export interface Database {
           actual_date?: string | null
           status?: string
           driver_notes?: string
+          previous_order_status?: string | null
           started_at?: string | null
           completed_at?: string | null
           created_at?: string
