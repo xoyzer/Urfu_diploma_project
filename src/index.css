@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Replace native blue date picker highlight with amber theme */
+input[type="date"] {
+    accent-color: #d97706;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: sepia(1) hue-rotate(5deg) saturate(3) brightness(0.8);
+}
+input[type="date"]:focus {
+    outline-color: #d97706;
+}
