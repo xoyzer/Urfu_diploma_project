@@ -10,6 +10,7 @@ type Delivery = Database["public"]["Tables"]["deliveries"]["Row"] & {
 };
 type Order = Database["public"]["Tables"]["orders"]["Row"] & {
     customer: { name: string; phone: string } | null;
+    order_items: { quantity: number; product: { name: string; unit: string } | null }[] | null;
 };
 
 const VEHICLE_TYPES = ["Манипулятор 5т", "Манипулятор 8т", "Манипулятор 10т", "Фура 20т"];
@@ -106,7 +107,7 @@ export function VehiclesSection() {
         try {
             const { data, error } = await supabase
                 .from("orders")
-                .select("*, customer:customers(name, phone)")
+                .select("*, customer:customers(name, phone), order_items(quantity, product:products(name, unit))")
                 .not("status", "in", '("Доставляется","Выполнен","Отменен")');
             if (error) throw error;
             setOrders((data as Order[]) || []);
@@ -706,14 +707,27 @@ export function VehiclesSection() {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none"
                                 >
                                     <option value="">Выберите заказ</option>
-                                    {orders.map((o) => (
-                                        <option key={o.id} value={o.id}>
-                                            {o.customer
-                                                ? `${o.customer.name} ${o.customer.phone}`
-                                                : `Заказ #${o.order_number}`}{" "}
-                                            — {o.delivery_address || "Адрес не указан"}
-                                        </option>
-                                    ))}
+                                    {orders.map((o) => {
+                                        const itemsLabel =
+                                            o.order_items && o.order_items.length > 0
+                                                ? o.order_items
+                                                      .map(
+                                                          (it) =>
+                                                              `${it.quantity} ${it.product?.unit || ""} ${
+                                                                  it.product?.name || ""
+                                                              }`,
+                                                      )
+                                                      .join(", ")
+                                                : "Позиции не указаны";
+                                        return (
+                                            <option key={o.id} value={o.id}>
+                                                {o.customer
+                                                    ? `${o.customer.name} ${o.customer.phone}`
+                                                    : `Заказ #${o.order_number}`}{" "}
+                                                — {itemsLabel}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                             </div>
                             <div>
